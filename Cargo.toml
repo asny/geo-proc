@@ -1,0 +1,6 @@
+[package]
+name = "gust"
+version = "0.1.0"
+authors = ["Asger <asger.nyman@alexandra.dk>"]
+
+[dependencies]
