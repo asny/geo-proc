@@ -26,9 +26,8 @@ pub fn load_obj(name: &str) -> Result<mesh::Mesh, Error>
 {
     let root_path: PathBuf = PathBuf::from("./assets/models/");
     let (models, _materials) = tobj::load_obj(&resource_name_to_path(&root_path,name))?;
-    let m = models.first().ok_or(Error::FileDoesntContainModel {message: format!("The file {} doesn't contain a model", name)})?;
-
-    Ok(mesh::Mesh::create(m.mesh.indices.clone(), m.mesh.positions.clone())?)
+    let m = &models.first().ok_or(Error::FileDoesntContainModel {message: format!("The file {} doesn't contain a model", name)})?.mesh;
+    Ok(mesh::Mesh::create(m.indices.clone(), m.positions.clone())?)
 }
 
 fn resource_name_to_path(root_dir: &Path, location: &str) -> PathBuf {
