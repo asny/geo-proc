@@ -1,18 +1,18 @@
 use std::path::Path;
+use std::path::PathBuf;
 use tobj;
 use mesh;
-use glm;
 
 #[derive(Debug)]
 pub enum Error {
-    TOBJ(tobj::LoadError),
+    ObjLoader(tobj::LoadError),
     Mesh(mesh::Error),
     FileDoesntContainModel{message: String}
 }
 
 impl From<tobj::LoadError> for Error {
     fn from(other: tobj::LoadError) -> Self {
-        Error::TOBJ(other)
+        Error::ObjLoader(other)
     }
 }
 
@@ -24,13 +24,19 @@ impl From<mesh::Error> for Error {
 
 pub fn load_obj(name: &str) -> Result<mesh::Mesh, Error>
 {
-    let (models, _materials) = tobj::load_obj(&Path::new(name))?;
+    let root_path: PathBuf = PathBuf::from("./assets/models/");
+    let (models, _materials) = tobj::load_obj(&resource_name_to_path(&root_path,name))?;
     let m = models.first().ok_or(Error::FileDoesntContainModel {message: format!("The file {} doesn't contain a model", name)})?;
-    let positions = &m.mesh.positions;
-    let mut p = Vec::with_capacity(positions.len()/3);
-    for i in 0..positions.len()/3 {
-        p.push(glm::vec3(positions[3*i], positions[3*i+1], positions[3*i+2]))
+
+    Ok(mesh::Mesh::create(m.mesh.indices.clone(), m.mesh.positions.clone())?)
+}
+
+fn resource_name_to_path(root_dir: &Path, location: &str) -> PathBuf {
+    let mut path: PathBuf = root_dir.into();
+
+    for part in location.split("/") {
+        path = path.join(part);
     }
 
-    Ok(mesh::Mesh::create(p)?)
+    path
 }

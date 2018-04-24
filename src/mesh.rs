@@ -16,6 +16,7 @@ impl From<attribute::Error> for Error {
 
 pub struct Mesh {
     no_vertices: usize,
+    indices: Vec<u32>,
     positions: attribute::Attribute,
     custom_attributes: Vec<attribute::Attribute>
 }
@@ -23,17 +24,27 @@ pub struct Mesh {
 
 impl Mesh
 {
-    pub fn create(positions: Vec<glm::Vec3>) -> Result<Mesh, Error>
+    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
     {
-        let no_vertices = positions.len();
-        let position_attribute = attribute::Attribute::create_vec3_attribute("Position", positions)?;
-        let mesh = Mesh { no_vertices, positions: position_attribute, custom_attributes: Vec::new() };
+        let no_vertices = positions.len()/3;
+        let mut p = Vec::with_capacity(no_vertices);
+        for vid in 0..no_vertices {
+            p.push(glm::vec3(positions[vid * 3], positions[vid * 3 + 1], positions[vid * 3 + 2]));
+        }
+
+        let position_attribute = attribute::Attribute::create_vec3_attribute("Position", p)?;
+        let mesh = Mesh { no_vertices, indices, positions: position_attribute, custom_attributes: Vec::new() };
         Ok(mesh)
     }
 
     pub fn positions(&self) -> &attribute::Attribute
     {
         &self.positions
+    }
+
+    pub fn indices(&self) -> &Vec<u32>
+    {
+        &self.indices
     }
 
     pub fn no_vertices(&self) -> usize
