@@ -24,19 +24,15 @@ pub struct Mesh {
 
 impl Mesh
 {
-    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
+    pub fn create(indices: Vec<u32>, positions: Vec<glm::Vec3>) -> Result<Mesh, Error>
     {
-        let no_vertices = positions.len()/3;
-        let mut positions_vec3 = Vec::with_capacity(no_vertices);
-        for vid in 0..no_vertices {
-            positions_vec3.push(glm::vec3(positions[vid * 3], positions[vid * 3 + 1], positions[vid * 3 + 2]));
-        }
+        let no_vertices = positions.len();
         let mut indices_u16 = Vec::with_capacity(indices.len());
         for i in 0..indices.len() {
             indices_u16.push(indices[i] as u16);
         }
 
-        let position_attribute = attribute::Attribute::create_vec3_attribute("Position", positions_vec3)?;
+        let position_attribute = attribute::Attribute::create_vec3_attribute("Position", positions)?;
         let mesh = Mesh { no_vertices, indices: indices_u16, positions: position_attribute, custom_attributes: Vec::new() };
         Ok(mesh)
     }
