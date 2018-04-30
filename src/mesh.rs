@@ -24,6 +24,16 @@ pub struct Mesh {
 
 impl Mesh
 {
+    pub fn create_unsafe(indices: Vec<u32>, positions: &Vec<f32>) -> Result<Mesh, Error>
+    {
+        let no_vertices = positions.len()/3;
+        let mut positions_vec3 = Vec::with_capacity(no_vertices);
+        for vid in 0..no_vertices {
+            positions_vec3.push(glm::vec3(positions[vid * 3], positions[vid * 3 + 1], positions[vid * 3 + 2]));
+        }
+        Mesh::create(indices, positions_vec3)
+    }
+
     pub fn create(indices: Vec<u32>, positions: Vec<glm::Vec3>) -> Result<Mesh, Error>
     {
         let no_vertices = positions.len();
