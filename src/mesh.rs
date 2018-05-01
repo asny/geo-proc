@@ -5,6 +5,7 @@ use glm;
 #[derive(Debug)]
 pub enum Error {
     FailedToFindCustomAttribute {message: String},
+    WrongSizeOfAttribute {message: String},
     Attribute(attribute::Error)
 }
 
@@ -75,6 +76,9 @@ impl Mesh
 
     pub fn add_custom_attribute(&mut self, name: &str, data: Vec<glm::Vec3>) -> Result<(), Error>
     {
+        if self.no_vertices != data.len() {
+            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
+        }
         let custom_attribute = attribute::Attribute::create_vec3_attribute(name, data)?;
         self.custom_attributes.push(custom_attribute);
         Ok(())
