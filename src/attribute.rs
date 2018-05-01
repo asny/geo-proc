@@ -14,6 +14,12 @@ pub struct Attribute {
 
 impl Attribute
 {
+    pub fn create_int_attribute(name: &str, data: &Vec<u32>) -> Result<Attribute, Error>
+    {
+        let d = data.iter().map(|i| *i as f32).collect();
+        Ok(Attribute{name: String::from(name), data: d, no_components: 1})
+    }
+
     pub fn create_vec3_attribute(name: &str, data: Vec<glm::Vec3>) -> Result<Attribute, Error>
     {
         let mut d = Vec::new();

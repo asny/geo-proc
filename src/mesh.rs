@@ -83,4 +83,14 @@ impl Mesh
         self.custom_attributes.push(custom_attribute);
         Ok(())
     }
+
+    pub fn add_custom_int_attribute(&mut self, name: &str, data: &Vec<u32>) -> Result<(), Error>
+    {
+        if self.no_vertices != data.len() {
+            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
+        }
+        let custom_attribute = attribute::Attribute::create_int_attribute(name, data)?;
+        self.custom_attributes.push(custom_attribute);
+        Ok(())
+    }
 }
