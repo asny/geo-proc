@@ -21,6 +21,7 @@ pub struct Mesh {
     pub no_faces: usize,
     pub indices: Option<Vec<u32>>,
     pub positions: attribute::Vec3Attribute,
+    int_attributes: Vec<attribute::IntAttribute>,
     vec2_attributes: Vec<attribute::Vec2Attribute>,
     vec3_attributes: Vec<attribute::Vec3Attribute>
 }
@@ -32,7 +33,7 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
-        Ok(Mesh { no_vertices, no_faces: no_vertices/3, indices: None, positions: position_attribute, vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        Ok(Mesh { no_vertices, no_faces: no_vertices/3, indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
     pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
@@ -40,7 +41,7 @@ impl Mesh
         let no_vertices = positions.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
 
-        Ok(Mesh { no_vertices, no_faces: indices.len()/3, indices: Some(indices), positions: position_attribute, vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        Ok(Mesh { no_vertices, no_faces: indices.len()/3, indices: Some(indices), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
@@ -120,15 +121,15 @@ impl Mesh
         Ok(())
     }
 
-    /*pub fn add_custom_int_attribute(&mut self, name: &str, data: &Vec<u32>) -> Result<(), Error>
+    pub fn add_custom_int_attribute(&mut self, name: &str, data: &Vec<u32>) -> Result<(), Error>
     {
         if self.no_vertices != data.len() {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
         }
-        let custom_attribute = attribute::Attribute::create_int_attribute(name, data)?;
-        self.attributes.push(custom_attribute);
+        let custom_attribute = attribute::IntAttribute::create(name, data)?;
+        self.int_attributes.push(custom_attribute);
         Ok(())
-    }*/
+    }
 
     fn position(&self, index: usize) -> glm::Vec3
     {

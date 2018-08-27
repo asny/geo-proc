@@ -16,6 +16,44 @@ pub trait Attribute
     fn data_mut(&mut self) -> &mut Vec<f32>;
 }
 
+pub struct IntAttribute {
+    name: String,
+    data: Vec<f32>
+}
+
+
+impl IntAttribute
+{
+    pub fn create(name: &str, data: &Vec<u32>) -> Result<IntAttribute, Error>
+    {
+        let d = data.iter().map(|i| *i as f32).collect();
+        Ok(IntAttribute{name: String::from(name), data: d})
+    }
+}
+
+impl Attribute for IntAttribute
+{
+    fn no_components(&self) -> usize
+    {
+        1
+    }
+
+    fn name(&self) -> &str
+    {
+        &self.name
+    }
+
+    fn data(&self) -> &Vec<f32>
+    {
+        &self.data
+    }
+
+    fn data_mut(&mut self) -> &mut Vec<f32>
+    {
+        &mut self.data
+    }
+}
+
 pub struct Vec2Attribute {
     name: String,
     data: Vec<f32>
@@ -24,12 +62,6 @@ pub struct Vec2Attribute {
 
 impl Vec2Attribute
 {
-    /*pub fn create_int_attribute(name: &str, data: &Vec<u32>) -> Result<Attribute, Error>
-    {
-        let d = data.iter().map(|i| *i as f32).collect();
-        Ok(Attribute{name: String::from(name), data: d, no_components: 1})
-    }*/
-
     pub fn create(name: &str, data: Vec<f32>) -> Result<Vec2Attribute, Error>
     {
         Ok(Vec2Attribute{name: String::from(name), data})
