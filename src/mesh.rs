@@ -131,11 +131,6 @@ impl Mesh
         Ok(())
     }
 
-    fn position(&self, index: usize) -> glm::Vec3
-    {
-        glm::vec3(self.positions.data()[3 * index], self.positions.data()[3 * index+1], self.positions.data()[3 * index+2])
-    }
-
     fn indices_of(&self, face_id: usize) -> [usize; 3]
     {
         let index0: usize;
@@ -159,9 +154,9 @@ impl Mesh
     fn normal_of(&self, face_id: usize) -> glm::Vec3
     {
         let indices = self.indices_of(face_id);
-        let p0 = self.position(indices[0]);
-        let p1 = self.position(indices[1]);
-        let p2 = self.position(indices[2]);
+        let p0 = self.positions.at(indices[0]);
+        let p1 = self.positions.at(indices[1]);
+        let p2 = self.positions.at(indices[2]);
 
         glm::normalize(glm::cross(p1 - p0, p2 - p0))
     }
