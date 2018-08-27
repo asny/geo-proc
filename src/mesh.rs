@@ -1,6 +1,7 @@
 use attribute;
 use glm;
 use std::string::String;
+use attribute::Attribute;
 
 #[derive(Debug)]
 pub enum Error {
@@ -19,8 +20,9 @@ pub struct Mesh {
     pub no_vertices: usize,
     pub no_faces: usize,
     pub indices: Option<Vec<u32>>,
-    pub positions: attribute::Attribute,
-    attributes: Vec<attribute::Attribute>
+    pub positions: attribute::Vec3Attribute,
+    vec2_attributes: Vec<attribute::Vec2Attribute>,
+    vec3_attributes: Vec<attribute::Vec3Attribute>
 }
 
 
@@ -29,21 +31,54 @@ impl Mesh
     pub fn create(positions: Vec<f32>) -> Result<Mesh, Error>
     {
         let no_vertices = positions.len()/3;
-        let position_attribute = attribute::Attribute::create_vec3_attribute("position", positions)?;
-        Ok(Mesh { no_vertices, no_faces: no_vertices/3, indices: None, positions: position_attribute, attributes: Vec::new() })
+        let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
+        Ok(Mesh { no_vertices, no_faces: no_vertices/3, indices: None, positions: position_attribute, vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
     pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
     {
         let no_vertices = positions.len()/3;
-        let position_attribute = attribute::Attribute::create_vec3_attribute("position", positions)?;
+        let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
 
-        Ok(Mesh { no_vertices, no_faces: indices.len()/3, indices: Some(indices), positions: position_attribute, attributes: Vec::new() })
+        Ok(Mesh { no_vertices, no_faces: indices.len()/3, indices: Some(indices), positions: position_attribute, vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
-    pub fn get(&self, name: &str) -> Result<&attribute::Attribute, Error>
+    pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
     {
-        for attribute in self.attributes.iter() {
+        for attribute in self.vec2_attributes.iter() {
+            if attribute.name() == name
+            {
+                return Ok(attribute)
+            }
+        }
+        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
+    }
+
+    pub fn get_vec3_attribute(&self, name: &str) -> Result<&attribute::Vec3Attribute, Error>
+    {
+        for attribute in self.vec3_attributes.iter() {
+            if attribute.name() == name
+            {
+                return Ok(attribute)
+            }
+        }
+        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
+    }
+
+    pub fn get_vec2_attribute_mut(&mut self, name: &str) -> Result<&mut attribute::Vec2Attribute, Error>
+    {
+        for attribute in self.vec2_attributes.iter_mut() {
+            if attribute.name() == name
+            {
+                return Ok(attribute)
+            }
+        }
+        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
+    }
+
+    pub fn get_vec3_attribute_mut(&mut self, name: &str) -> Result<&mut attribute::Vec3Attribute, Error>
+    {
+        for attribute in self.vec3_attributes.iter_mut() {
             if attribute.name() == name
             {
                 return Ok(attribute)
@@ -54,23 +89,15 @@ impl Mesh
 
     pub fn get_attributes(&self) -> Vec<&attribute::Attribute>
     {
-        let mut att = Vec::new();
+        let mut att : Vec<&Attribute> = Vec::new();
         att.push(&self.positions);
-        for attribute in self.attributes.iter() {
+        for attribute in self.vec2_attributes.iter() {
+            att.push(attribute);
+        }
+        for attribute in self.vec3_attributes.iter() {
             att.push(attribute);
         }
         att
-    }
-
-    pub fn get_mut(&mut self, name: &str) -> Result<&mut attribute::Attribute, Error>
-    {
-        for attribute in self.attributes.iter_mut() {
-            if attribute.name() == name
-            {
-                return Ok(attribute)
-            }
-        }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn add_custom_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
@@ -78,8 +105,8 @@ impl Mesh
         if self.no_vertices != data.len()/2 {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
         }
-        let custom_attribute = attribute::Attribute::create_vec2_attribute(name, data)?;
-        self.attributes.push(custom_attribute);
+        let custom_attribute = attribute::Vec2Attribute::create(name, data)?;
+        self.vec2_attributes.push(custom_attribute);
         Ok(())
     }
 
@@ -88,12 +115,12 @@ impl Mesh
         if self.no_vertices != data.len()/3 {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
         }
-        let custom_attribute = attribute::Attribute::create_vec3_attribute(name, data)?;
-        self.attributes.push(custom_attribute);
+        let custom_attribute = attribute::Vec3Attribute::create(name, data)?;
+        self.vec3_attributes.push(custom_attribute);
         Ok(())
     }
 
-    pub fn add_custom_int_attribute(&mut self, name: &str, data: &Vec<u32>) -> Result<(), Error>
+    /*pub fn add_custom_int_attribute(&mut self, name: &str, data: &Vec<u32>) -> Result<(), Error>
     {
         if self.no_vertices != data.len() {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
@@ -101,7 +128,7 @@ impl Mesh
         let custom_attribute = attribute::Attribute::create_int_attribute(name, data)?;
         self.attributes.push(custom_attribute);
         Ok(())
-    }
+    }*/
 
     fn position(&self, index: usize) -> glm::Vec3
     {
@@ -154,7 +181,7 @@ impl Mesh
             }
         }
         {
-            let normals_dest = self.get_mut("normal").unwrap().data_mut();
+            let normals_dest = self.get_vec3_attribute_mut("normal").unwrap().data_mut();
             for i in 0..normals.len()/3 {
                 let n = glm::normalize(glm::vec3(normals[i*3], normals[i*3+1], normals[i*3+2]));
                 normals_dest[i*3] = n[0];
@@ -162,5 +189,159 @@ impl Mesh
                 normals_dest[i*3+2] = n[2];
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_normal() {
+        let mesh = create_test_object().unwrap();
+        let normal = mesh.get_vec3_attribute("normal").unwrap().data_at(0);
+        let computed_normal = mesh.normal_of(0);
+        assert_eq!(normal.x, computed_normal.x);
+        assert_eq!(normal.y, computed_normal.y);
+        assert_eq!(normal.z, computed_normal.z);
+    }
+
+    fn create_test_object() -> Result<Mesh, Error>
+    {
+        let positions: Vec<f32> = vec![
+            1.0, 1.0, -1.0,
+            -1.0, 1.0, -1.0,
+            1.0, 1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            -1.0, 1.0, -1.0,
+
+            -1.0, -1.0, -1.0,
+            1.0, -1.0, -1.0,
+            1.0, -1.0, 1.0,
+            1.0, -1.0, 1.0,
+            -1.0, -1.0, 1.0,
+            -1.0, -1.0, -1.0,
+
+            1.0, -1.0, -1.0,
+            -1.0, -1.0, -1.0,
+            1.0, 1.0, -1.0,
+            -1.0, 1.0, -1.0,
+            1.0, 1.0, -1.0,
+            -1.0, -1.0, -1.0,
+
+            -1.0, -1.0, 1.0,
+            1.0, -1.0, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            -1.0, -1.0, 1.0,
+
+            1.0, -1.0, -1.0,
+            1.0, 1.0, -1.0,
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, -1.0, 1.0,
+            1.0, -1.0, -1.0,
+
+            -1.0, 1.0, -1.0,
+            -1.0, -1.0, -1.0,
+            -1.0, 1.0, 1.0,
+            -1.0, -1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            -1.0, -1.0, -1.0
+        ];
+        let normals: Vec<f32> = vec![
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 1.0, 0.0,
+
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+            0.0, -1.0, 0.0,
+
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+            0.0, 0.0, -1.0,
+
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0,
+
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0,
+            -1.0, 0.0, 0.0
+        ];
+
+        let uvs: Vec<f32> = vec![
+            1.0, 0.0,
+            0.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0,
+
+            1.0, 0.0,
+            0.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
+            1.0, 1.0,
+            0.0, 0.0
+        ];
+
+        let mut mesh = Mesh::create(positions)?;
+        mesh.add_custom_vec3_attribute("normal", normals)?;
+        mesh.add_custom_vec2_attribute("uv_coordinate", uvs)?;
+        Ok(mesh)
     }
 }
