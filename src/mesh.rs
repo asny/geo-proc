@@ -200,7 +200,7 @@ mod tests {
     #[test]
     fn test_normal() {
         let mesh = create_test_object().unwrap();
-        let normal = mesh.get_vec3_attribute("normal").unwrap().data_at(0);
+        let normal = mesh.get_vec3_attribute("normal").unwrap().at(0);
         let computed_normal = mesh.normal_of(0);
         assert_eq!(normal.x, computed_normal.x);
         assert_eq!(normal.y, computed_normal.y);

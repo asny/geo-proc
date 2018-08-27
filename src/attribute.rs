@@ -29,6 +29,11 @@ impl IntAttribute
         let d = data.iter().map(|i| *i as f32).collect();
         Ok(IntAttribute{name: String::from(name), data: d})
     }
+
+    pub fn at(&self, vertex_id: usize) -> u32
+    {
+        self.data[vertex_id] as u32
+    }
 }
 
 impl Attribute for IntAttribute
@@ -65,6 +70,11 @@ impl Vec2Attribute
     pub fn create(name: &str, data: Vec<f32>) -> Result<Vec2Attribute, Error>
     {
         Ok(Vec2Attribute{name: String::from(name), data})
+    }
+
+    pub fn at(&self, vertex_id: usize) -> Vec2
+    {
+        vec2(self.data[vertex_id * 2], self.data[vertex_id * 2 + 1])
     }
 }
 
@@ -104,7 +114,7 @@ impl Vec3Attribute
         Ok(Vec3Attribute{name: String::from(name), data})
     }
 
-    pub fn data_at(&self, vertex_id: usize) -> Vec3
+    pub fn at(&self, vertex_id: usize) -> Vec3
     {
         vec3(self.data[vertex_id * 3], self.data[vertex_id * 3 + 1], self.data[vertex_id * 3 + 2])
     }
