@@ -163,7 +163,6 @@ impl Mesh
 
     pub fn compute_normals(&mut self)
     {
-        //let normals = self.get_mut("normal").unwrap();
         let mut normals = vec![0.0; 3 * self.no_vertices];
         {
             for face_id in 0..self.no_faces {
