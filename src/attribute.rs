@@ -34,6 +34,10 @@ impl IntAttribute
     {
         self.data[vertex_id] as u32
     }
+
+    pub fn set(&mut self, vertex_id: usize, value: u32) {
+        self.data[vertex_id] = value as f32;
+    }
 }
 
 impl Attribute for IntAttribute
@@ -76,6 +80,13 @@ impl Vec2Attribute
     {
         vec2(self.data[vertex_id * 2], self.data[vertex_id * 2 + 1])
     }
+
+    pub fn set(&mut self, vertex_id: usize, value: Vec2) {
+        let no_components = self.no_components();
+        for i in 0..no_components {
+            self.data[vertex_id * no_components] = value[i];
+        }
+    }
 }
 
 impl Attribute for Vec2Attribute
@@ -117,6 +128,13 @@ impl Vec3Attribute
     pub fn at(&self, vertex_id: usize) -> Vec3
     {
         vec3(self.data[vertex_id * 3], self.data[vertex_id * 3 + 1], self.data[vertex_id * 3 + 2])
+    }
+
+    pub fn set(&mut self, vertex_id: usize, value: Vec3) {
+        let no_components = self.no_components();
+        for i in 0..no_components {
+            self.data[vertex_id * no_components] = value[i];
+        }
     }
 }
 

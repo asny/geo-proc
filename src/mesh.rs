@@ -177,12 +177,11 @@ impl Mesh
             }
         }
         {
-            let normals_dest = self.get_vec3_attribute_mut("normal").unwrap().data_mut();
+            let normals_dest = self.get_vec3_attribute_mut("normal").unwrap();
+
             for i in 0..normals.len()/3 {
                 let n = glm::normalize(glm::vec3(normals[i*3], normals[i*3+1], normals[i*3+2]));
-                normals_dest[i*3] = n[0];
-                normals_dest[i*3+1] = n[1];
-                normals_dest[i*3+2] = n[2];
+                normals_dest.set(i, n);
             }
         }
     }
