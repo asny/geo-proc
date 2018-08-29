@@ -3,15 +3,6 @@ use std::cell::{RefCell, Ref};
 use std::ops::{Deref,DerefMut};
 use std::borrow::{Borrow, BorrowMut};
 
-pub trait VertexWalker {
-    fn halfedge(&mut self) -> Walker;
-}
-
-pub trait HalfEdgeWalker {
-    fn vertex(&mut self) -> Walker;
-    fn deref(&self) -> HalfEdge;
-}
-
 pub struct Walker {
     current: usize,
     vertices: Rc<RefCell<Vec<Vertex>>>,
@@ -38,7 +29,29 @@ impl Walker {
         &self
     }
 
+    pub fn halfedge(&mut self) -> HalfEdgeWalker
+    {
+        let halfedge = self.current_vertex().halfedge;
+        self.current = halfedge;
+        HalfEdgeWalker { walker: self.clone() }
+    }
 
+    pub fn vertex(&mut self) -> VertexWalker
+    {
+        let vertex = self.current_halfedge().vertex;
+        self.current = vertex;
+        VertexWalker { walker: self.clone() }
+    }
+
+    pub fn current_vertex(&self) -> Vertex
+    {
+        RefCell::borrow(&self.vertices)[self.current].clone()
+    }
+
+    pub fn current_halfedge(&self) -> HalfEdge
+    {
+        RefCell::borrow(&self.halfedges)[self.current].clone()
+    }
 
 }
 
@@ -48,7 +61,41 @@ impl Clone for Walker {
   }
 }
 
-impl VertexWalker for Walker {
+pub struct VertexWalker
+{
+    walker: Walker
+}
+
+impl VertexWalker {
+    pub fn halfedge(&mut self) -> HalfEdgeWalker
+    {
+        self.walker.halfedge()
+    }
+
+    pub fn deref(&self) -> Vertex
+    {
+        self.walker.current_vertex()
+    }
+}
+
+pub struct HalfEdgeWalker
+{
+    walker: Walker
+}
+
+impl HalfEdgeWalker {
+    pub fn vertex(&mut self) -> VertexWalker
+    {
+        self.walker.vertex()
+    }
+
+    pub fn deref(&self) -> HalfEdge
+    {
+        self.walker.current_halfedge()
+    }
+}
+
+/*impl VertexWalker for Walker {
     fn halfedge(&mut self) -> Walker
     {
         let vertex = &RefCell::borrow(&self.vertices)[self.current];
@@ -59,11 +106,11 @@ impl VertexWalker for Walker {
 }
 
 impl HalfEdgeWalker for Walker {
-    fn vertex(&mut self) -> Walker
+    fn vertex(&mut self) -> Box<VertexWalker>
     {
         let halfedge = &RefCell::borrow(&self.halfedges)[self.current];
         self.current = halfedge.vertex;
-        self.clone()
+        Box::new(self.clone())
     }
 
     fn deref(&self) -> HalfEdge
@@ -71,7 +118,7 @@ impl HalfEdgeWalker for Walker {
         RefCell::borrow(&self.halfedges)[self.current].clone()
     }
 
-}
+}*/
 
 #[derive(Debug)]
 pub struct Vertex {
