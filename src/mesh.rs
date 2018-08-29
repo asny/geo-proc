@@ -2,6 +2,10 @@ use attribute;
 use glm;
 use std::string::String;
 use attribute::Attribute;
+use traversal::*;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::borrow::Borrow;
 
 #[derive(Debug)]
 pub enum Error {
@@ -23,7 +27,10 @@ pub struct Mesh {
     pub positions: attribute::Vec3Attribute,
     int_attributes: Vec<attribute::IntAttribute>,
     vec2_attributes: Vec<attribute::Vec2Attribute>,
-    vec3_attributes: Vec<attribute::Vec3Attribute>
+    vec3_attributes: Vec<attribute::Vec3Attribute>,
+    vertices: Rc<RefCell<Vec<Vertex>>>,
+    halfedges: Rc<RefCell<Vec<HalfEdge>>>,
+    faces: Rc<RefCell<Vec<Face>>>
 }
 
 
@@ -33,7 +40,7 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
-        Ok(Mesh { no_vertices, no_faces: no_vertices/3, indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        Ok(Mesh { no_vertices, no_faces: no_vertices/3, vertices: Rc::new(RefCell::new(Vec::new())), halfedges: Rc::new(RefCell::new(Vec::new())), faces: Rc::new(RefCell::new(Vec::new())), indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
     pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
@@ -41,8 +48,83 @@ impl Mesh
         let no_vertices = positions.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
 
-        Ok(Mesh { no_vertices, no_faces: indices.len()/3, indices: Some(indices), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        Ok(Mesh { no_vertices, no_faces: indices.len()/3, vertices: Rc::new(RefCell::new(Vec::new())), halfedges: Rc::new(RefCell::new(Vec::new())), faces: Rc::new(RefCell::new(Vec::new())), indices: Some(indices), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
+
+    /*fn create_connections(&mut self, indices: Vec<u32>, no_vertices: usize)
+    {
+        for vertex_id in 0..no_vertices {
+            {
+                self.create_vertex();
+            }
+            {
+                self.create_halfedge();
+
+            }
+        }
+    }*/
+
+    fn create_vertex(&mut self) -> Vertex
+    {
+        let mut vec = &mut *RefCell::borrow_mut(&self.vertices);
+        let vertex = Vertex {id: vec.len(), halfedge: 0 };
+        vec.push(vertex.clone());
+        vertex
+    }
+
+    fn create_halfedge(&mut self, vertex: usize) -> HalfEdge
+    {
+        let mut halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+        let halfedge = HalfEdge {id: halfedges.len(), vertex };
+        halfedges.push(halfedge.clone());
+
+        RefCell::borrow_mut(&self.vertices)[vertex].halfedge = halfedge.id;
+
+        println!("{:?}", *self.vertices.borrow_mut());
+        halfedge
+    }
+
+    fn create_face(&mut self, halfedge: usize) -> Face
+    {
+        let mut vec = RefCell::borrow_mut(&self.faces);
+        let face = Face {id: vec.len(), halfedge };
+        vec.push(face.clone());
+        face
+    }
+
+    fn create_vertex_walker(&self, id: usize) -> Walker
+    {
+        Walker::new_vertex_walker(id, self.vertices.clone(), self.halfedges.clone(), self.faces.clone())
+    }
+
+    /*pub fn create_attached_face(&mut self) -> Ptr<Face>
+    {
+        let mut v1 = self.create_vertex();
+        let mut v2 = self.create_vertex();
+        let mut v3 = self.create_vertex();
+
+        let halfedge1 = self.create_halfedge(&v1);
+        let halfedge2 = self.create_halfedge(&v2);
+        let halfedge3 = self.create_halfedge(&v3);
+
+        let mut face = self.create_face(&halfedge1);
+
+        /*v1.attach_halfedge(&halfedge1);
+        v2.attach_halfedge(&halfedge2);
+        v3.attach_halfedge(&halfedge3);*/
+
+        //v1.halfedge();
+
+
+        face.attach_halfedge(&halfedge1);
+
+        face
+    }*/
+
+    /*fn next_vertex(&self, vertex: &Ptr<Vertex>) -> Ptr<Vertex>
+    {
+        vertex.halfedge().vertex().clone()
+    }*/
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
     {
@@ -189,6 +271,44 @@ impl Mesh
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_walk() {
+        let positions: Vec<f32> = vec![
+            1.0, 1.0, -1.0,
+            -1.0, 1.0, -1.0,
+            1.0, 1.0, 1.0];
+        let mut mesh = Mesh::create(positions).unwrap();
+        //let face = mesh.create_attached_face();
+
+        let mut v1 = mesh.create_vertex();
+        let mut v2 = mesh.create_vertex();
+        let mut v3 = mesh.create_vertex();
+        let mut e1 = mesh.create_halfedge(v2.id);
+        let mut e2 = mesh.create_halfedge(v3.id);
+        let mut e3 = mesh.create_halfedge(v1.id);
+        println!("{:?}", v1);
+        println!("{:?}", v2);
+        println!("{:?}", v3);
+        println!("{:?}", e1);
+        println!("{:?}", e2);
+        println!("{:?}", e3);
+
+        let mut walker = mesh.create_vertex_walker(0);
+        let halfedge = walker.halfedge().deref();
+        println!("{:?}", halfedge);
+        let mut walker2 = mesh.create_vertex_walker(0);
+        let vertex = walker2.halfedge().vertex().deref();
+        println!("{:?}", vertex);
+
+        //let v2 = RefCell::borrow(&v1);
+        //let halfedge = v2.halfedge();
+        //let test_vertex = halfedge.deref().vertex();
+        //let halfedge = face.halfedge();
+
+
+        //assert!(halfedge.is_valid());
+    }
 
     #[test]
     fn test_normal() {

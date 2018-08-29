@@ -6,4 +6,4 @@ pub mod attribute;
 pub mod loader;
 pub mod mesh;
 pub mod models;
-pub mod ids;
+pub mod traversal;
