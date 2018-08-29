@@ -10,21 +10,25 @@ struct Walker {
 }
 
 impl Walker {
-    pub fn new(vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> Walker
+    fn new(vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> Walker
     {
         Walker { vertices, halfedges, faces }
     }
 
-    pub fn vertex_at(&self, vertex_id: usize) -> Vertex
+    fn vertex_at(&self, vertex_id: &VertexID) -> Vertex
     {
-        RefCell::borrow(&self.vertices)[vertex_id].clone()
+        RefCell::borrow(&self.vertices)[vertex_id.val()].clone()
     }
 
-    pub fn halfedge_at(&self, halfedge_id: usize) -> HalfEdge
+    fn halfedge_at(&self, halfedge_id: &HalfEdgeID) -> HalfEdge
     {
-        RefCell::borrow(&self.halfedges)[halfedge_id].clone()
+        RefCell::borrow(&self.halfedges)[halfedge_id.val()].clone()
     }
 
+    fn face_at(&self, face_id: usize) -> Face
+    {
+        RefCell::borrow(&self.faces)[face_id].clone()
+    }
 }
 
 impl Clone for Walker {
@@ -41,7 +45,7 @@ pub struct VertexWalker
 
 impl VertexWalker
 {
-    pub fn new(vertex_id: usize, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> VertexWalker
+    pub fn new(vertex_id: &VertexID, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> VertexWalker
     {
         let walker = Walker::new(vertices, halfedges, faces);
         let current = walker.vertex_at(vertex_id);
@@ -50,13 +54,13 @@ impl VertexWalker
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
-        let halfedge = self.current.halfedge;
+        let halfedge = &self.current.halfedge;
         HalfEdgeWalker { current: self.walker.halfedge_at(halfedge), walker: self.walker.clone() }
     }
 
-    pub fn deref(&self) -> Vertex
+    pub fn deref(&self) -> VertexID
     {
-        self.current.clone()
+        self.current.id.clone()
     }
 }
 
@@ -68,149 +72,129 @@ pub struct HalfEdgeWalker
 
 impl HalfEdgeWalker
 {
-    pub fn new(halfedge: &HalfEdge, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> HalfEdgeWalker
+    pub fn new(halfedge_id: &HalfEdgeID, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> HalfEdgeWalker
     {
-        HalfEdgeWalker {current: halfedge.clone(), walker: Walker::new(vertices, halfedges, faces)}
+        let walker = Walker::new(vertices, halfedges, faces);
+        let current = walker.halfedge_at(halfedge_id);
+        HalfEdgeWalker {current, walker}
     }
 
     pub fn vertex(&mut self) -> VertexWalker
     {
-        let vertex = self.current.vertex;
+        let vertex = &self.current.vertex;
         VertexWalker { current: self.walker.vertex_at(vertex), walker: self.walker.clone() }
     }
 
-    pub fn deref(&self) -> HalfEdge
+    pub fn deref(&self) -> HalfEdgeID
     {
-        self.current.clone()
+        self.current.id.clone()
     }
 }
-
-/*impl VertexWalker for Walker {
-    fn halfedge(&mut self) -> Walker
-    {
-        let vertex = &RefCell::borrow(&self.vertices)[self.current];
-        self.current = vertex.halfedge;
-        self.clone()
-    }
-
-}
-
-impl HalfEdgeWalker for Walker {
-    fn vertex(&mut self) -> Box<VertexWalker>
-    {
-        let halfedge = &RefCell::borrow(&self.halfedges)[self.current];
-        self.current = halfedge.vertex;
-        Box::new(self.clone())
-    }
-
-    fn deref(&self) -> HalfEdge
-    {
-        RefCell::borrow(&self.halfedges)[self.current].clone()
-    }
-
-}*/
 
 #[derive(Debug)]
 pub struct Vertex {
-    pub id: usize,
-    pub halfedge: usize
+    pub id: VertexID,
+    pub halfedge: HalfEdgeID
 }
 
 impl Clone for Vertex {
   fn clone(& self) -> Self {
-    Vertex { id: self.id, halfedge: self.halfedge }
+    Vertex { id: self.id.clone(), halfedge: self.halfedge.clone() }
   }
 }
 
-/*impl Vertex
-{
-    pub fn create(id: usize) -> Vertex
-    {
-        Vertex {id, halfedge: 0}
-    }
-
-    pub fn id(&self) -> usize
-    {
-        self.id
-    }
-
-    pub fn halfedge(&self) -> usize
-    {
-        self.halfedge
-    }
-
-    pub fn attach_halfedge(&mut self, halfedge: usize)
-    {
-        self.halfedge = halfedge;
-    }
-
-    pub fn detach_halfedge(&mut self)
-    {
-        self.halfedge = 0;
-    }
-}*/
-
 #[derive(Debug)]
 pub struct HalfEdge {
-    pub id: usize,
-    pub vertex: usize
+    pub id: HalfEdgeID,
+    pub vertex: VertexID
 }
 
 impl Clone for HalfEdge {
   fn clone(& self) -> Self {
-    HalfEdge { id: self.id, vertex: self.vertex }
+    HalfEdge { id: self.id.clone(), vertex: self.vertex.clone() }
   }
 }
 
-/*impl HalfEdge
-{
-    pub fn create(id: usize, vertex: usize) -> HalfEdge
-    {
-        HalfEdge {id, vertex}
-    }
-
-    pub fn id(&self) -> usize
-    {
-        self.id
-    }
-
-    pub fn vertex(&self) -> usize
-    {
-        self.vertex
-    }
-}*/
-
 #[derive(Debug)]
 pub struct Face {
-    pub id: usize,
-    pub halfedge: usize
+    pub id: FaceID,
+    pub halfedge: HalfEdgeID
 }
 
 impl Clone for Face {
   fn clone(& self) -> Self {
-    Face { id: self.id, halfedge: self.halfedge }
+    Face { id: self.id.clone(), halfedge: self.halfedge.clone() }
   }
 }
 
-/*impl Face
+#[derive(Debug)]
+pub struct VertexID
 {
-    pub fn create(id: usize, halfedge: usize) -> Face
+    val: usize
+}
+
+impl VertexID {
+    pub fn new(val: usize) -> VertexID
     {
-        Face {id, halfedge}
+        VertexID {val}
     }
 
-    pub fn id(&self) -> usize
+    pub fn val(&self) -> usize
     {
-        self.id
+        self.val
+    }
+}
+
+impl Clone for VertexID {
+  fn clone(& self) -> Self {
+    VertexID { val: self.val }
+  }
+}
+
+#[derive(Debug)]
+pub struct HalfEdgeID
+{
+    val: usize
+}
+
+impl HalfEdgeID {
+    pub fn new(val: usize) -> HalfEdgeID
+    {
+        HalfEdgeID {val}
     }
 
-    pub fn halfedge(&self) -> usize
+    pub fn val(&self) -> usize
     {
-        self.halfedge
+        self.val
+    }
+}
+
+impl Clone for HalfEdgeID {
+  fn clone(& self) -> Self {
+    HalfEdgeID { val: self.val }
+  }
+}
+
+#[derive(Debug)]
+pub struct FaceID
+{
+    val: usize
+}
+
+impl FaceID {
+    pub fn new(val: usize) -> FaceID
+    {
+        FaceID {val}
     }
 
-    pub fn attach_halfedge(&mut self, halfedge: usize)
+    pub fn val(&self) -> usize
     {
-        self.halfedge = halfedge;
+        self.val
     }
-}*/
+}
+
+impl Clone for FaceID {
+  fn clone(& self) -> Self {
+    FaceID { val: self.val }
+  }
+}

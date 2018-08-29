@@ -64,35 +64,37 @@ impl Mesh
         }
     }*/
 
-    fn create_vertex(&mut self) -> Vertex
+    fn create_vertex(&mut self) -> VertexID
     {
         let mut vec = &mut *RefCell::borrow_mut(&self.vertices);
-        let vertex = Vertex {id: vec.len(), halfedge: 0 };
-        vec.push(vertex.clone());
-        vertex
+        let id = VertexID::new(vec.len());
+        let vertex = Vertex {id: id.clone(), halfedge: HalfEdgeID::new(0) };
+        vec.push(vertex);
+        id
     }
 
-    fn create_halfedge(&mut self, vertex: usize) -> HalfEdge
+    fn create_halfedge(&mut self, vertex_id: &VertexID) -> HalfEdgeID
     {
         let mut halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
-        let halfedge = HalfEdge {id: halfedges.len(), vertex };
-        halfedges.push(halfedge.clone());
+        let id = HalfEdgeID::new(halfedges.len());
+        halfedges.push(HalfEdge {id: id.clone(), vertex: vertex_id.clone() });
 
-        RefCell::borrow_mut(&self.vertices)[vertex].halfedge = halfedge.id;
+        RefCell::borrow_mut(&self.vertices)[vertex_id.val()].halfedge = id.clone();
 
         println!("{:?}", *self.vertices.borrow_mut());
-        halfedge
+        id
     }
 
-    fn create_face(&mut self, halfedge: usize) -> Face
+    fn create_face(&mut self, halfedge_id: &HalfEdgeID) -> FaceID
     {
         let mut vec = RefCell::borrow_mut(&self.faces);
-        let face = Face {id: vec.len(), halfedge };
-        vec.push(face.clone());
-        face
+        let id = FaceID::new(vec.len());
+        let face = Face {id: id.clone(), halfedge: halfedge_id.clone() };
+        vec.push(face);
+        id
     }
 
-    fn create_vertex_walker(&self, vertex_id: usize) -> VertexWalker
+    fn create_vertex_walker(&self, vertex_id: &VertexID) -> VertexWalker
     {
         VertexWalker::new(vertex_id, self.vertices.clone(), self.halfedges.clone(), self.faces.clone())
     }
@@ -284,9 +286,9 @@ mod tests {
         let mut v1 = mesh.create_vertex();
         let mut v2 = mesh.create_vertex();
         let mut v3 = mesh.create_vertex();
-        let mut e1 = mesh.create_halfedge(v2.id);
-        let mut e2 = mesh.create_halfedge(v3.id);
-        let mut e3 = mesh.create_halfedge(v1.id);
+        let mut e1 = mesh.create_halfedge(&v2);
+        let mut e2 = mesh.create_halfedge(&v3);
+        let mut e3 = mesh.create_halfedge(&v1);
         println!("{:?}", v1);
         println!("{:?}", v2);
         println!("{:?}", v3);
@@ -294,11 +296,10 @@ mod tests {
         println!("{:?}", e2);
         println!("{:?}", e3);
 
-        let mut walker = mesh.create_vertex_walker(v1.id);
+        let mut walker = mesh.create_vertex_walker(&v1);
         let halfedge = walker.halfedge().deref();
         println!("{:?}", halfedge);
-        let mut walker2 = mesh.create_vertex_walker(v1.id);
-        let vertex = walker2.halfedge().vertex().deref();
+        let vertex = mesh.create_vertex_walker(&v1).halfedge().vertex().deref();
         println!("{:?}", vertex);
 
         //let v2 = RefCell::borrow(&v1);
