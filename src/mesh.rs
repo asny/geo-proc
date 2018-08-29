@@ -92,9 +92,9 @@ impl Mesh
         face
     }
 
-    fn create_vertex_walker(&self, vertex: &Vertex) -> VertexWalker
+    fn create_vertex_walker(&self, vertex_id: usize) -> VertexWalker
     {
-        VertexWalker::new(vertex, self.vertices.clone(), self.halfedges.clone(), self.faces.clone())
+        VertexWalker::new(vertex_id, self.vertices.clone(), self.halfedges.clone(), self.faces.clone())
     }
 
     /*pub fn create_attached_face(&mut self) -> Ptr<Face>
@@ -294,10 +294,10 @@ mod tests {
         println!("{:?}", e2);
         println!("{:?}", e3);
 
-        let mut walker = mesh.create_vertex_walker(&v1);
+        let mut walker = mesh.create_vertex_walker(v1.id);
         let halfedge = walker.halfedge().deref();
         println!("{:?}", halfedge);
-        let mut walker2 = mesh.create_vertex_walker(&v1);
+        let mut walker2 = mesh.create_vertex_walker(v1.id);
         let vertex = walker2.halfedge().vertex().deref();
         println!("{:?}", vertex);
 
