@@ -4,7 +4,6 @@ use std::ops::{Deref,DerefMut};
 use std::borrow::{Borrow, BorrowMut};
 
 pub struct Walker {
-    current: usize,
     vertices: Rc<RefCell<Vec<Vertex>>>,
     halfedges: Rc<RefCell<Vec<HalfEdge>>>,
     faces: Rc<RefCell<Vec<Face>>>
@@ -13,14 +12,7 @@ pub struct Walker {
 impl Walker {
     pub fn new(vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> Walker
     {
-        Walker { current: 0, vertices, halfedges, faces }
-    }
-
-    pub fn new_vertex_walker(id: usize, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> Walker
-    {
-        let walker = Walker { current: id, vertices, halfedges, faces };
-
-        walker
+        Walker { vertices, halfedges, faces }
     }
 
     pub fn next_vertex(&self) -> &Self
@@ -29,69 +21,71 @@ impl Walker {
         &self
     }
 
-    pub fn halfedge(&mut self) -> HalfEdgeWalker
+    pub fn vertex_at(&self, vertex_id: usize) -> Vertex
     {
-        let halfedge = self.current_vertex().halfedge;
-        self.current = halfedge;
-        HalfEdgeWalker { walker: self.clone() }
+        RefCell::borrow(&self.vertices)[vertex_id].clone()
     }
 
-    pub fn vertex(&mut self) -> VertexWalker
+    pub fn halfedge_at(&self, halfedge_id: usize) -> HalfEdge
     {
-        let vertex = self.current_halfedge().vertex;
-        self.current = vertex;
-        VertexWalker { walker: self.clone() }
-    }
-
-    pub fn current_vertex(&self) -> Vertex
-    {
-        RefCell::borrow(&self.vertices)[self.current].clone()
-    }
-
-    pub fn current_halfedge(&self) -> HalfEdge
-    {
-        RefCell::borrow(&self.halfedges)[self.current].clone()
+        RefCell::borrow(&self.halfedges)[halfedge_id].clone()
     }
 
 }
 
 impl Clone for Walker {
   fn clone(& self) -> Self {
-    Walker { current: self.current, vertices: self.vertices.clone(), halfedges: self.halfedges.clone(), faces: self.faces.clone() }
+    Walker { vertices: self.vertices.clone(), halfedges: self.halfedges.clone(), faces: self.faces.clone() }
   }
 }
 
 pub struct VertexWalker
 {
-    walker: Walker
+    walker: Walker,
+    current: Vertex
 }
 
-impl VertexWalker {
-    pub fn halfedge(&mut self) -> HalfEdgeWalker
+impl VertexWalker
+{
+    pub fn new(vertex: &Vertex, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> VertexWalker
     {
-        self.walker.halfedge()
+        VertexWalker {current: vertex.clone(), walker: Walker::new(vertices, halfedges, faces)}
+    }
+
+    pub fn halfedge(&self) -> HalfEdgeWalker
+    {
+        let halfedge = self.current.halfedge;
+        HalfEdgeWalker { current: self.walker.halfedge_at(halfedge), walker: self.walker.clone() }
     }
 
     pub fn deref(&self) -> Vertex
     {
-        self.walker.current_vertex()
+        self.current.clone()
     }
 }
 
 pub struct HalfEdgeWalker
 {
-    walker: Walker
+    walker: Walker,
+    current: HalfEdge
 }
 
-impl HalfEdgeWalker {
+impl HalfEdgeWalker
+{
+    pub fn new(halfedge: &HalfEdge, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> HalfEdgeWalker
+    {
+        HalfEdgeWalker {current: halfedge.clone(), walker: Walker::new(vertices, halfedges, faces)}
+    }
+
     pub fn vertex(&mut self) -> VertexWalker
     {
-        self.walker.vertex()
+        let vertex = self.current.vertex;
+        VertexWalker { current: self.walker.vertex_at(vertex), walker: self.walker.clone() }
     }
 
     pub fn deref(&self) -> HalfEdge
     {
-        self.walker.current_halfedge()
+        self.current.clone()
     }
 }
 
