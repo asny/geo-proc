@@ -1,7 +1,5 @@
-use std::rc::{Weak, Rc};
-use std::cell::{RefCell, Ref};
-use std::ops::{Deref,DerefMut};
-use std::borrow::{Borrow, BorrowMut};
+use std::rc::{Rc};
+use std::cell::{RefCell};
 
 pub struct ConnectivityInfo {
     vertices: RefCell<Vec<Vertex>>,
@@ -20,7 +18,7 @@ impl ConnectivityInfo {
 
     pub fn create_vertex(&self) -> VertexID
     {
-        let mut vec = &mut *RefCell::borrow_mut(&self.vertices);
+        let vec = &mut *RefCell::borrow_mut(&self.vertices);
         let id = VertexID::new(vec.len());
         vec.push(Vertex { halfedge: HalfEdgeID::null() });
         id
@@ -28,7 +26,7 @@ impl ConnectivityInfo {
 
     pub fn create_halfedge(&self) -> HalfEdgeID
     {
-        let mut halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+        let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
         let id = HalfEdgeID::new(halfedges.len());
         halfedges.push(HalfEdge { vertex: VertexID::null(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: FaceID::null() });
         id
@@ -83,9 +81,9 @@ impl ConnectivityInfo {
         RefCell::borrow(&self.halfedges)[halfedge_id.val()].clone()
     }
 
-    fn face_at(&self, face_id: usize) -> Face
+    fn face_at(&self, face_id: &FaceID) -> Face
     {
-        RefCell::borrow(&self.faces)[face_id].clone()
+        RefCell::borrow(&self.faces)[face_id.val()].clone()
     }
 }
 
@@ -145,7 +143,38 @@ impl HalfEdgeWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
+    pub fn face(&mut self) -> FaceWalker
+    {
+        let id = self.connectivity_info.halfedge_at(&self.current).face.clone();
+        FaceWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+    }
+
     pub fn deref(&self) -> HalfEdgeID
+    {
+        self.current.clone()
+    }
+}
+
+pub struct FaceWalker
+{
+    connectivity_info: Rc<ConnectivityInfo>,
+    current: FaceID
+}
+
+impl FaceWalker
+{
+    pub fn new(current: FaceID, connectivity_info: Rc<ConnectivityInfo>) -> FaceWalker
+    {
+        FaceWalker {current, connectivity_info}
+    }
+
+    pub fn halfedge(&self) -> HalfEdgeWalker
+    {
+        let id = self.connectivity_info.face_at(&self.current).halfedge.clone();
+        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+    }
+
+    pub fn deref(&self) -> FaceID
     {
         self.current.clone()
     }

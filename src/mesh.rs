@@ -4,8 +4,6 @@ use std::string::String;
 use attribute::Attribute;
 use traversal::*;
 use std::rc::Rc;
-use std::cell::RefCell;
-use std::borrow::Borrow;
 
 #[derive(Debug)]
 pub enum Error {
@@ -107,9 +105,19 @@ impl Mesh
         id
     }
 
-    fn vertex_walker(&self, vertex_id: &VertexID) -> VertexWalker
+    pub fn vertex_walker(&self, vertex_id: &VertexID) -> VertexWalker
     {
         VertexWalker::new(vertex_id.clone(), self.connectivity_info.clone())
+    }
+
+    pub fn halfedge_walker(&self, halfedge_id: &HalfEdgeID) -> HalfEdgeWalker
+    {
+        HalfEdgeWalker::new(halfedge_id.clone(), self.connectivity_info.clone())
+    }
+
+    pub fn face_walker(&self, face_id: &FaceID) -> FaceWalker
+    {
+        FaceWalker::new(face_id.clone(), self.connectivity_info.clone())
     }
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
@@ -283,16 +291,11 @@ mod tests {
         let t2 = mesh.vertex_walker(&v1).halfedge().twin().deref();
         assert_eq!(t2.val(), 5);
 
-        let t2 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().deref();
-        assert_eq!(t2.val(), v2.val());
+        let t3 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().deref();
+        assert_eq!(t3.val(), v2.val());
 
-        //let v2 = RefCell::borrow(&v1);
-        //let halfedge = v2.halfedge();
-        //let test_vertex = halfedge.deref().vertex();
-        //let halfedge = face.halfedge();
-
-
-        //assert!(halfedge.is_valid());
+        let t4 = mesh.face_walker(&f1).halfedge().twin().twin().vertex().halfedge().face().deref();
+        assert_eq!(t4.val(), f1.val());
     }
 
     #[test]
