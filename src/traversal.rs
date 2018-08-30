@@ -13,9 +13,6 @@ impl ConnectivityInfo {
         ConnectivityInfo { vertices: RefCell::new(Vec::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()) }
     }
 
-    //TODO: Direct access instead of cloning
-    //TODO: Mutable access
-
     pub fn create_vertex(&self) -> VertexID
     {
         let vec = &mut *RefCell::borrow_mut(&self.vertices);
@@ -71,19 +68,34 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.faces)[id.val()].halfedge = val.clone();
     }
 
-    fn vertex_at(&self, vertex_id: &VertexID) -> Vertex
+    fn vertex_halfedge(&self, vertex_id: &VertexID) -> HalfEdgeID
     {
-        RefCell::borrow(&self.vertices)[vertex_id.val()].clone()
+        RefCell::borrow(&self.vertices)[vertex_id.val()].halfedge.clone()
     }
 
-    fn halfedge_at(&self, halfedge_id: &HalfEdgeID) -> HalfEdge
+    fn halfedge_vertex(&self, halfedge_id: &HalfEdgeID) -> VertexID
     {
-        RefCell::borrow(&self.halfedges)[halfedge_id.val()].clone()
+        RefCell::borrow(&self.halfedges)[halfedge_id.val()].vertex.clone()
     }
 
-    fn face_at(&self, face_id: &FaceID) -> Face
+    fn halfedge_twin(&self, halfedge_id: &HalfEdgeID) -> HalfEdgeID
     {
-        RefCell::borrow(&self.faces)[face_id.val()].clone()
+        RefCell::borrow(&self.halfedges)[halfedge_id.val()].twin.clone()
+    }
+
+    fn halfedge_next(&self, halfedge_id: &HalfEdgeID) -> HalfEdgeID
+    {
+        RefCell::borrow(&self.halfedges)[halfedge_id.val()].next.clone()
+    }
+
+    fn halfedge_face(&self, halfedge_id: &HalfEdgeID) -> FaceID
+    {
+        RefCell::borrow(&self.halfedges)[halfedge_id.val()].face.clone()
+    }
+
+    fn face_halfedge(&self, face_id: &FaceID) -> HalfEdgeID
+    {
+        RefCell::borrow(&self.faces)[face_id.val()].halfedge.clone()
     }
 }
 
@@ -102,7 +114,7 @@ impl VertexWalker
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
-        let id = self.connectivity_info.vertex_at(&self.current).halfedge.clone();
+        let id = self.connectivity_info.vertex_halfedge(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
@@ -127,25 +139,25 @@ impl HalfEdgeWalker
 
     pub fn vertex(&mut self) -> VertexWalker
     {
-        let id = self.connectivity_info.halfedge_at(&self.current).vertex.clone();
+        let id = self.connectivity_info.halfedge_vertex(&self.current);
         VertexWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn twin(&mut self) -> HalfEdgeWalker
     {
-        let id = self.connectivity_info.halfedge_at(&self.current).twin.clone();
+        let id = self.connectivity_info.halfedge_twin(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn next(&mut self) -> HalfEdgeWalker
     {
-        let id = self.connectivity_info.halfedge_at(&self.current).next.clone();
+        let id = self.connectivity_info.halfedge_next(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn face(&mut self) -> FaceWalker
     {
-        let id = self.connectivity_info.halfedge_at(&self.current).face.clone();
+        let id = self.connectivity_info.halfedge_face(&self.current);
         FaceWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
@@ -170,7 +182,7 @@ impl FaceWalker
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
-        let id = self.connectivity_info.face_at(&self.current).halfedge.clone();
+        let id = self.connectivity_info.face_halfedge(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
