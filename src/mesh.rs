@@ -110,7 +110,7 @@ impl Mesh
         id
     }
 
-    fn create_vertex_walker(&self, vertex_id: &VertexID) -> VertexWalker
+    fn vertex_walker(&self, vertex_id: &VertexID) -> VertexWalker
     {
         VertexWalker::new(vertex_id, self.vertices.clone(), self.halfedges.clone(), self.faces.clone())
     }
@@ -280,13 +280,13 @@ mod tests {
 
         // TODO: Test position attribute
 
-        let t1 = mesh.create_vertex_walker(&v1).halfedge().deref();
+        let t1 = mesh.vertex_walker(&v1).halfedge().deref();
         assert_eq!(t1.val(), 0);
 
-        let t2 = mesh.create_vertex_walker(&v1).halfedge().twin().deref();
+        let t2 = mesh.vertex_walker(&v1).halfedge().twin().deref();
         assert_eq!(t2.val(), 5);
 
-        let t2 = mesh.create_vertex_walker(&v2).halfedge().next().next().vertex().deref();
+        let t2 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().deref();
         assert_eq!(t2.val(), v2.val());
 
         //let v2 = RefCell::borrow(&v1);
