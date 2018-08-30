@@ -53,8 +53,8 @@ impl VertexWalker
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
-        let halfedge = self.walker.vertex_at(&self.current).halfedge.clone();
-        HalfEdgeWalker { current: halfedge, walker: self.walker.clone() }
+        let id = self.walker.vertex_at(&self.current).halfedge.clone();
+        HalfEdgeWalker { current: id, walker: self.walker.clone() }
     }
 
     pub fn deref(&self) -> VertexID
@@ -79,8 +79,20 @@ impl HalfEdgeWalker
 
     pub fn vertex(&mut self) -> VertexWalker
     {
-        let vertex = self.walker.halfedge_at(&self.current).vertex.clone();
-        VertexWalker { current: vertex, walker: self.walker.clone() }
+        let id = self.walker.halfedge_at(&self.current).vertex.clone();
+        VertexWalker { current: id, walker: self.walker.clone() }
+    }
+
+    pub fn twin(&mut self) -> HalfEdgeWalker
+    {
+        let id = self.walker.halfedge_at(&self.current).twin.clone();
+        HalfEdgeWalker { current: id, walker: self.walker.clone() }
+    }
+
+    pub fn next(&mut self) -> HalfEdgeWalker
+    {
+        let id = self.walker.halfedge_at(&self.current).next.clone();
+        HalfEdgeWalker { current: id, walker: self.walker.clone() }
     }
 
     pub fn deref(&self) -> HalfEdgeID
@@ -102,12 +114,15 @@ impl Clone for Vertex {
 
 #[derive(Debug)]
 pub struct HalfEdge {
-    pub vertex: VertexID
+    pub vertex: VertexID,
+    pub twin: HalfEdgeID,
+    pub next: HalfEdgeID,
+    pub face: FaceID
 }
 
 impl Clone for HalfEdge {
   fn clone(& self) -> Self {
-    HalfEdge { vertex: self.vertex.clone() }
+    HalfEdge { vertex: self.vertex.clone(), twin: self.twin.clone(), next: self.next.clone(), face: self.face.clone() }
   }
 }
 
@@ -125,13 +140,24 @@ impl Clone for Face {
 #[derive(Debug)]
 pub struct VertexID
 {
-    val: usize
+    val: usize,
+    dead: bool
 }
 
 impl VertexID {
     pub fn new(val: usize) -> VertexID
     {
-        VertexID {val}
+        VertexID {val, dead: false}
+    }
+
+    pub fn null() -> VertexID
+    {
+        VertexID {val: 0, dead: true}
+    }
+
+    pub fn is_null(&self) -> bool
+    {
+        self.dead
     }
 
     pub fn val(&self) -> usize
@@ -142,20 +168,31 @@ impl VertexID {
 
 impl Clone for VertexID {
   fn clone(& self) -> Self {
-    VertexID { val: self.val }
+    VertexID { val: self.val, dead: self.dead }
   }
 }
 
 #[derive(Debug)]
 pub struct HalfEdgeID
 {
-    val: usize
+    val: usize,
+    dead: bool
 }
 
 impl HalfEdgeID {
     pub fn new(val: usize) -> HalfEdgeID
     {
-        HalfEdgeID {val}
+        HalfEdgeID {val, dead: false}
+    }
+
+    pub fn null() -> HalfEdgeID
+    {
+        HalfEdgeID {val: 0, dead: true}
+    }
+
+    pub fn is_null(&self) -> bool
+    {
+        self.dead
     }
 
     pub fn val(&self) -> usize
@@ -166,20 +203,31 @@ impl HalfEdgeID {
 
 impl Clone for HalfEdgeID {
   fn clone(& self) -> Self {
-    HalfEdgeID { val: self.val }
+    HalfEdgeID { val: self.val, dead: self.dead }
   }
 }
 
 #[derive(Debug)]
 pub struct FaceID
 {
-    val: usize
+    val: usize,
+    dead: bool
 }
 
 impl FaceID {
     pub fn new(val: usize) -> FaceID
     {
-        FaceID {val}
+        FaceID {val, dead: false}
+    }
+
+    pub fn null() -> FaceID
+    {
+        FaceID {val: 0, dead: true}
+    }
+
+    pub fn is_null(&self) -> bool
+    {
+        self.dead
     }
 
     pub fn val(&self) -> usize
@@ -190,6 +238,6 @@ impl FaceID {
 
 impl Clone for FaceID {
   fn clone(& self) -> Self {
-    FaceID { val: self.val }
+    FaceID { val: self.val, dead: self.dead }
   }
 }
