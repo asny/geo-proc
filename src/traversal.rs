@@ -3,16 +3,16 @@ use std::cell::{RefCell, Ref};
 use std::ops::{Deref,DerefMut};
 use std::borrow::{Borrow, BorrowMut};
 
-struct Walker {
-    vertices: Rc<RefCell<Vec<Vertex>>>,
-    halfedges: Rc<RefCell<Vec<HalfEdge>>>,
-    faces: Rc<RefCell<Vec<Face>>>
+pub struct ConnectivityInfo {
+    pub vertices: RefCell<Vec<Vertex>>,
+    pub halfedges: RefCell<Vec<HalfEdge>>,
+    pub faces: RefCell<Vec<Face>>
 }
 
-impl Walker {
-    fn new(vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> Walker
+impl ConnectivityInfo {
+    pub fn new() -> ConnectivityInfo
     {
-        Walker { vertices, halfedges, faces }
+        ConnectivityInfo { vertices: RefCell::new(Vec::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()) }
     }
 
     fn vertex_at(&self, vertex_id: &VertexID) -> Vertex
@@ -31,30 +31,23 @@ impl Walker {
     }
 }
 
-impl Clone for Walker {
-  fn clone(& self) -> Self {
-    Walker { vertices: self.vertices.clone(), halfedges: self.halfedges.clone(), faces: self.faces.clone() }
-  }
-}
-
 pub struct VertexWalker
 {
-    walker: Walker,
+    connectivity_info: Rc<ConnectivityInfo>,
     current: VertexID
 }
 
 impl VertexWalker
 {
-    pub fn new(vertex_id: &VertexID, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> VertexWalker
+    pub fn new(current: VertexID, connectivity_info: Rc<ConnectivityInfo>) -> VertexWalker
     {
-        let walker = Walker::new(vertices, halfedges, faces);
-        VertexWalker {current: vertex_id.clone(), walker}
+        VertexWalker {current, connectivity_info}
     }
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
-        let id = self.walker.vertex_at(&self.current).halfedge.clone();
-        HalfEdgeWalker { current: id, walker: self.walker.clone() }
+        let id = self.connectivity_info.vertex_at(&self.current).halfedge.clone();
+        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn deref(&self) -> VertexID
@@ -65,34 +58,33 @@ impl VertexWalker
 
 pub struct HalfEdgeWalker
 {
-    walker: Walker,
+    connectivity_info: Rc<ConnectivityInfo>,
     current: HalfEdgeID
 }
 
 impl HalfEdgeWalker
 {
-    pub fn new(halfedge_id: &HalfEdgeID, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> HalfEdgeWalker
+    pub fn new(current: HalfEdgeID, connectivity_info: Rc<ConnectivityInfo>) -> HalfEdgeWalker
     {
-        let walker = Walker::new(vertices, halfedges, faces);
-        HalfEdgeWalker {current: halfedge_id.clone(), walker}
+        HalfEdgeWalker {current, connectivity_info}
     }
 
     pub fn vertex(&mut self) -> VertexWalker
     {
-        let id = self.walker.halfedge_at(&self.current).vertex.clone();
-        VertexWalker { current: id, walker: self.walker.clone() }
+        let id = self.connectivity_info.halfedge_at(&self.current).vertex.clone();
+        VertexWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn twin(&mut self) -> HalfEdgeWalker
     {
-        let id = self.walker.halfedge_at(&self.current).twin.clone();
-        HalfEdgeWalker { current: id, walker: self.walker.clone() }
+        let id = self.connectivity_info.halfedge_at(&self.current).twin.clone();
+        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn next(&mut self) -> HalfEdgeWalker
     {
-        let id = self.walker.halfedge_at(&self.current).next.clone();
-        HalfEdgeWalker { current: id, walker: self.walker.clone() }
+        let id = self.connectivity_info.halfedge_at(&self.current).next.clone();
+        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn deref(&self) -> HalfEdgeID

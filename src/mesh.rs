@@ -28,9 +28,7 @@ pub struct Mesh {
     int_attributes: Vec<attribute::IntAttribute>,
     vec2_attributes: Vec<attribute::Vec2Attribute>,
     vec3_attributes: Vec<attribute::Vec3Attribute>,
-    vertices: Rc<RefCell<Vec<Vertex>>>,
-    halfedges: Rc<RefCell<Vec<HalfEdge>>>,
-    faces: Rc<RefCell<Vec<Face>>>
+    connectivity_info: Rc<ConnectivityInfo>
 }
 
 
@@ -40,7 +38,7 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
-        Ok(Mesh { no_vertices, no_faces: no_vertices/3, vertices: Rc::new(RefCell::new(Vec::new())), halfedges: Rc::new(RefCell::new(Vec::new())), faces: Rc::new(RefCell::new(Vec::new())), indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        Ok(Mesh { no_vertices, no_faces: no_vertices/3, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
     pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
@@ -48,12 +46,12 @@ impl Mesh
         let no_vertices = positions.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
 
-        Ok(Mesh { no_vertices, no_faces: indices.len()/3, vertices: Rc::new(RefCell::new(Vec::new())), halfedges: Rc::new(RefCell::new(Vec::new())), faces: Rc::new(RefCell::new(Vec::new())), indices: Some(indices), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        Ok(Mesh { no_vertices, no_faces: indices.len()/3, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
     fn create_vertex(&mut self) -> VertexID
     {
-        let mut vec = &mut *RefCell::borrow_mut(&self.vertices);
+        let mut vec = &mut *RefCell::borrow_mut(&self.connectivity_info.vertices);
         let id = VertexID::new(vec.len());
         vec.push(Vertex { halfedge: HalfEdgeID::null() });
         id
@@ -61,7 +59,7 @@ impl Mesh
 
     fn create_halfedge(&mut self, vertex_id: &VertexID, face_id: &FaceID) -> HalfEdgeID
     {
-        let mut halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+        let mut halfedges = &mut *RefCell::borrow_mut(&self.connectivity_info.halfedges);
 
         let id = HalfEdgeID::new(halfedges.len());
         halfedges.push(HalfEdge { vertex: vertex_id.clone(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: face_id.clone() });
@@ -73,7 +71,7 @@ impl Mesh
     {
         let mut id = FaceID::null();
         {
-            let mut vec = RefCell::borrow_mut(&self.faces);
+            let mut vec = RefCell::borrow_mut(&self.connectivity_info.faces);
             id = FaceID::new(vec.len());
             let face = Face { halfedge: HalfEdgeID::null() };
             vec.push(face);
@@ -87,32 +85,32 @@ impl Mesh
         let halfedge5 = self.create_halfedge(vertex_id2, &FaceID::null());
         let halfedge6 = self.create_halfedge(vertex_id1, &FaceID::null());
 
-        RefCell::borrow_mut(&self.vertices)[vertex_id1.val()].halfedge = halfedge1.clone();
-        RefCell::borrow_mut(&self.vertices)[vertex_id2.val()].halfedge = halfedge2.clone();
-        RefCell::borrow_mut(&self.vertices)[vertex_id3.val()].halfedge = halfedge3.clone();
+        RefCell::borrow_mut(&self.connectivity_info.vertices)[vertex_id1.val()].halfedge = halfedge1.clone();
+        RefCell::borrow_mut(&self.connectivity_info.vertices)[vertex_id2.val()].halfedge = halfedge2.clone();
+        RefCell::borrow_mut(&self.connectivity_info.vertices)[vertex_id3.val()].halfedge = halfedge3.clone();
 
-        RefCell::borrow_mut(&self.halfedges)[halfedge1.val()].twin = halfedge6.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge2.val()].twin = halfedge5.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge3.val()].twin = halfedge4.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge1.val()].twin = halfedge6.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge2.val()].twin = halfedge5.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge3.val()].twin = halfedge4.clone();
 
-        RefCell::borrow_mut(&self.halfedges)[halfedge6.val()].twin = halfedge1.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge5.val()].twin = halfedge2.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge4.val()].twin = halfedge3.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge6.val()].twin = halfedge1.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge5.val()].twin = halfedge2.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge4.val()].twin = halfedge3.clone();
 
-        RefCell::borrow_mut(&self.halfedges)[halfedge1.val()].next = halfedge2.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge2.val()].next = halfedge3.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge3.val()].next = halfedge1.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge1.val()].next = halfedge2.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge2.val()].next = halfedge3.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge3.val()].next = halfedge1.clone();
 
-        RefCell::borrow_mut(&self.halfedges)[halfedge6.val()].next = halfedge4.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge4.val()].next = halfedge5.clone();
-        RefCell::borrow_mut(&self.halfedges)[halfedge5.val()].next = halfedge6.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge6.val()].next = halfedge4.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge4.val()].next = halfedge5.clone();
+        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge5.val()].next = halfedge6.clone();
 
         id
     }
 
     fn vertex_walker(&self, vertex_id: &VertexID) -> VertexWalker
     {
-        VertexWalker::new(vertex_id, self.vertices.clone(), self.halfedges.clone(), self.faces.clone())
+        VertexWalker::new(vertex_id.clone(), self.connectivity_info.clone())
     }
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
