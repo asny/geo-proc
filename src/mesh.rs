@@ -51,19 +51,6 @@ impl Mesh
         Ok(Mesh { no_vertices, no_faces: indices.len()/3, vertices: Rc::new(RefCell::new(Vec::new())), halfedges: Rc::new(RefCell::new(Vec::new())), faces: Rc::new(RefCell::new(Vec::new())), indices: Some(indices), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
     }
 
-    /*fn create_connections(&mut self, indices: Vec<u32>, no_vertices: usize)
-    {
-        for vertex_id in 0..no_vertices {
-            {
-                self.create_vertex();
-            }
-            {
-                self.create_halfedge();
-
-            }
-        }
-    }*/
-
     fn create_vertex(&mut self) -> VertexID
     {
         let mut vec = &mut *RefCell::borrow_mut(&self.vertices);
@@ -127,35 +114,6 @@ impl Mesh
     {
         VertexWalker::new(vertex_id, self.vertices.clone(), self.halfedges.clone(), self.faces.clone())
     }
-
-    /*pub fn create_attached_face(&mut self) -> Ptr<Face>
-    {
-        let mut v1 = self.create_vertex();
-        let mut v2 = self.create_vertex();
-        let mut v3 = self.create_vertex();
-
-        let halfedge1 = self.create_halfedge(&v1);
-        let halfedge2 = self.create_halfedge(&v2);
-        let halfedge3 = self.create_halfedge(&v3);
-
-        let mut face = self.create_face(&halfedge1);
-
-        /*v1.attach_halfedge(&halfedge1);
-        v2.attach_halfedge(&halfedge2);
-        v3.attach_halfedge(&halfedge3);*/
-
-        //v1.halfedge();
-
-
-        face.attach_halfedge(&halfedge1);
-
-        face
-    }*/
-
-    /*fn next_vertex(&self, vertex: &Ptr<Vertex>) -> Ptr<Vertex>
-    {
-        vertex.halfedge().vertex().clone()
-    }*/
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
     {
