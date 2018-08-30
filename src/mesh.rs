@@ -296,6 +296,9 @@ mod tests {
 
         let t4 = mesh.face_walker(&f1).halfedge().twin().twin().vertex().halfedge().face().deref();
         assert_eq!(t4.val(), f1.val());
+
+        let t5 = mesh.halfedge_walker(&t1).twin().deref();
+        assert_eq!(t5.val(), 5);
     }
 
     #[test]
