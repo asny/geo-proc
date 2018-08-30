@@ -162,6 +162,9 @@ impl VertexID {
 
     pub fn val(&self) -> usize
     {
+        if self.is_null() {
+            panic!("Vertex is dead");
+        }
         self.val
     }
 }
@@ -197,6 +200,9 @@ impl HalfEdgeID {
 
     pub fn val(&self) -> usize
     {
+        if self.is_null() {
+            panic!("Halfedge is dead");
+        }
         self.val
     }
 }
@@ -232,6 +238,9 @@ impl FaceID {
 
     pub fn val(&self) -> usize
     {
+        if self.is_null() {
+            panic!("Face is dead");
+        }
         self.val
     }
 }
