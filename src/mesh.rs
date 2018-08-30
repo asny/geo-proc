@@ -54,26 +54,38 @@ impl Mesh
         self.connectivity_info.create_vertex()
     }
 
-    fn create_halfedge(&mut self, vertex_id: &VertexID, face_id: &FaceID) -> HalfEdgeID
+    fn create_halfedge(&mut self) -> HalfEdgeID
     {
-        self.connectivity_info.create_halfedge(vertex_id, face_id)
+        self.connectivity_info.create_halfedge()
     }
 
     fn create_face(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
     {
         let id = self.connectivity_info.create_face();
 
-        let halfedge1 = self.create_halfedge(vertex_id2, &id);
-        let halfedge2 = self.create_halfedge(vertex_id3, &id);
-        let halfedge3 = self.create_halfedge(vertex_id1, &id);
+        let halfedge1 = self.create_halfedge();
+        let halfedge2 = self.create_halfedge();
+        let halfedge3 = self.create_halfedge();
 
-        let halfedge4 = self.create_halfedge(vertex_id3, &FaceID::null());
-        let halfedge5 = self.create_halfedge(vertex_id2, &FaceID::null());
-        let halfedge6 = self.create_halfedge(vertex_id1, &FaceID::null());
+        let halfedge4 = self.create_halfedge();
+        let halfedge5 = self.create_halfedge();
+        let halfedge6 = self.create_halfedge();
 
         self.connectivity_info.set_vertex_halfedge(&vertex_id1, &halfedge1);
         self.connectivity_info.set_vertex_halfedge(&vertex_id2, &halfedge2);
         self.connectivity_info.set_vertex_halfedge(&vertex_id3, &halfedge3);
+
+        self.connectivity_info.set_halfedge_vertex(&halfedge1, &vertex_id2);
+        self.connectivity_info.set_halfedge_vertex(&halfedge2, &vertex_id3);
+        self.connectivity_info.set_halfedge_vertex(&halfedge3, &vertex_id1);
+
+        self.connectivity_info.set_halfedge_vertex(&halfedge4, &vertex_id3);
+        self.connectivity_info.set_halfedge_vertex(&halfedge5, &vertex_id2);
+        self.connectivity_info.set_halfedge_vertex(&halfedge6, &vertex_id1);
+
+        self.connectivity_info.set_halfedge_face(&halfedge1, &id);
+        self.connectivity_info.set_halfedge_face(&halfedge2, &id);
+        self.connectivity_info.set_halfedge_face(&halfedge3, &id);
 
         self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge6);
         self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
@@ -91,6 +103,7 @@ impl Mesh
         self.connectivity_info.set_halfedge_next(&halfedge4, &halfedge5);
         self.connectivity_info.set_halfedge_next(&halfedge5, &halfedge6);
 
+        self.connectivity_info.set_face_halfedge(&id, &halfedge1);
         id
     }
 
@@ -253,9 +266,9 @@ mod tests {
             1.0, 1.0, 1.0];
         let mut mesh = Mesh::create(positions).unwrap();
 
-        let mut v1 = mesh.create_vertex();
-        let mut v2 = mesh.create_vertex();
-        let mut v3 = mesh.create_vertex();
+        let v1 = mesh.create_vertex();
+        let v2 = mesh.create_vertex();
+        let v3 = mesh.create_vertex();
         let f1 = mesh.create_face(&v1, &v2, &v3);
         assert_eq!(v1.val(), 0);
         assert_eq!(v2.val(), 1);

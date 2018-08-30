@@ -26,11 +26,11 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_halfedge(&self, vertex_id: &VertexID, face_id: &FaceID) -> HalfEdgeID
+    pub fn create_halfedge(&self) -> HalfEdgeID
     {
         let mut halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
         let id = HalfEdgeID::new(halfedges.len());
-        halfedges.push(HalfEdge { vertex: vertex_id.clone(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: face_id.clone() });
+        halfedges.push(HalfEdge { vertex: VertexID::null(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: FaceID::null() });
         id
     }
 
@@ -48,6 +48,11 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.vertices)[id.val()].halfedge = val.clone();
     }
 
+    pub fn set_halfedge_vertex(&self, id: &HalfEdgeID, val: &VertexID)
+    {
+        RefCell::borrow_mut(&self.halfedges)[id.val()].vertex = val.clone();
+    }
+
     pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: &HalfEdgeID)
     {
         RefCell::borrow_mut(&self.halfedges)[id.val()].next = val.clone();
@@ -56,6 +61,16 @@ impl ConnectivityInfo {
     pub fn set_halfedge_twin(&self, id: &HalfEdgeID, val: &HalfEdgeID)
     {
         RefCell::borrow_mut(&self.halfedges)[id.val()].twin = val.clone();
+    }
+
+    pub fn set_halfedge_face(&self, id: &HalfEdgeID, val: &FaceID)
+    {
+        RefCell::borrow_mut(&self.halfedges)[id.val()].face = val.clone();
+    }
+
+    pub fn set_face_halfedge(&self, id: &FaceID, val: &HalfEdgeID)
+    {
+        RefCell::borrow_mut(&self.faces)[id.val()].halfedge = val.clone();
     }
 
     fn vertex_at(&self, vertex_id: &VertexID) -> Vertex
