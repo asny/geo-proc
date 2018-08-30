@@ -85,25 +85,25 @@ impl Mesh
         let halfedge5 = self.create_halfedge(vertex_id2, &FaceID::null());
         let halfedge6 = self.create_halfedge(vertex_id1, &FaceID::null());
 
-        RefCell::borrow_mut(&self.connectivity_info.vertices)[vertex_id1.val()].halfedge = halfedge1.clone();
-        RefCell::borrow_mut(&self.connectivity_info.vertices)[vertex_id2.val()].halfedge = halfedge2.clone();
-        RefCell::borrow_mut(&self.connectivity_info.vertices)[vertex_id3.val()].halfedge = halfedge3.clone();
+        self.connectivity_info.set_vertex_halfedge(&vertex_id1, &halfedge1);
+        self.connectivity_info.set_vertex_halfedge(&vertex_id2, &halfedge2);
+        self.connectivity_info.set_vertex_halfedge(&vertex_id3, &halfedge3);
 
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge1.val()].twin = halfedge6.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge2.val()].twin = halfedge5.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge3.val()].twin = halfedge4.clone();
+        self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge6);
+        self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
+        self.connectivity_info.set_halfedge_twin(&halfedge3, &halfedge4);
 
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge6.val()].twin = halfedge1.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge5.val()].twin = halfedge2.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge4.val()].twin = halfedge3.clone();
+        self.connectivity_info.set_halfedge_twin(&halfedge6, &halfedge1);
+        self.connectivity_info.set_halfedge_twin(&halfedge5, &halfedge2);
+        self.connectivity_info.set_halfedge_twin(&halfedge4, &halfedge3);
 
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge1.val()].next = halfedge2.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge2.val()].next = halfedge3.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge3.val()].next = halfedge1.clone();
+        self.connectivity_info.set_halfedge_next(&halfedge1, &halfedge2);
+        self.connectivity_info.set_halfedge_next(&halfedge2, &halfedge3);
+        self.connectivity_info.set_halfedge_next(&halfedge3, &halfedge1);
 
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge6.val()].next = halfedge4.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge4.val()].next = halfedge5.clone();
-        RefCell::borrow_mut(&self.connectivity_info.halfedges)[halfedge5.val()].next = halfedge6.clone();
+        self.connectivity_info.set_halfedge_next(&halfedge6, &halfedge4);
+        self.connectivity_info.set_halfedge_next(&halfedge4, &halfedge5);
+        self.connectivity_info.set_halfedge_next(&halfedge5, &halfedge6);
 
         id
     }

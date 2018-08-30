@@ -29,6 +29,23 @@ impl ConnectivityInfo {
     {
         RefCell::borrow(&self.faces)[face_id].clone()
     }
+
+    //TODO: Direct access instead of cloning
+    //TODO: Mutable access
+    pub fn set_vertex_halfedge(&self, id: &VertexID, val: &HalfEdgeID)
+    {
+        RefCell::borrow_mut(&self.vertices)[id.val()].halfedge = val.clone();
+    }
+
+    pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: &HalfEdgeID)
+    {
+        RefCell::borrow_mut(&self.halfedges)[id.val()].next = val.clone();
+    }
+
+    pub fn set_halfedge_twin(&self, id: &HalfEdgeID, val: &HalfEdgeID)
+    {
+        RefCell::borrow_mut(&self.halfedges)[id.val()].twin = val.clone();
+    }
 }
 
 pub struct VertexWalker
