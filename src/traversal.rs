@@ -40,7 +40,7 @@ impl Clone for Walker {
 pub struct VertexWalker
 {
     walker: Walker,
-    current: Vertex
+    current: VertexID
 }
 
 impl VertexWalker
@@ -48,26 +48,25 @@ impl VertexWalker
     pub fn new(vertex_id: &VertexID, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> VertexWalker
     {
         let walker = Walker::new(vertices, halfedges, faces);
-        let current = walker.vertex_at(vertex_id);
-        VertexWalker {current, walker}
+        VertexWalker {current: vertex_id.clone(), walker}
     }
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
-        let halfedge = &self.current.halfedge;
-        HalfEdgeWalker { current: self.walker.halfedge_at(halfedge), walker: self.walker.clone() }
+        let halfedge = self.walker.vertex_at(&self.current).halfedge.clone();
+        HalfEdgeWalker { current: halfedge, walker: self.walker.clone() }
     }
 
     pub fn deref(&self) -> VertexID
     {
-        self.current.id.clone()
+        self.current.clone()
     }
 }
 
 pub struct HalfEdgeWalker
 {
     walker: Walker,
-    current: HalfEdge
+    current: HalfEdgeID
 }
 
 impl HalfEdgeWalker
@@ -75,19 +74,18 @@ impl HalfEdgeWalker
     pub fn new(halfedge_id: &HalfEdgeID, vertices: Rc<RefCell<Vec<Vertex>>>, halfedges: Rc<RefCell<Vec<HalfEdge>>>, faces: Rc<RefCell<Vec<Face>>>) -> HalfEdgeWalker
     {
         let walker = Walker::new(vertices, halfedges, faces);
-        let current = walker.halfedge_at(halfedge_id);
-        HalfEdgeWalker {current, walker}
+        HalfEdgeWalker {current: halfedge_id.clone(), walker}
     }
 
     pub fn vertex(&mut self) -> VertexWalker
     {
-        let vertex = &self.current.vertex;
-        VertexWalker { current: self.walker.vertex_at(vertex), walker: self.walker.clone() }
+        let vertex = self.walker.halfedge_at(&self.current).vertex.clone();
+        VertexWalker { current: vertex, walker: self.walker.clone() }
     }
 
     pub fn deref(&self) -> HalfEdgeID
     {
-        self.current.id.clone()
+        self.current.clone()
     }
 }
 
