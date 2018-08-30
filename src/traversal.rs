@@ -114,13 +114,21 @@ impl VertexWalker
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
+        if self.current.is_null()
+        {
+            return HalfEdgeWalker { current: HalfEdgeID::null(), connectivity_info: self.connectivity_info.clone() }
+        }
         let id = self.connectivity_info.vertex_halfedge(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> VertexID
+    pub fn deref(&self) -> Option<VertexID>
     {
-        self.current.clone()
+        if self.current.is_null()
+        {
+            return None
+        }
+        Some(self.current.clone())
     }
 }
 
@@ -139,31 +147,51 @@ impl HalfEdgeWalker
 
     pub fn vertex(&mut self) -> VertexWalker
     {
+        if self.current.is_null()
+        {
+            return VertexWalker { current: VertexID::null(), connectivity_info: self.connectivity_info.clone() }
+        }
         let id = self.connectivity_info.halfedge_vertex(&self.current);
         VertexWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn twin(&mut self) -> HalfEdgeWalker
     {
+        if self.current.is_null()
+        {
+            return HalfEdgeWalker { current: HalfEdgeID::null(), connectivity_info: self.connectivity_info.clone() }
+        }
         let id = self.connectivity_info.halfedge_twin(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn next(&mut self) -> HalfEdgeWalker
     {
+        if self.current.is_null()
+        {
+            return HalfEdgeWalker { current: HalfEdgeID::null(), connectivity_info: self.connectivity_info.clone() }
+        }
         let id = self.connectivity_info.halfedge_next(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn face(&mut self) -> FaceWalker
     {
+        if self.current.is_null()
+        {
+            return FaceWalker { current: FaceID::null(), connectivity_info: self.connectivity_info.clone() }
+        }
         let id = self.connectivity_info.halfedge_face(&self.current);
         FaceWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> HalfEdgeID
+    pub fn deref(&self) -> Option<HalfEdgeID>
     {
-        self.current.clone()
+        if self.current.is_null()
+        {
+            return None
+        }
+        Some(self.current.clone())
     }
 }
 
@@ -182,13 +210,21 @@ impl FaceWalker
 
     pub fn halfedge(&self) -> HalfEdgeWalker
     {
+        if self.current.is_null()
+        {
+            return HalfEdgeWalker { current: HalfEdgeID::null(), connectivity_info: self.connectivity_info.clone() }
+        }
         let id = self.connectivity_info.face_halfedge(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> FaceID
+    pub fn deref(&self) -> Option<FaceID>
     {
-        self.current.clone()
+        if self.current.is_null()
+        {
+            return None
+        }
+        Some(self.current.clone())
     }
 }
 

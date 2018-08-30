@@ -283,19 +283,19 @@ mod tests {
         assert_eq!(p.y, 1.0);
         assert_eq!(p.z, -1.0);
 
-        let t1 = mesh.vertex_walker(&v1).halfedge().deref();
+        let t1 = mesh.vertex_walker(&v1).halfedge().deref().unwrap();
         assert_eq!(t1.val(), 0);
 
-        let t2 = mesh.vertex_walker(&v1).halfedge().twin().deref();
+        let t2 = mesh.vertex_walker(&v1).halfedge().twin().deref().unwrap();
         assert_eq!(t2.val(), 5);
 
-        let t3 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().deref();
+        let t3 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().deref().unwrap();
         assert_eq!(t3.val(), v2.val());
 
-        let t4 = mesh.face_walker(&f1).halfedge().twin().twin().vertex().halfedge().face().deref();
+        let t4 = mesh.face_walker(&f1).halfedge().twin().twin().vertex().halfedge().face().deref().unwrap();
         assert_eq!(t4.val(), f1.val());
 
-        let t5 = mesh.halfedge_walker(&t1).twin().deref();
+        let t5 = mesh.halfedge_walker(&t1).twin().deref().unwrap();
         assert_eq!(t5.val(), 5);
     }
 
