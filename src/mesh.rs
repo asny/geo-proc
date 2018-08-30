@@ -51,31 +51,17 @@ impl Mesh
 
     fn create_vertex(&mut self) -> VertexID
     {
-        let mut vec = &mut *RefCell::borrow_mut(&self.connectivity_info.vertices);
-        let id = VertexID::new(vec.len());
-        vec.push(Vertex { halfedge: HalfEdgeID::null() });
-        id
+        self.connectivity_info.create_vertex()
     }
 
     fn create_halfedge(&mut self, vertex_id: &VertexID, face_id: &FaceID) -> HalfEdgeID
     {
-        let mut halfedges = &mut *RefCell::borrow_mut(&self.connectivity_info.halfedges);
-
-        let id = HalfEdgeID::new(halfedges.len());
-        halfedges.push(HalfEdge { vertex: vertex_id.clone(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: face_id.clone() });
-
-        id
+        self.connectivity_info.create_halfedge(vertex_id, face_id)
     }
 
     fn create_face(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
     {
-        let mut id = FaceID::null();
-        {
-            let mut vec = RefCell::borrow_mut(&self.connectivity_info.faces);
-            id = FaceID::new(vec.len());
-            let face = Face { halfedge: HalfEdgeID::null() };
-            vec.push(face);
-        }
+        let id = self.connectivity_info.create_face();
 
         let halfedge1 = self.create_halfedge(vertex_id2, &id);
         let halfedge2 = self.create_halfedge(vertex_id3, &id);

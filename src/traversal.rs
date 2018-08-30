@@ -4,15 +4,58 @@ use std::ops::{Deref,DerefMut};
 use std::borrow::{Borrow, BorrowMut};
 
 pub struct ConnectivityInfo {
-    pub vertices: RefCell<Vec<Vertex>>,
-    pub halfedges: RefCell<Vec<HalfEdge>>,
-    pub faces: RefCell<Vec<Face>>
+    vertices: RefCell<Vec<Vertex>>,
+    halfedges: RefCell<Vec<HalfEdge>>,
+    faces: RefCell<Vec<Face>>
 }
 
 impl ConnectivityInfo {
     pub fn new() -> ConnectivityInfo
     {
         ConnectivityInfo { vertices: RefCell::new(Vec::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()) }
+    }
+
+    //TODO: Direct access instead of cloning
+    //TODO: Mutable access
+
+    pub fn create_vertex(&self) -> VertexID
+    {
+        let mut vec = &mut *RefCell::borrow_mut(&self.vertices);
+        let id = VertexID::new(vec.len());
+        vec.push(Vertex { halfedge: HalfEdgeID::null() });
+        id
+    }
+
+    pub fn create_halfedge(&self, vertex_id: &VertexID, face_id: &FaceID) -> HalfEdgeID
+    {
+        let mut halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+        let id = HalfEdgeID::new(halfedges.len());
+        halfedges.push(HalfEdge { vertex: vertex_id.clone(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: face_id.clone() });
+        id
+    }
+
+    pub fn create_face(&self) -> FaceID
+    {
+        let mut vec = RefCell::borrow_mut(&self.faces);
+        let id = FaceID::new(vec.len());
+        let face = Face { halfedge: HalfEdgeID::null() };
+        vec.push(face);
+        id
+    }
+
+    pub fn set_vertex_halfedge(&self, id: &VertexID, val: &HalfEdgeID)
+    {
+        RefCell::borrow_mut(&self.vertices)[id.val()].halfedge = val.clone();
+    }
+
+    pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: &HalfEdgeID)
+    {
+        RefCell::borrow_mut(&self.halfedges)[id.val()].next = val.clone();
+    }
+
+    pub fn set_halfedge_twin(&self, id: &HalfEdgeID, val: &HalfEdgeID)
+    {
+        RefCell::borrow_mut(&self.halfedges)[id.val()].twin = val.clone();
     }
 
     fn vertex_at(&self, vertex_id: &VertexID) -> Vertex
@@ -28,23 +71,6 @@ impl ConnectivityInfo {
     fn face_at(&self, face_id: usize) -> Face
     {
         RefCell::borrow(&self.faces)[face_id].clone()
-    }
-
-    //TODO: Direct access instead of cloning
-    //TODO: Mutable access
-    pub fn set_vertex_halfedge(&self, id: &VertexID, val: &HalfEdgeID)
-    {
-        RefCell::borrow_mut(&self.vertices)[id.val()].halfedge = val.clone();
-    }
-
-    pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: &HalfEdgeID)
-    {
-        RefCell::borrow_mut(&self.halfedges)[id.val()].next = val.clone();
-    }
-
-    pub fn set_halfedge_twin(&self, id: &HalfEdgeID, val: &HalfEdgeID)
-    {
-        RefCell::borrow_mut(&self.halfedges)[id.val()].twin = val.clone();
     }
 }
 
