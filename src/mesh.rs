@@ -283,7 +283,10 @@ mod tests {
         assert_eq!(v3.val(), 2);
         assert_eq!(f1.val(), 0);
 
-        // TODO: Test position attribute
+        let p = mesh.positions.at(v1.val());
+        assert_eq!(p.x, 1.0);
+        assert_eq!(p.y, 1.0);
+        assert_eq!(p.z, -1.0);
 
         let t1 = mesh.vertex_walker(&v1).halfedge().deref();
         assert_eq!(t1.val(), 0);
