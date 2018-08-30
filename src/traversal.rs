@@ -91,37 +91,34 @@ impl HalfEdgeWalker
 
 #[derive(Debug)]
 pub struct Vertex {
-    pub id: VertexID,
     pub halfedge: HalfEdgeID
 }
 
 impl Clone for Vertex {
   fn clone(& self) -> Self {
-    Vertex { id: self.id.clone(), halfedge: self.halfedge.clone() }
+    Vertex { halfedge: self.halfedge.clone() }
   }
 }
 
 #[derive(Debug)]
 pub struct HalfEdge {
-    pub id: HalfEdgeID,
     pub vertex: VertexID
 }
 
 impl Clone for HalfEdge {
   fn clone(& self) -> Self {
-    HalfEdge { id: self.id.clone(), vertex: self.vertex.clone() }
+    HalfEdge { vertex: self.vertex.clone() }
   }
 }
 
 #[derive(Debug)]
 pub struct Face {
-    pub id: FaceID,
     pub halfedge: HalfEdgeID
 }
 
 impl Clone for Face {
   fn clone(& self) -> Self {
-    Face { id: self.id.clone(), halfedge: self.halfedge.clone() }
+    Face { halfedge: self.halfedge.clone() }
   }
 }
 
