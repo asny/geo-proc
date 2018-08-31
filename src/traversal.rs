@@ -122,7 +122,12 @@ impl VertexWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> Option<VertexID>
+    pub fn deref(&self) -> VertexID
+    {
+        self.current.clone()
+    }
+
+    pub fn deref_option(&self) -> Option<VertexID>
     {
         if self.current.is_null()
         {
@@ -185,7 +190,12 @@ impl HalfEdgeWalker
         FaceWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> Option<HalfEdgeID>
+    pub fn deref(&self) -> HalfEdgeID
+    {
+        self.current.clone()
+    }
+
+    pub fn deref_option(&self) -> Option<HalfEdgeID>
     {
         if self.current.is_null()
         {
@@ -218,7 +228,12 @@ impl FaceWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> Option<FaceID>
+    pub fn deref(&self) -> FaceID
+    {
+        self.current.clone()
+    }
+
+    pub fn deref_option(&self) -> Option<FaceID>
     {
         if self.current.is_null()
         {
@@ -302,6 +317,12 @@ impl Clone for VertexID {
   }
 }
 
+impl PartialEq for VertexID {
+    fn eq(&self, other: &VertexID) -> bool {
+        !self.is_null() && !other.is_null() && self.val == other.val
+    }
+}
+
 #[derive(Debug)]
 pub struct HalfEdgeID
 {
@@ -340,6 +361,12 @@ impl Clone for HalfEdgeID {
   }
 }
 
+impl PartialEq for HalfEdgeID {
+    fn eq(&self, other: &HalfEdgeID) -> bool {
+        !self.is_null() && !other.is_null() && self.val == other.val
+    }
+}
+
 #[derive(Debug)]
 pub struct FaceID
 {
@@ -373,7 +400,13 @@ impl FaceID {
 }
 
 impl Clone for FaceID {
-  fn clone(& self) -> Self {
-    FaceID { val: self.val, dead: self.dead }
-  }
+    fn clone(& self) -> Self {
+        FaceID { val: self.val, dead: self.dead }
+    }
+}
+
+impl PartialEq for FaceID {
+    fn eq(&self, other: &FaceID) -> bool {
+        !self.is_null() && !other.is_null() && self.val == other.val
+    }
 }
