@@ -7,3 +7,4 @@ pub mod loader;
 pub mod mesh;
 pub mod models;
 pub mod traversal;
+pub mod iterators;
