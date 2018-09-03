@@ -154,6 +154,11 @@ impl Mesh
         OneRingIterator::new(vertex_id, self.connectivity_info.clone())
     }
 
+    pub fn face_iterator(&self, face_id: &FaceID) -> FaceIterator
+    {
+        FaceIterator::new(face_id, self.connectivity_info.clone())
+    }
+
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
     {
         for attribute in self.vec2_attributes.iter() {
@@ -346,6 +351,16 @@ mod tests {
     }
 
     #[test]
+    fn test_face_iterator() {
+        let mesh = create_single_face();
+        let mut i = 0;
+        for edge in mesh.face_iterator(&FaceID::new(0)) {
+            assert_eq!(edge.deref().val(), i);
+            i = i+1;
+        }
+    }
+
+    #[test]
     fn test_normal() {
         let mesh = create_test_object().unwrap();
         let normal = mesh.get_vec3_attribute("normal").unwrap().at(&VertexID::new(0));
@@ -353,6 +368,18 @@ mod tests {
         assert_eq!(normal.x, computed_normal.x);
         assert_eq!(normal.y, computed_normal.y);
         assert_eq!(normal.z, computed_normal.z);
+    }
+
+    fn create_single_face() -> Mesh
+    {
+        let positions: Vec<f32> = vec![];
+        let mut mesh = Mesh::create(positions).unwrap();
+
+        let v0 = mesh.create_vertex();
+        let v1 = mesh.create_vertex();
+        let v2 = mesh.create_vertex();
+        mesh.create_face(&v0, &v1, &v2);
+        mesh
     }
 
     fn create_test_object() -> Result<Mesh, Error>
