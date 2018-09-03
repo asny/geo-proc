@@ -261,12 +261,12 @@ impl Mesh
         [index0, index1, index2]
     }
 
-    fn normal_of(&self, face_id: usize) -> glm::Vec3
+    fn normal_of(&self, face_id: &FaceID) -> glm::Vec3
     {
-        let indices = self.indices_of(face_id);
-        let p0 = self.positions.at(indices[0]);
-        let p1 = self.positions.at(indices[1]);
-        let p2 = self.positions.at(indices[2]);
+        let indices = self.indices_of(face_id.val());
+        let p0 = self.positions.at(&VertexID::new(indices[0]));
+        let p1 = self.positions.at(&VertexID::new(indices[1]));
+        let p2 = self.positions.at(&VertexID::new(indices[2]));
 
         glm::normalize(glm::cross(p1 - p0, p2 - p0))
     }
@@ -276,7 +276,7 @@ impl Mesh
         let mut normals = vec![0.0; 3 * self.no_vertices];
         {
             for face_id in 0..self.no_faces {
-                let normal = self.normal_of(face_id);
+                let normal = self.normal_of(&FaceID::new(face_id));
                 let indices = self.indices_of(face_id);
                 for index in indices.iter() {
                     normals[3 * *index] += normal.x;
@@ -290,7 +290,7 @@ impl Mesh
 
             for i in 0..normals.len()/3 {
                 let n = glm::normalize(glm::vec3(normals[i*3], normals[i*3+1], normals[i*3+2]));
-                normals_dest.set(i, n);
+                normals_dest.set(&VertexID::new(i), n);
             }
         }
     }
@@ -348,8 +348,8 @@ mod tests {
     #[test]
     fn test_normal() {
         let mesh = create_test_object().unwrap();
-        let normal = mesh.get_vec3_attribute("normal").unwrap().at(0);
-        let computed_normal = mesh.normal_of(0);
+        let normal = mesh.get_vec3_attribute("normal").unwrap().at(&VertexID::new(0));
+        let computed_normal = mesh.normal_of(&FaceID::new(0));
         assert_eq!(normal.x, computed_normal.x);
         assert_eq!(normal.y, computed_normal.y);
         assert_eq!(normal.z, computed_normal.z);

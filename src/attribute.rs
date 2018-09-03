@@ -1,4 +1,5 @@
 use glm::*;
+use traversal::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -76,15 +77,15 @@ impl Vec2Attribute
         Ok(Vec2Attribute{name: String::from(name), data})
     }
 
-    pub fn at(&self, vertex_id: usize) -> Vec2
+    pub fn at(&self, vertex_id: &VertexID) -> Vec2
     {
-        vec2(self.data[vertex_id * 2], self.data[vertex_id * 2 + 1])
+        vec2(self.data[vertex_id.val() * 2], self.data[vertex_id.val() * 2 + 1])
     }
 
-    pub fn set(&mut self, vertex_id: usize, value: Vec2) {
+    pub fn set(&mut self, vertex_id: &VertexID, value: Vec2) {
         let no_components = self.no_components();
         for i in 0..no_components {
-            self.data[vertex_id * no_components] = value[i];
+            self.data[vertex_id.val() * no_components] = value[i];
         }
     }
 }
@@ -125,15 +126,15 @@ impl Vec3Attribute
         Ok(Vec3Attribute{name: String::from(name), data})
     }
 
-    pub fn at(&self, vertex_id: usize) -> Vec3
+    pub fn at(&self, vertex_id: &VertexID) -> Vec3
     {
-        vec3(self.data[vertex_id * 3], self.data[vertex_id * 3 + 1], self.data[vertex_id * 3 + 2])
+        vec3(self.data[vertex_id.val() * 3], self.data[vertex_id.val() * 3 + 1], self.data[vertex_id.val() * 3 + 2])
     }
 
-    pub fn set(&mut self, vertex_id: usize, value: Vec3) {
+    pub fn set(&mut self, vertex_id: &VertexID, value: Vec3) {
         let no_components = self.no_components();
         for i in 0..no_components {
-            self.data[vertex_id * no_components] = value[i];
+            self.data[vertex_id.val() * no_components] = value[i];
         }
     }
 }
