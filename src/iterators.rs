@@ -21,11 +21,11 @@ impl Iterator for OneRingIterator {
 
     fn next(&mut self) -> Option<HalfEdgeID>
     {
-        let mut next = HalfEdgeWalker::new(self.current.clone(), self.connectivity_info.clone()).twin().next().deref();
+        let mut next = HalfEdgeWalker::new(self.current.clone(), self.connectivity_info.clone()).previous().twin().deref();
         if next.is_null() { // In the case there are holes in the one-ring
             let mut temp = self.start.clone();
             loop {
-                match HalfEdgeWalker::new(temp.clone(), self.connectivity_info.clone()).next().next().twin().deref_option()
+                match HalfEdgeWalker::new(temp.clone(), self.connectivity_info.clone()).twin().next().deref_option()
                 {
                     Some(e) => { temp = e },
                     None => { break; }

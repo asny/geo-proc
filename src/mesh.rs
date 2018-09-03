@@ -79,37 +79,39 @@ impl Mesh
         self.connectivity_info.set_halfedge_vertex(&halfedge2, &vertex_id3);
         self.connectivity_info.set_halfedge_vertex(&halfedge3, &vertex_id1);
 
-        self.connectivity_info.set_halfedge_face(&halfedge1, &id);
-        self.connectivity_info.set_halfedge_face(&halfedge2, &id);
-        self.connectivity_info.set_halfedge_face(&halfedge3, &id);
-
-        let halfedge4 = match self.connecting_edge(vertex_id1, vertex_id3) { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
-
-        //let halfedge4 = self.connectivity_info.create_halfedge();
-        let halfedge5 = self.connectivity_info.create_halfedge();
-        let halfedge6 = self.connectivity_info.create_halfedge();
-
-        self.connectivity_info.set_halfedge_vertex(&halfedge4, &vertex_id3);
-        self.connectivity_info.set_halfedge_vertex(&halfedge5, &vertex_id2);
-        self.connectivity_info.set_halfedge_vertex(&halfedge6, &vertex_id1);
-
-        self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge6);
-        self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
-        self.connectivity_info.set_halfedge_twin(&halfedge3, &halfedge4);
-
-        self.connectivity_info.set_halfedge_twin(&halfedge6, &halfedge1);
-        self.connectivity_info.set_halfedge_twin(&halfedge5, &halfedge2);
-        self.connectivity_info.set_halfedge_twin(&halfedge4, &halfedge3);
-
         self.connectivity_info.set_halfedge_next(&halfedge1, &halfedge2);
         self.connectivity_info.set_halfedge_next(&halfedge2, &halfedge3);
         self.connectivity_info.set_halfedge_next(&halfedge3, &halfedge1);
 
-        self.connectivity_info.set_halfedge_next(&halfedge6, &halfedge4);
-        self.connectivity_info.set_halfedge_next(&halfedge4, &halfedge5);
-        self.connectivity_info.set_halfedge_next(&halfedge5, &halfedge6);
+        self.connectivity_info.set_halfedge_face(&halfedge1, &id);
+        self.connectivity_info.set_halfedge_face(&halfedge2, &id);
+        self.connectivity_info.set_halfedge_face(&halfedge3, &id);
 
         self.connectivity_info.set_face_halfedge(&id, &halfedge1);
+
+        let halfedge4 = match self.connecting_edge(vertex_id2, vertex_id1)
+            { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
+        let halfedge5 = match self.connecting_edge(vertex_id3, vertex_id2)
+            { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
+        let halfedge6 = match self.connecting_edge(vertex_id1, vertex_id3)
+            { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
+
+        self.connectivity_info.set_halfedge_vertex(&halfedge4, &vertex_id1);
+        self.connectivity_info.set_halfedge_vertex(&halfedge5, &vertex_id2);
+        self.connectivity_info.set_halfedge_vertex(&halfedge6, &vertex_id3);
+
+        self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge4);
+        self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
+        self.connectivity_info.set_halfedge_twin(&halfedge3, &halfedge6);
+
+        self.connectivity_info.set_halfedge_twin(&halfedge4, &halfedge1);
+        self.connectivity_info.set_halfedge_twin(&halfedge5, &halfedge2);
+        self.connectivity_info.set_halfedge_twin(&halfedge6, &halfedge3);
+
+        self.connectivity_info.set_halfedge_next(&halfedge4, &halfedge6);
+        self.connectivity_info.set_halfedge_next(&halfedge5, &halfedge4);
+        self.connectivity_info.set_halfedge_next(&halfedge6, &halfedge5);
+
         id
     }
 
@@ -305,7 +307,7 @@ mod tests {
         assert_eq!(t1.val(), 0);
 
         let t2 = mesh.vertex_walker(&v1).halfedge().twin().deref();
-        assert_eq!(t2.val(), 5);
+        assert_eq!(t2.val(), 3);
 
         let t3 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().deref();
         assert_eq!(t3.val(), v2.val());
@@ -314,7 +316,7 @@ mod tests {
         assert_eq!(t4.val(), f1.val());
 
         let t5 = mesh.halfedge_walker(&t1).twin().deref();
-        assert_eq!(t5.val(), 5);
+        assert_eq!(t5.val(), 3);
     }
 
     #[test]

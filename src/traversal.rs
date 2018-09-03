@@ -180,6 +180,11 @@ impl HalfEdgeWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
+    pub fn previous(&mut self) -> HalfEdgeWalker
+    {
+        self.next().next()
+    }
+
     pub fn face(&mut self) -> FaceWalker
     {
         if self.current.is_null()
