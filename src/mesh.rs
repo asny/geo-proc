@@ -39,7 +39,7 @@ impl Mesh
         let no_faces = no_vertices/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
         let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
-        for face in 0..no_faces {
+        for _face in 0..no_faces {
             let v0 = mesh.create_vertex();
             let v1 = mesh.create_vertex();
             let v2 = mesh.create_vertex();
@@ -54,14 +54,14 @@ impl Mesh
         let no_faces = indices.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
         let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices.clone()), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
-        for vertex in 0..no_vertices {
+        for _vertex in 0..no_vertices {
             mesh.create_vertex();
         }
         for face in 0..no_faces {
             let v0 = VertexID::new(indices[face * 3] as usize);
             let v1 = VertexID::new(indices[face * 3 + 1] as usize);
             let v2 = VertexID::new(indices[face * 3 + 2] as usize);
-            mesh.create_face(&v0, &v1, &v2);
+            let f = mesh.create_face(&v0, &v1, &v2);
         }
 
         Ok(mesh)
@@ -74,9 +74,9 @@ impl Mesh
 
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
-        for halfedge_id in self.one_ring_iterator(vertex_id1) {
-            if self.halfedge_walker(&halfedge_id).vertex().deref() == *vertex_id2 {
-                return Some(halfedge_id)
+        for mut halfedge in self.one_ring_iterator(vertex_id1) {
+            if halfedge.vertex().deref() == *vertex_id2 {
+                return Some(halfedge.deref())
             }
         }
         None
@@ -348,16 +348,24 @@ mod tests {
 
     #[test]
     fn test_one_ring_iterator() {
+        let mesh = create_connected_test_object();
+        let mut i = 0;
+        for edge in mesh.one_ring_iterator(&VertexID::new(0)) {
+            assert_eq!(edge.deref().val(), i);
+            i = i+1;
+        }
     }
 
     #[test]
     fn test_face_iterator() {
         let mesh = create_single_face();
         let mut i = 0;
-        for edge in mesh.face_iterator(&FaceID::new(0)) {
+        for mut edge in mesh.face_iterator(&FaceID::new(0)) {
             assert_eq!(edge.deref().val(), i);
+            assert_eq!(edge.face().deref().val(), 0);
             i = i+1;
         }
+        assert_eq!(i, 3, "All edges of a face is not visited");
     }
 
     #[test]
@@ -380,6 +388,37 @@ mod tests {
         let v2 = mesh.create_vertex();
         mesh.create_face(&v0, &v1, &v2);
         mesh
+    }
+
+    fn create_connected_test_object() -> Mesh
+    {
+        let positions: Vec<f32> = vec![
+            1.0, -1.0, -1.0,
+            1.0, -1.0, 1.0,
+            -1.0, -1.0, 1.0,
+            -1.0, -1.0, -1.0,
+            1.0, 1.0, -1.0,
+            1.0, 1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            -1.0, 1.0, -1.0
+        ];
+
+        let indices: Vec<u32> = vec![
+            0, 1, 2,
+            0, 2, 3,
+            4, 7, 6,
+            4, 6, 5,
+            0, 4, 5,
+            0, 5, 1,
+            1, 5, 6,
+            1, 6, 2,
+            2, 6, 7,
+            2, 7, 3,
+            4, 0, 3,
+            4, 3, 7
+        ];
+
+        Mesh::create_indexed(indices, positions).unwrap()
     }
 
     fn create_test_object() -> Result<Mesh, Error>
