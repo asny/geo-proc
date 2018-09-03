@@ -4,6 +4,7 @@ use std::string::String;
 use attribute::Attribute;
 use traversal::*;
 use std::rc::Rc;
+use iterators::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -52,6 +53,16 @@ impl Mesh
         self.connectivity_info.create_vertex()
     }
 
+    fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
+    {
+        for halfedge_id in self.one_ring_iterator(vertex_id1) {
+            if self.halfedge_walker(&halfedge_id).vertex().deref() == *vertex_id2 {
+                return Some(halfedge_id)
+            }
+        }
+        None
+    }
+
     fn create_face(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
     {
         let id = self.connectivity_info.create_face();
@@ -59,21 +70,6 @@ impl Mesh
         let halfedge1 = self.connectivity_info.create_halfedge();
         let halfedge2 = self.connectivity_info.create_halfedge();
         let halfedge3 = self.connectivity_info.create_halfedge();
-
-        let mut halfedge4 = self.vertex_walker(vertex_id1).halfedge().deref();
-        while !halfedge4.is_null() && self.halfedge_walker(&halfedge4).vertex().deref() != *vertex_id2
-        {
-            halfedge4 = self.halfedge_walker(&halfedge4).twin().next().deref();
-        }
-
-        if halfedge4.is_null()
-        {
-            halfedge4 = self.connectivity_info.create_halfedge();
-        }
-
-        //let halfedge4 = self.connectivity_info.create_halfedge();
-        let halfedge5 = self.connectivity_info.create_halfedge();
-        let halfedge6 = self.connectivity_info.create_halfedge();
 
         self.connectivity_info.set_vertex_halfedge(&vertex_id1, &halfedge1);
         self.connectivity_info.set_vertex_halfedge(&vertex_id2, &halfedge2);
@@ -83,13 +79,19 @@ impl Mesh
         self.connectivity_info.set_halfedge_vertex(&halfedge2, &vertex_id3);
         self.connectivity_info.set_halfedge_vertex(&halfedge3, &vertex_id1);
 
-        self.connectivity_info.set_halfedge_vertex(&halfedge4, &vertex_id3);
-        self.connectivity_info.set_halfedge_vertex(&halfedge5, &vertex_id2);
-        self.connectivity_info.set_halfedge_vertex(&halfedge6, &vertex_id1);
-
         self.connectivity_info.set_halfedge_face(&halfedge1, &id);
         self.connectivity_info.set_halfedge_face(&halfedge2, &id);
         self.connectivity_info.set_halfedge_face(&halfedge3, &id);
+
+        let halfedge4 = match self.connecting_edge(vertex_id1, vertex_id3) { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
+
+        //let halfedge4 = self.connectivity_info.create_halfedge();
+        let halfedge5 = self.connectivity_info.create_halfedge();
+        let halfedge6 = self.connectivity_info.create_halfedge();
+
+        self.connectivity_info.set_halfedge_vertex(&halfedge4, &vertex_id3);
+        self.connectivity_info.set_halfedge_vertex(&halfedge5, &vertex_id2);
+        self.connectivity_info.set_halfedge_vertex(&halfedge6, &vertex_id1);
 
         self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge6);
         self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
@@ -124,6 +126,11 @@ impl Mesh
     pub fn face_walker(&self, face_id: &FaceID) -> FaceWalker
     {
         FaceWalker::new(face_id.clone(), self.connectivity_info.clone())
+    }
+
+    pub fn one_ring_iterator(&self, vertex_id: &VertexID) -> OneRingIterator
+    {
+        OneRingIterator::new(vertex_id, self.connectivity_info.clone())
     }
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
