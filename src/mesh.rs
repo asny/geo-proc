@@ -36,16 +36,35 @@ impl Mesh
     pub fn create(positions: Vec<f32>) -> Result<Mesh, Error>
     {
         let no_vertices = positions.len()/3;
+        let no_faces = no_vertices/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
-        Ok(Mesh { no_vertices, no_faces: no_vertices/3, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        for face in 0..no_faces {
+            let v0 = mesh.create_vertex();
+            let v1 = mesh.create_vertex();
+            let v2 = mesh.create_vertex();
+            mesh.create_face(&v0, &v1, &v2);
+        }
+        Ok(mesh)
     }
 
     pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
     {
         let no_vertices = positions.len()/3;
+        let no_faces = indices.len()/3;
         let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
+        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices.clone()), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        for vertex in 0..no_vertices {
+            mesh.create_vertex();
+        }
+        for face in 0..no_faces {
+            let v0 = VertexID::new(indices[face * 3] as usize);
+            let v1 = VertexID::new(indices[face * 3 + 1] as usize);
+            let v2 = VertexID::new(indices[face * 3 + 2] as usize);
+            mesh.create_face(&v0, &v1, &v2);
+        }
 
-        Ok(Mesh { no_vertices, no_faces: indices.len()/3, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() })
+        Ok(mesh)
     }
 
     fn create_vertex(&mut self) -> VertexID
@@ -281,27 +300,30 @@ impl Mesh
 mod tests {
     use super::*;
 
+
     #[test]
-    fn test_walk() {
-        let positions: Vec<f32> = vec![
-            1.0, 1.0, -1.0,
-            -1.0, 1.0, -1.0,
-            1.0, 1.0, 1.0];
+    fn test_create_vertex() {
+        let positions: Vec<f32> = vec![];
+        let mut mesh = Mesh::create(positions).unwrap();
+
+        let v1 = mesh.create_vertex();
+        let v2 = mesh.create_vertex();
+        let v3 = mesh.create_vertex();
+        assert_eq!(v1.val(), 0);
+        assert_eq!(v2.val(), 1);
+        assert_eq!(v3.val(), 2);
+    }
+
+    #[test]
+    fn test_create_face() {
+        let positions: Vec<f32> = vec![];
         let mut mesh = Mesh::create(positions).unwrap();
 
         let v1 = mesh.create_vertex();
         let v2 = mesh.create_vertex();
         let v3 = mesh.create_vertex();
         let f1 = mesh.create_face(&v1, &v2, &v3);
-        assert_eq!(v1.val(), 0);
-        assert_eq!(v2.val(), 1);
-        assert_eq!(v3.val(), 2);
         assert_eq!(f1.val(), 0);
-
-        let p = mesh.positions.at(v1.val());
-        assert_eq!(p.x, 1.0);
-        assert_eq!(p.y, 1.0);
-        assert_eq!(p.z, -1.0);
 
         let t1 = mesh.vertex_walker(&v1).halfedge().deref();
         assert_eq!(t1.val(), 0);
@@ -317,6 +339,10 @@ mod tests {
 
         let t5 = mesh.halfedge_walker(&t1).twin().deref();
         assert_eq!(t5.val(), 3);
+    }
+
+    #[test]
+    fn test_one_ring_iterator() {
     }
 
     #[test]
