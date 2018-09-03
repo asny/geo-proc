@@ -42,3 +42,33 @@ impl Iterator for OneRingIterator {
         }
     }
 }
+
+pub struct FaceIterator
+{
+    connectivity_info: Rc<ConnectivityInfo>,
+    current: HalfEdgeWalker,
+    start: HalfEdgeID
+}
+
+impl FaceIterator {
+    pub fn new(face_id: &FaceID, connectivity_info: Rc<ConnectivityInfo>) -> FaceIterator
+    {
+        let current = FaceWalker::new(face_id.clone(), connectivity_info.clone()).halfedge();
+        let start = current.deref().clone();
+        FaceIterator { connectivity_info, current, start }
+    }
+}
+
+impl Iterator for FaceIterator {
+    type Item = HalfEdgeWalker;
+
+    fn next(&mut self) -> Option<HalfEdgeWalker>
+    {
+        if self.current.deref() == self.start {
+            return None;
+        }
+        let curr = self.current.clone();
+        self.current =  HalfEdgeWalker::new(self.current.deref().clone(), self.connectivity_info.clone()).next();
+        Some(curr)
+    }
+}
