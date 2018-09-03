@@ -137,6 +137,12 @@ impl VertexWalker
     }
 }
 
+impl Clone for VertexWalker {
+  fn clone(& self) -> Self {
+    VertexWalker { current: self.current.clone(), connectivity_info: self.connectivity_info.clone() }
+  }
+}
+
 pub struct HalfEdgeWalker
 {
     connectivity_info: Rc<ConnectivityInfo>,
@@ -210,6 +216,12 @@ impl HalfEdgeWalker
     }
 }
 
+impl Clone for HalfEdgeWalker {
+  fn clone(& self) -> Self {
+    HalfEdgeWalker { current: self.current.clone(), connectivity_info: self.connectivity_info.clone() }
+  }
+}
+
 pub struct FaceWalker
 {
     connectivity_info: Rc<ConnectivityInfo>,
@@ -246,6 +258,12 @@ impl FaceWalker
         }
         Some(self.current.clone())
     }
+}
+
+impl Clone for FaceWalker {
+  fn clone(& self) -> Self {
+    FaceWalker { current: self.current.clone(), connectivity_info: self.connectivity_info.clone() }
+  }
 }
 
 #[derive(Debug)]
