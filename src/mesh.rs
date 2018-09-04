@@ -463,9 +463,25 @@ mod tests {
         let indices = vec![1, 2, 3];
         for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
             assert_eq!(edge.vertex().id().val(), indices[i]);
+            i = i + 1;
+        }
+        assert_eq!(i, 3, "All edges of a one-ring are not visited");
+    }
+
+    #[test]
+    fn test_vertex_halfedge_iterator_with_holes() {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
+        let mesh = Mesh::create_indexed(indices, positions).unwrap();
+
+        let mut i = 0;
+        let indices = vec![1, 2, 3, 4];
+        for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
+            assert_eq!(edge.vertex().id().val(), indices[i]);
             i = i+1;
         }
-        assert_eq!(i,3, "All edges of a one-ring are not visited");
+        assert_eq!(i,4, "All edges of a one-ring are not visited");
+
     }
 
     #[test]
