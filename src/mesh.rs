@@ -87,23 +87,24 @@ impl Mesh
         None
     }*/
 
+    fn find_edge(&self, v1: &VertexID, v2: &VertexID) -> Option<HalfEdgeID>
+    {
+        for halfedge_id in self.halfedge_iterator() {
+            let walker = self.halfedge_walker(&halfedge_id);
+            if &walker.vertex().id() == v2 && &walker.twin().vertex().id() == v1
+            {
+                return Some(halfedge_id)
+            }
+        }
+        None
+    }
+
     fn create_face(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
     {
-        let find_edge = |v1, v2| -> Option<HalfEdgeID> {
-            for halfedge_id in self.halfedge_iterator() {
-                let mut walker = self.halfedge_walker(&halfedge_id);
-                if walker.clone().vertex().id() == v2 && walker.twin().vertex().id() == v1
-                {
-                    return Some(halfedge_id)
-                }
-            }
-            None
-        };
-        
         let id = self.connectivity_info.create_face();
 
         // Create inner halfedges
-        let halfedge1 = match find_edge(vertex_id1.clone(), vertex_id2.clone())
+        let halfedge1 = match self.find_edge(vertex_id1, vertex_id2)
             {
                 Some(e) => { e },
                 None => {
@@ -116,7 +117,7 @@ impl Mesh
         self.connectivity_info.set_vertex_halfedge(&vertex_id1, &halfedge1);
         self.connectivity_info.set_halfedge_face(&halfedge1, &id);
 
-        let halfedge2 = match find_edge(vertex_id2.clone(), vertex_id3.clone())
+        let halfedge2 = match self.find_edge(vertex_id2, vertex_id3)
             {
                 Some(e) => { e },
                 None => {
@@ -129,7 +130,7 @@ impl Mesh
         self.connectivity_info.set_halfedge_next(&halfedge1, &halfedge2);
         self.connectivity_info.set_halfedge_face(&halfedge2, &id);
 
-        let halfedge3 = match find_edge(vertex_id3.clone(), vertex_id1.clone())
+        let halfedge3 = match self.find_edge(vertex_id3, vertex_id1)
             {
                 Some(e) => { e },
                 None => {
@@ -144,7 +145,7 @@ impl Mesh
         self.connectivity_info.set_halfedge_face(&halfedge3, &id);
 
         // Create outer halfedges
-        let halfedge4 = match find_edge(vertex_id2.clone(), vertex_id1.clone())
+        let halfedge4 = match self.find_edge(vertex_id2, vertex_id1)
             {
                 Some(e) => { e },
                 None => {
@@ -156,7 +157,7 @@ impl Mesh
         self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge4);
         self.connectivity_info.set_halfedge_twin(&halfedge4, &halfedge1);
 
-        let halfedge5 = match find_edge(vertex_id3.clone(), vertex_id2.clone())
+        let halfedge5 = match self.find_edge(vertex_id3, vertex_id2)
             {
                 Some(e) => { e },
                 None => {
@@ -168,7 +169,7 @@ impl Mesh
         self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
         self.connectivity_info.set_halfedge_twin(&halfedge5, &halfedge2);
 
-        let halfedge6 = match find_edge(vertex_id1.clone(), vertex_id3.clone())
+        let halfedge6 = match self.find_edge(vertex_id1, vertex_id3)
             {
                 Some(e) => { e },
                 None => {
