@@ -40,7 +40,7 @@ impl Iterator for HalfEdgeIterator {
     }
 }
 
-pub struct OneRingIterator
+pub struct VertexOneRingIterator
 {
     connectivity_info: Rc<ConnectivityInfo>,
     current: HalfEdgeWalker,
@@ -48,16 +48,16 @@ pub struct OneRingIterator
     is_done: bool
 }
 
-impl OneRingIterator {
-    pub fn new(vertex_id: &VertexID, connectivity_info: Rc<ConnectivityInfo>) -> OneRingIterator
+impl VertexOneRingIterator {
+    pub fn new(vertex_id: &VertexID, connectivity_info: Rc<ConnectivityInfo>) -> VertexOneRingIterator
     {
         let current = VertexWalker::new(vertex_id.clone(), connectivity_info.clone()).halfedge();
         let start = current.id();
-        OneRingIterator { connectivity_info, current, start, is_done: false }
+        VertexOneRingIterator { connectivity_info, current, start, is_done: false }
     }
 }
 
-impl Iterator for OneRingIterator {
+impl Iterator for VertexOneRingIterator {
     type Item = HalfEdgeWalker;
 
     fn next(&mut self) -> Option<HalfEdgeWalker>
@@ -79,23 +79,23 @@ impl Iterator for OneRingIterator {
     }
 }
 
-pub struct FaceIterator
+pub struct FaceHalfedgeIterator
 {
     current: HalfEdgeWalker,
     start: HalfEdgeID,
     is_done: bool
 }
 
-impl FaceIterator {
-    pub fn new(face_id: &FaceID, connectivity_info: Rc<ConnectivityInfo>) -> FaceIterator
+impl FaceHalfedgeIterator {
+    pub fn new(face_id: &FaceID, connectivity_info: Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
     {
         let current = FaceWalker::new(face_id.clone(), connectivity_info.clone()).halfedge();
         let start = current.id().clone();
-        FaceIterator { current, start, is_done: false }
+        FaceHalfedgeIterator { current, start, is_done: false }
     }
 }
 
-impl Iterator for FaceIterator {
+impl Iterator for FaceHalfedgeIterator {
     type Item = HalfEdgeWalker;
 
     fn next(&mut self) -> Option<HalfEdgeWalker>
