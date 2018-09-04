@@ -31,13 +31,13 @@ impl IntAttribute
         Ok(IntAttribute{name: String::from(name), data: d})
     }
 
-    pub fn at(&self, vertex_id: usize) -> u32
+    pub fn at(&self, vertex_id: &VertexID) -> u32
     {
-        self.data[vertex_id] as u32
+        self.data[vertex_id.val()] as u32
     }
 
-    pub fn set(&mut self, vertex_id: usize, value: u32) {
-        self.data[vertex_id] = value as f32;
+    pub fn set(&mut self, vertex_id: &VertexID, value: u32) {
+        self.data[vertex_id.val()] = value as f32;
     }
 }
 
