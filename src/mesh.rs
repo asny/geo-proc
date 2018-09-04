@@ -78,7 +78,7 @@ impl Mesh
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
         for mut halfedge in self.vertex_halfedge_iterator(vertex_id1) {
-            if halfedge.vertex().id() == *vertex_id2 {
+            if &halfedge.vertex().id() == vertex_id2 {
                 return Some(halfedge.id())
             }
         }
