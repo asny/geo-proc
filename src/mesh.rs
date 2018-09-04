@@ -2,9 +2,10 @@ use attribute;
 use glm;
 use std::string::String;
 use attribute::Attribute;
-use traversal::*;
 use std::rc::Rc;
+use ids::*;
 use iterators::*;
+use traversal::*;
 
 #[derive(Debug)]
 pub enum Error {

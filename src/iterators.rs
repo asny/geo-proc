@@ -1,3 +1,4 @@
+use ids::*;
 use traversal::*;
 use std::rc::Rc;
 

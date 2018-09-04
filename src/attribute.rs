@@ -1,5 +1,5 @@
 use glm::*;
-use traversal::*;
+use ids::*;
 
 #[derive(Debug)]
 pub enum Error {

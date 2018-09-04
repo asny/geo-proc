@@ -1,148 +1,133 @@
-use std::rc::{Weak, Rc};
-use std::cell::{RefCell, Ref};
-use std::ops::{Deref,DerefMut};
-use std::borrow::{Borrow, BorrowMut};
+
 
 #[derive(Debug)]
-pub enum Error {
-    FailedToDerefPtr {message: String}
+pub struct VertexID
+{
+    val: usize,
+    dead: bool
 }
 
-#[derive(Debug)]
-pub struct Ptr<T> {
-  pub val: Rc<RefCell<T>>
-}
-
-impl<T> Ptr<T> {
-    pub fn new(val: T) -> Ptr<T> {
-        Ptr { val: Rc::new(RefCell::new(val)) }
-    }
-
-    pub fn deref(&self) -> Ref<T>
+impl VertexID {
+    pub fn new(val: usize) -> VertexID
     {
-        RefCell::borrow(self.val.as_ref())
+        VertexID {val, dead: false}
+    }
+
+    pub fn null() -> VertexID
+    {
+        VertexID {val: 0, dead: true}
+    }
+
+    pub fn is_null(&self) -> bool
+    {
+        self.dead
+    }
+
+    pub fn val(&self) -> usize
+    {
+        if self.is_null() {
+            panic!("Vertex is dead");
+        }
+        self.val
     }
 }
 
-impl<T> Deref for Ptr<T> {
-    type Target = RefCell<T>;
-
-    fn deref(&self) -> &RefCell<T> {
-        println!("deref");
-        self.val.as_ref()
-    }
-}
-
-/*impl<T> DerefMut for Ptr<T> {
-    fn deref_mut(&mut self) -> &mut T {
-        println!("deref mut");
-        RefCell::borrow_mut(self.val.as_ref()).deref_mut()
-    }
-}*/
-
-impl<T> Clone for Ptr<T> {
+impl Clone for VertexID {
   fn clone(& self) -> Self {
-    Ptr { val: self.val.clone() }
+    VertexID { val: self.val, dead: self.dead }
   }
 }
 
+impl PartialEq for VertexID {
+    fn eq(&self, other: &VertexID) -> bool {
+        !self.is_null() && !other.is_null() && self.val == other.val
+    }
+}
+
 #[derive(Debug)]
-pub struct VertexPtr {
-  pub val: Rc<RefCell<Vertex>>
-}
-
-impl VertexPtr {
-    pub fn new(val: T) -> Ptr<T> {
-        Ptr { val: Rc::new(RefCell::new(val)) }
-    }
-
-    pub fn halfedge(&self) -> Ref<T>
-    {
-        RefCell::borrow(self.val.as_ref())
-    }
-}
-
-pub struct Vertex {
-    id: usize,
-    halfedge: Option<Ptr<HalfEdge>>
-}
-
-impl Vertex
+pub struct HalfEdgeID
 {
-    pub fn create(id: usize) -> Ptr<Vertex>
+    val: usize,
+    dead: bool
+}
+
+impl HalfEdgeID {
+    pub fn new(val: usize) -> HalfEdgeID
     {
-        Ptr::new(Vertex {id, halfedge: None})
+        HalfEdgeID {val, dead: false}
     }
 
-    pub fn id(&self) -> usize
+    pub fn null() -> HalfEdgeID
     {
-        self.id
+        HalfEdgeID {val: 0, dead: true}
     }
 
-    pub fn halfedge(&self) -> &Ptr<HalfEdge>
+    pub fn is_null(&self) -> bool
     {
-        &self.halfedge.as_ref().unwrap()
+        self.dead
     }
 
-    pub fn attach_halfedge(&mut self, halfedge: &Ptr<HalfEdge>)
+    pub fn val(&self) -> usize
     {
-        self.halfedge = Some(halfedge.clone());
-    }
-
-    pub fn detach_halfedge(&mut self)
-    {
-        self.halfedge = None;
+        if self.is_null() {
+            panic!("Halfedge is dead");
+        }
+        self.val
     }
 }
 
-
-pub struct HalfEdge {
-    id: usize,
-    vertex: Ptr<Vertex>
+impl Clone for HalfEdgeID {
+  fn clone(& self) -> Self {
+    HalfEdgeID { val: self.val, dead: self.dead }
+  }
 }
 
-impl HalfEdge
+impl PartialEq for HalfEdgeID {
+    fn eq(&self, other: &HalfEdgeID) -> bool {
+        !self.is_null() && !other.is_null() && self.val == other.val
+    }
+}
+
+#[derive(Debug)]
+pub struct FaceID
 {
-    pub fn create(id: usize, vertex: &Ptr<Vertex>) -> Ptr<HalfEdge>
+    val: usize,
+    dead: bool
+}
+
+impl FaceID {
+    pub fn new(val: usize) -> FaceID
     {
-        Ptr::new(HalfEdge {id, vertex: vertex.clone()})
+        FaceID {val, dead: false}
     }
 
-    pub fn id(&self) -> usize
+    pub fn null() -> FaceID
     {
-        self.id
+        FaceID {val: 0, dead: true}
     }
 
-    pub fn vertex(&self) -> &Ptr<Vertex>
+    pub fn is_null(&self) -> bool
     {
-        &self.vertex
+        self.dead
+    }
+
+    pub fn val(&self) -> usize
+    {
+        if self.is_null() {
+            panic!("Face is dead");
+        }
+        self.val
     }
 }
 
-pub struct Face {
-    id: usize,
-    halfedge: Ptr<HalfEdge>
+impl Clone for FaceID {
+    fn clone(& self) -> Self {
+        FaceID { val: self.val, dead: self.dead }
+    }
 }
 
-impl Face
-{
-    pub fn create(id: usize, halfedge: &Ptr<HalfEdge>) -> Ptr<Face>
-    {
-        Ptr::new(Face {id, halfedge: halfedge.clone()})
-    }
-
-    pub fn id(&self) -> usize
-    {
-        self.id
-    }
-
-    pub fn halfedge(&self) -> &Ptr<HalfEdge>
-    {
-        &self.halfedge
-    }
-
-    pub fn attach_halfedge(&mut self, halfedge: &Ptr<HalfEdge>)
-    {
-        self.halfedge = halfedge.clone();
+impl PartialEq for FaceID {
+    fn eq(&self, other: &FaceID) -> bool {
+        !self.is_null() && !other.is_null() && self.val == other.val
     }
 }
