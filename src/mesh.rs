@@ -6,6 +6,7 @@ use std::rc::Rc;
 use ids::*;
 use iterators::*;
 use traversal::*;
+use connectivity_info::ConnectivityInfo;
 
 #[derive(Debug)]
 pub enum Error {
