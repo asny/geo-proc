@@ -169,19 +169,13 @@ impl ConnectivityInfo {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Vertex {
     pub id: VertexID,
     pub halfedge: HalfEdgeID
 }
 
-impl Clone for Vertex {
-  fn clone(& self) -> Self {
-    Vertex { id: self.id.clone(), halfedge: self.halfedge.clone() }
-  }
-}
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct HalfEdge {
     pub id: HalfEdgeID,
     pub vertex: VertexID,
@@ -190,20 +184,15 @@ pub struct HalfEdge {
     pub face: FaceID
 }
 
-impl Clone for HalfEdge {
-  fn clone(& self) -> Self {
-    HalfEdge { id: self.id.clone(), vertex: self.vertex.clone(), twin: self.twin.clone(), next: self.next.clone(), face: self.face.clone() }
-  }
+impl HalfEdge {
+    pub fn id(&self) -> &HalfEdgeID
+    {
+        &self.id
+    }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Face {
     pub id: FaceID,
     pub halfedge: HalfEdgeID
-}
-
-impl Clone for Face {
-  fn clone(& self) -> Self {
-    Face { id: self.id.clone(), halfedge: self.halfedge.clone() }
-  }
 }
