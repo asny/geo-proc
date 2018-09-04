@@ -18,7 +18,7 @@ impl ConnectivityInfo {
     {
         let vec = &mut *RefCell::borrow_mut(&self.vertices);
         let id = VertexID::new(vec.len());
-        vec.push(Vertex { halfedge: HalfEdgeID::null() });
+        vec.push(Vertex { id: id.clone(), halfedge: HalfEdgeID::null() });
         id
     }
 
@@ -34,7 +34,7 @@ impl ConnectivityInfo {
     {
         let mut vec = RefCell::borrow_mut(&self.faces);
         let id = FaceID::new(vec.len());
-        let face = Face { halfedge: HalfEdgeID::null() };
+        let face = Face { id: id.clone(), halfedge: HalfEdgeID::null() };
         vec.push(face);
         id
     }
@@ -69,29 +69,70 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.faces)[id.val()].halfedge = val.clone();
     }
 
+    pub fn vertex_first_iter(&self) -> Option<VertexID>
+    {
+        self.next_vertex(-1)
+    }
+
+    pub fn vertex_next_iter(&self, index: &VertexID) -> Option<VertexID>
+    {
+        self.next_vertex(index.val() as i32)
+    }
+
+    fn next_vertex(&self, index: i32) -> Option<VertexID>
+    {
+        let vertices = RefCell::borrow(&self.vertices);
+        let mut i = (index + 1) as usize;
+        let mut id = VertexID::null();
+        while id.is_null() {
+            if i >= vertices.len() { return None; }
+            id = vertices[i].id.clone();
+            i = i+1;
+        }
+        Some(id)
+    }
+
     pub fn halfedge_first_iter(&self) -> Option<HalfEdgeID>
     {
+        self.next_halfedge(-1)
+    }
+
+    pub fn halfedge_next_iter(&self, index: &HalfEdgeID) -> Option<HalfEdgeID>
+    {
+        self.next_halfedge(index.val() as i32)
+    }
+
+    fn next_halfedge(&self, index: i32) -> Option<HalfEdgeID>
+    {
         let halfedges = RefCell::borrow(&self.halfedges);
-        let no_halfedges = halfedges.len();
-        let mut i = 0;
+        let mut i = (index + 1) as usize;
         let mut id = HalfEdgeID::null();
         while id.is_null() {
-            if i >= no_halfedges { return None; }
+            if i >= halfedges.len() { return None; }
             id = halfedges[i].id.clone();
             i = i+1;
         }
         Some(id)
     }
 
-    pub fn halfedge_next_iter(&self, index: &HalfEdgeID) -> Option<HalfEdgeID>
+    pub fn face_first_iter(&self) -> Option<FaceID>
     {
-        let halfedges = RefCell::borrow(&self.halfedges);
-        let no_halfedges = halfedges.len();
-        let mut i = index.val() + 1;
-        let mut id = HalfEdgeID::null();
+        self.next_face(-1)
+    }
+
+    pub fn face_next_iter(&self, index: &FaceID) -> Option<FaceID>
+    {
+        self.next_face(index.val() as i32)
+    }
+
+    fn next_face(&self, index: i32) -> Option<FaceID>
+    {
+        let faces = RefCell::borrow(&self.faces);
+        let mut i = (index + 1) as usize;
+        let mut id = FaceID::null();
         while id.is_null() {
-            if i >= no_halfedges { return None; }
-            id = halfedges[i].id.clone();
+            if i >= faces.len() { return None; }
+            id = faces[i].id.clone();
             i = i+1;
         }
         Some(id)
@@ -130,12 +171,13 @@ impl ConnectivityInfo {
 
 #[derive(Debug)]
 pub struct Vertex {
+    pub id: VertexID,
     pub halfedge: HalfEdgeID
 }
 
 impl Clone for Vertex {
   fn clone(& self) -> Self {
-    Vertex { halfedge: self.halfedge.clone() }
+    Vertex { id: self.id.clone(), halfedge: self.halfedge.clone() }
   }
 }
 
@@ -156,11 +198,12 @@ impl Clone for HalfEdge {
 
 #[derive(Debug)]
 pub struct Face {
+    pub id: FaceID,
     pub halfedge: HalfEdgeID
 }
 
 impl Clone for Face {
   fn clone(& self) -> Self {
-    Face { halfedge: self.halfedge.clone() }
+    Face { id: self.id.clone(), halfedge: self.halfedge.clone() }
   }
 }

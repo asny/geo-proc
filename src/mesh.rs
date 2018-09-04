@@ -198,19 +198,29 @@ impl Mesh
         FaceWalker::new(face_id.clone(), self.connectivity_info.clone())
     }
 
-    pub fn one_ring_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
+    pub fn vertex_halfedge_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
     {
         VertexHalfedgeIterator::new(vertex_id, self.connectivity_info.clone())
     }
 
-    pub fn face_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator
+    pub fn face_halfedge_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator
     {
         FaceHalfedgeIterator::new(face_id, self.connectivity_info.clone())
+    }
+
+    pub fn vertex_iterator(&self) -> VertexIterator
+    {
+        VertexIterator::new(self.connectivity_info.clone())
     }
 
     pub fn halfedge_iterator(&self) -> HalfEdgeIterator
     {
         HalfEdgeIterator::new(self.connectivity_info.clone())
+    }
+
+    pub fn face_iterator(&self) -> FaceIterator
+    {
+        FaceIterator::new(self.connectivity_info.clone())
     }
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
@@ -401,23 +411,44 @@ mod tests {
     }
 
     #[test]
-    fn test_edge_iterator() {
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-        let indices: Vec<u32> = vec![0, 3, 1,  0, 2, 3,  0, 3, 1];
-        let mesh = Mesh::create_indexed(indices, positions).unwrap();
+    fn test_vertex_iterator() {
+        let mesh = create_three_connected_faces();
 
         let mut i = 0;
-        for halfedge in mesh.halfedge_iterator() {
-            assert_eq!(halfedge.val(), i);
+        for vertex_id in mesh.vertex_iterator() {
+            assert_eq!(vertex_id.val(), i);
             i = i+1;
         }
+        assert_eq!(4, i);
+    }
+
+    #[test]
+    fn test_halfedge_iterator() {
+        let mesh = create_three_connected_faces();
+
+        let mut i = 0;
+        for halfedge_id in mesh.halfedge_iterator() {
+            assert_eq!(halfedge_id.val(), i);
+            i = i+1;
+        }
+        assert_eq!(12, i);
+    }
+
+    #[test]
+    fn test_face_iterator() {
+        let mesh = create_three_connected_faces();
+
+        let mut i = 0;
+        for face_id in mesh.face_iterator() {
+            assert_eq!(face_id.val(), i);
+            i = i+1;
+        }
+        assert_eq!(3, i);
     }
 
     #[test]
     fn test_connectivity() {
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        let mesh = Mesh::create_indexed(indices, positions).unwrap();
+        let mesh = create_three_connected_faces();
 
         let walker = mesh.vertex_walker(&VertexID::new(0)).halfedge();
         let start_edge = walker.id();
@@ -426,14 +457,12 @@ mod tests {
     }
 
     #[test]
-    fn test_one_ring_iterator() {
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        let mesh = Mesh::create_indexed(indices, positions).unwrap();
+    fn test_vertex_halfedge_iterator() {
+        let mesh = create_three_connected_faces();
 
         let mut i = 0;
         let indices = vec![1, 2, 3];
-        for edge in mesh.one_ring_iterator(&VertexID::new(0)) {
+        for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
             assert_eq!(edge.vertex().id().val(), indices[i]);
             i = i+1;
         }
@@ -441,10 +470,10 @@ mod tests {
     }
 
     #[test]
-    fn test_face_iterator() {
+    fn test_face_halfedge_iterator() {
         let mesh = create_single_face();
         let mut i = 0;
-        for mut edge in mesh.face_iterator(&FaceID::new(0)) {
+        for mut edge in mesh.face_halfedge_iterator(&FaceID::new(0)) {
             assert_eq!(edge.id().val(), i);
             assert_eq!(edge.face().id().val(), 0);
             i = i+1;
@@ -472,6 +501,13 @@ mod tests {
         let v2 = mesh.create_vertex();
         mesh.create_face(&v0, &v1, &v2);
         mesh
+    }
+
+    fn create_three_connected_faces() -> Mesh
+    {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
+        Mesh::create_indexed(indices, positions).unwrap()
     }
 
     fn create_connected_test_object() -> Mesh
