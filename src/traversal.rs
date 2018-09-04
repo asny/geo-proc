@@ -151,18 +151,9 @@ impl VertexWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> VertexID
+    pub fn id(&self) -> VertexID
     {
         self.current.clone()
-    }
-
-    pub fn deref_option(&self) -> Option<VertexID>
-    {
-        if self.current.is_null()
-        {
-            return None
-        }
-        Some(self.current.clone())
     }
 }
 
@@ -231,18 +222,9 @@ impl HalfEdgeWalker
         FaceWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> HalfEdgeID
+    pub fn id(&self) -> HalfEdgeID
     {
         self.current.clone()
-    }
-
-    pub fn deref_option(&self) -> Option<HalfEdgeID>
-    {
-        if self.current.is_null()
-        {
-            return None
-        }
-        Some(self.current.clone())
     }
 }
 
@@ -275,18 +257,9 @@ impl FaceWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn deref(&self) -> FaceID
+    pub fn id(&self) -> FaceID
     {
         self.current.clone()
-    }
-
-    pub fn deref_option(&self) -> Option<FaceID>
-    {
-        if self.current.is_null()
-        {
-            return None
-        }
-        Some(self.current.clone())
     }
 }
 

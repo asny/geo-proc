@@ -90,7 +90,7 @@ impl Mesh
         let find_edge = |v1, v2| -> Option<HalfEdgeID> {
             for halfedge_id in self.halfedge_iterator() {
                 let mut walker = self.halfedge_walker(&halfedge_id);
-                if walker.clone().vertex().deref() == v2 && walker.twin().vertex().deref() == v1
+                if walker.clone().vertex().id() == v2 && walker.twin().vertex().id() == v1
                 {
                     return Some(halfedge_id)
                 }
@@ -382,19 +382,19 @@ mod tests {
         let f1 = mesh.create_face(&v1, &v2, &v3);
         assert_eq!(f1.val(), 0);
 
-        let t1 = mesh.vertex_walker(&v1).halfedge().deref();
+        let t1 = mesh.vertex_walker(&v1).halfedge().id();
         assert_eq!(t1.val(), 0);
 
-        let t2 = mesh.vertex_walker(&v1).halfedge().twin().deref();
+        let t2 = mesh.vertex_walker(&v1).halfedge().twin().id();
         assert_eq!(t2.val(), 3);
 
-        let t3 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().deref();
+        let t3 = mesh.vertex_walker(&v2).halfedge().next().next().vertex().id();
         assert_eq!(t3.val(), v2.val());
 
-        let t4 = mesh.face_walker(&f1).halfedge().twin().twin().vertex().halfedge().face().deref();
+        let t4 = mesh.face_walker(&f1).halfedge().twin().twin().vertex().halfedge().face().id();
         assert_eq!(t4.val(), f1.val());
 
-        let t5 = mesh.halfedge_walker(&t1).twin().deref();
+        let t5 = mesh.halfedge_walker(&t1).twin().id();
         assert_eq!(t5.val(), 3);
     }
 
@@ -418,8 +418,8 @@ mod tests {
         let mesh = Mesh::create_indexed(indices, positions).unwrap();
 
         let walker = mesh.vertex_walker(&VertexID::new(0)).halfedge();
-        let start_edge = walker.deref();
-        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().deref();
+        let start_edge = walker.id();
+        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().id();
         assert_eq!(start_edge.val(), one_round_edge.val());
     }
 
@@ -432,7 +432,7 @@ mod tests {
         let mut i = 0;
         let indices = vec![1, 2, 3];
         for edge in mesh.one_ring_iterator(&VertexID::new(0)) {
-            assert_eq!(edge.vertex().deref().val(), indices[i]);
+            assert_eq!(edge.vertex().id().val(), indices[i]);
             i = i+1;
         }
         assert_eq!(i,3, "All edges of a one-ring are not visited");
@@ -443,8 +443,8 @@ mod tests {
         let mesh = create_single_face();
         let mut i = 0;
         for mut edge in mesh.face_iterator(&FaceID::new(0)) {
-            assert_eq!(edge.deref().val(), i);
-            assert_eq!(edge.face().deref().val(), 0);
+            assert_eq!(edge.id().val(), i);
+            assert_eq!(edge.face().id().val(), 0);
             i = i+1;
         }
         assert_eq!(i, 3, "All edges of a face are not visited");
