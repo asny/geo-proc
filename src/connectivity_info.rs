@@ -81,15 +81,13 @@ impl ConnectivityInfo {
 
     fn next_vertex(&self, index: i32) -> Option<VertexID>
     {
-        let vertices = RefCell::borrow(&self.vertices);
+        let vec = RefCell::borrow(&self.vertices);
         let mut i = (index + 1) as usize;
-        let mut id = VertexID::null();
-        while id.is_null() {
-            if i >= vertices.len() { return None; }
-            id = vertices[i].id.clone();
+        loop {
+            if i >= vec.len() { return None; }
+            if !vec[i].id().is_null() { return Some(vec[i].id().clone()) }
             i = i+1;
         }
-        Some(id)
     }
 
     pub fn halfedge_first_iter(&self) -> Option<HalfEdgeID>
@@ -104,15 +102,13 @@ impl ConnectivityInfo {
 
     fn next_halfedge(&self, index: i32) -> Option<HalfEdgeID>
     {
-        let halfedges = RefCell::borrow(&self.halfedges);
+        let vec = RefCell::borrow(&self.halfedges);
         let mut i = (index + 1) as usize;
-        let mut id = HalfEdgeID::null();
-        while id.is_null() {
-            if i >= halfedges.len() { return None; }
-            id = halfedges[i].id.clone();
+        loop {
+            if i >= vec.len() { return None; }
+            if !vec[i].id().is_null() { return Some(vec[i].id().clone()) }
             i = i+1;
         }
-        Some(id)
     }
 
     pub fn face_first_iter(&self) -> Option<FaceID>
@@ -127,15 +123,13 @@ impl ConnectivityInfo {
 
     fn next_face(&self, index: i32) -> Option<FaceID>
     {
-        let faces = RefCell::borrow(&self.faces);
+        let vec = RefCell::borrow(&self.faces);
         let mut i = (index + 1) as usize;
-        let mut id = FaceID::null();
-        while id.is_null() {
-            if i >= faces.len() { return None; }
-            id = faces[i].id.clone();
+        loop {
+            if i >= vec.len() { return None; }
+            if !vec[i].id().is_null() { return Some(vec[i].id().clone()) }
             i = i+1;
         }
-        Some(id)
     }
 
     pub fn vertex_halfedge(&self, vertex_id: &VertexID) -> HalfEdgeID
@@ -175,6 +169,13 @@ pub struct Vertex {
     pub halfedge: HalfEdgeID
 }
 
+impl Vertex {
+    pub fn id(&self) -> &VertexID
+    {
+        &self.id
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct HalfEdge {
     pub id: HalfEdgeID,
@@ -195,4 +196,11 @@ impl HalfEdge {
 pub struct Face {
     pub id: FaceID,
     pub halfedge: HalfEdgeID
+}
+
+impl Face {
+    pub fn id(&self) -> &FaceID
+    {
+        &self.id
+    }
 }
