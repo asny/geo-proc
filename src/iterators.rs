@@ -116,7 +116,6 @@ impl Iterator for FaceIterator {
 
 pub struct VertexHalfedgeIterator
 {
-    connectivity_info: Rc<ConnectivityInfo>,
     current: HalfEdgeWalker,
     start: HalfEdgeID,
     is_done: bool
@@ -127,7 +126,7 @@ impl VertexHalfedgeIterator {
     {
         let current = VertexWalker::new(vertex_id, connectivity_info).halfedge();
         let start = current.id();
-        VertexHalfedgeIterator { connectivity_info: connectivity_info.clone(), current, start, is_done: false }
+        VertexHalfedgeIterator { current, start, is_done: false }
     }
 }
 
@@ -141,7 +140,7 @@ impl Iterator for VertexHalfedgeIterator {
         self.current.previous_mut().twin_mut();
 
         if self.current.id().is_null() { // In the case there are holes in the one-ring
-            self.current = HalfEdgeWalker::new(&self.start, &self.connectivity_info);
+            self.current = curr.clone();
             loop {
                 let mut walker = self.current.clone();
                 walker.twin_mut().next_mut();
