@@ -42,7 +42,8 @@ pub struct OneRingIterator
 {
     connectivity_info: Rc<ConnectivityInfo>,
     current: HalfEdgeWalker,
-    start: HalfEdgeID
+    start: HalfEdgeID,
+    is_done: bool
 }
 
 impl OneRingIterator {
@@ -50,7 +51,7 @@ impl OneRingIterator {
     {
         let current = VertexWalker::new(vertex_id.clone(), connectivity_info.clone()).halfedge();
         let start = current.deref();
-        OneRingIterator { connectivity_info, current, start }
+        OneRingIterator { connectivity_info, current, start, is_done: false }
     }
 }
 
@@ -59,9 +60,7 @@ impl Iterator for OneRingIterator {
 
     fn next(&mut self) -> Option<HalfEdgeWalker>
     {
-        if self.current.deref() == self.start {
-            return None;
-        }
+        if self.is_done { return None; }
         let curr = self.current.clone();
         self.current = self.current.clone().previous().twin();
 
@@ -76,6 +75,7 @@ impl Iterator for OneRingIterator {
                 }
             }
         }
+        self.is_done = self.current.deref() == self.start;
         Some(curr)
     }
 }
@@ -104,9 +104,7 @@ impl Iterator for FaceIterator {
         if self.is_done { return None; }
         let curr = self.current.clone();
         self.current = self.current.next();
-        if self.current.deref() == self.start {
-            self.is_done = true;;
-        }
+        self.is_done = self.current.deref() == self.start;
         Some(curr)
     }
 }

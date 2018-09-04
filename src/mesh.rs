@@ -57,6 +57,7 @@ impl Mesh
         for _vertex in 0..no_vertices {
             mesh.create_vertex();
         }
+
         for face in 0..no_faces {
             let v0 = VertexID::new(indices[face * 3] as usize);
             let v1 = VertexID::new(indices[face * 3 + 1] as usize);
@@ -72,64 +73,110 @@ impl Mesh
         self.connectivity_info.create_vertex()
     }
 
-    fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
+    /*fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
+        let mut i = 0;
         for mut halfedge in self.one_ring_iterator(vertex_id1) {
             if halfedge.vertex().deref() == *vertex_id2 {
                 return Some(halfedge.deref())
             }
+            i = i+1;
         }
         None
-    }
+    }*/
 
     fn create_face(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
     {
+        let find_edge = |v1, v2| -> Option<HalfEdgeID> {
+            for halfedge_id in self.halfedge_iterator() {
+                let mut walker = self.halfedge_walker(&halfedge_id);
+                if walker.clone().vertex().deref() == v2 && walker.twin().vertex().deref() == v1
+                {
+                    return Some(halfedge_id)
+                }
+            }
+            None
+        };
+        
         let id = self.connectivity_info.create_face();
 
-        let halfedge1 = self.connectivity_info.create_halfedge();
-        let halfedge2 = self.connectivity_info.create_halfedge();
-        let halfedge3 = self.connectivity_info.create_halfedge();
-
+        // Create inner halfedges
+        let halfedge1 = match find_edge(vertex_id1.clone(), vertex_id2.clone())
+            {
+                Some(e) => { e },
+                None => {
+                    let halfedge_id = self.connectivity_info.create_halfedge();
+                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id2);
+                    halfedge_id
+                }
+            };
+        self.connectivity_info.set_face_halfedge(&id, &halfedge1);
         self.connectivity_info.set_vertex_halfedge(&vertex_id1, &halfedge1);
+        self.connectivity_info.set_halfedge_face(&halfedge1, &id);
+
+        let halfedge2 = match find_edge(vertex_id2.clone(), vertex_id3.clone())
+            {
+                Some(e) => { e },
+                None => {
+                    let halfedge_id = self.connectivity_info.create_halfedge();
+                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id3);
+                    halfedge_id
+                }
+            };
         self.connectivity_info.set_vertex_halfedge(&vertex_id2, &halfedge2);
-        self.connectivity_info.set_vertex_halfedge(&vertex_id3, &halfedge3);
-
-        self.connectivity_info.set_halfedge_vertex(&halfedge1, &vertex_id2);
-        self.connectivity_info.set_halfedge_vertex(&halfedge2, &vertex_id3);
-        self.connectivity_info.set_halfedge_vertex(&halfedge3, &vertex_id1);
-
         self.connectivity_info.set_halfedge_next(&halfedge1, &halfedge2);
+        self.connectivity_info.set_halfedge_face(&halfedge2, &id);
+
+        let halfedge3 = match find_edge(vertex_id3.clone(), vertex_id1.clone())
+            {
+                Some(e) => { e },
+                None => {
+                    let halfedge_id = self.connectivity_info.create_halfedge();
+                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id1);
+                    halfedge_id
+                }
+            };
+        self.connectivity_info.set_vertex_halfedge(&vertex_id3, &halfedge3);
         self.connectivity_info.set_halfedge_next(&halfedge2, &halfedge3);
         self.connectivity_info.set_halfedge_next(&halfedge3, &halfedge1);
-
-        self.connectivity_info.set_halfedge_face(&halfedge1, &id);
-        self.connectivity_info.set_halfedge_face(&halfedge2, &id);
         self.connectivity_info.set_halfedge_face(&halfedge3, &id);
 
-        self.connectivity_info.set_face_halfedge(&id, &halfedge1);
-
-        let halfedge4 = match self.connecting_edge(vertex_id2, vertex_id1)
-            { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
-        let halfedge5 = match self.connecting_edge(vertex_id3, vertex_id2)
-            { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
-        let halfedge6 = match self.connecting_edge(vertex_id1, vertex_id3)
-            { Some(e) => {e}, None => { self.connectivity_info.create_halfedge() } };
-
-        self.connectivity_info.set_halfedge_vertex(&halfedge4, &vertex_id1);
-        self.connectivity_info.set_halfedge_vertex(&halfedge5, &vertex_id2);
-        self.connectivity_info.set_halfedge_vertex(&halfedge6, &vertex_id3);
-
+        // Create outer halfedges
+        let halfedge4 = match find_edge(vertex_id2.clone(), vertex_id1.clone())
+            {
+                Some(e) => { e },
+                None => {
+                    let halfedge_id = self.connectivity_info.create_halfedge();
+                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id1);
+                    halfedge_id
+                }
+            };
         self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge4);
-        self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
-        self.connectivity_info.set_halfedge_twin(&halfedge3, &halfedge6);
-
         self.connectivity_info.set_halfedge_twin(&halfedge4, &halfedge1);
-        self.connectivity_info.set_halfedge_twin(&halfedge5, &halfedge2);
-        self.connectivity_info.set_halfedge_twin(&halfedge6, &halfedge3);
 
-        self.connectivity_info.set_halfedge_next(&halfedge4, &halfedge6);
-        self.connectivity_info.set_halfedge_next(&halfedge5, &halfedge4);
-        self.connectivity_info.set_halfedge_next(&halfedge6, &halfedge5);
+        let halfedge5 = match find_edge(vertex_id3.clone(), vertex_id2.clone())
+            {
+                Some(e) => { e },
+                None => {
+                    let halfedge_id = self.connectivity_info.create_halfedge();
+                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id2);
+                    halfedge_id
+                }
+            };
+        self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
+        self.connectivity_info.set_halfedge_twin(&halfedge5, &halfedge2);
+
+        let halfedge6 = match find_edge(vertex_id1.clone(), vertex_id3.clone())
+            {
+                Some(e) => { e },
+                None => {
+                    let halfedge_id = self.connectivity_info.create_halfedge();
+                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id3);
+                    halfedge_id
+                }
+            };
+        self.connectivity_info.set_halfedge_twin(&halfedge3, &halfedge6);
+        self.connectivity_info.set_halfedge_twin(&halfedge6, &halfedge3);
 
         id
     }
@@ -157,6 +204,11 @@ impl Mesh
     pub fn face_iterator(&self, face_id: &FaceID) -> FaceIterator
     {
         FaceIterator::new(face_id, self.connectivity_info.clone())
+    }
+
+    pub fn halfedge_iterator(&self) -> HalfEdgeIterator
+    {
+        HalfEdgeIterator::new(self.connectivity_info.clone())
     }
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
@@ -347,13 +399,43 @@ mod tests {
     }
 
     #[test]
-    fn test_one_ring_iterator() {
-        let mesh = create_connected_test_object();
+    fn test_edge_iterator() {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let indices: Vec<u32> = vec![0, 3, 1,  0, 2, 3,  0, 3, 1];
+        let mut mesh = Mesh::create_indexed(indices, positions).unwrap();
+
         let mut i = 0;
-        for edge in mesh.one_ring_iterator(&VertexID::new(0)) {
-            assert_eq!(edge.deref().val(), i);
+        for halfedge in mesh.halfedge_iterator() {
+            assert_eq!(halfedge.val(), i);
             i = i+1;
         }
+    }
+
+    #[test]
+    fn test_connectivity() {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
+        let mut mesh = Mesh::create_indexed(indices, positions).unwrap();
+
+        let mut walker = mesh.vertex_walker(&VertexID::new(0)).halfedge();
+        let start_edge = walker.clone().deref();
+        let one_round_edge = walker.clone().previous().twin().previous().twin().previous().twin().deref();
+        assert_eq!(start_edge.val(), one_round_edge.val());
+    }
+
+    #[test]
+    fn test_one_ring_iterator() {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
+        let mut mesh = Mesh::create_indexed(indices, positions).unwrap();
+
+        let mut i = 0;
+        let indices = vec![1, 2, 3];
+        for edge in mesh.one_ring_iterator(&VertexID::new(0)) {
+            assert_eq!(edge.clone().vertex().deref().val(), indices[i]);
+            i = i+1;
+        }
+        assert_eq!(i,3, "All edges of a one-ring are not visited");
     }
 
     #[test]
@@ -365,7 +447,7 @@ mod tests {
             assert_eq!(edge.face().deref().val(), 0);
             i = i+1;
         }
-        assert_eq!(i, 3, "All edges of a face is not visited");
+        assert_eq!(i, 3, "All edges of a face are not visited");
     }
 
     #[test]
