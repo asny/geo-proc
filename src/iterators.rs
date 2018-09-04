@@ -1,6 +1,43 @@
 use traversal::*;
 use std::rc::Rc;
 
+pub struct HalfEdgeIterator
+{
+    connectivity_info: Rc<ConnectivityInfo>,
+    current: HalfEdgeID,
+    is_done: bool
+}
+
+impl HalfEdgeIterator {
+    pub fn new(connectivity_info: Rc<ConnectivityInfo>) -> HalfEdgeIterator
+    {
+        match connectivity_info.halfedge_first_iter() {
+            Some(halfedge_id) => {
+                HalfEdgeIterator { connectivity_info: connectivity_info.clone(), current: halfedge_id, is_done: false }
+            }
+            None => {
+                HalfEdgeIterator { connectivity_info: connectivity_info.clone(), current: HalfEdgeID::new(0), is_done: true }
+            }
+        }
+
+    }
+}
+
+impl Iterator for HalfEdgeIterator {
+    type Item = HalfEdgeID;
+
+    fn next(&mut self) -> Option<HalfEdgeID>
+    {
+        if self.is_done { return None; }
+        let curr = self.current.clone();
+        match self.connectivity_info.halfedge_next_iter(&self.current) {
+            Some(halfedge) => { self.current = halfedge },
+            None => { self.is_done = true; }
+        }
+        Some(curr)
+    }
+}
+
 pub struct OneRingIterator
 {
     connectivity_info: Rc<ConnectivityInfo>,

@@ -1,6 +1,7 @@
 use std::rc::{Rc};
 use std::cell::{RefCell};
 
+#[derive(Debug)]
 pub struct ConnectivityInfo {
     vertices: RefCell<Vec<Vertex>>,
     halfedges: RefCell<Vec<HalfEdge>>,
@@ -25,7 +26,7 @@ impl ConnectivityInfo {
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
         let id = HalfEdgeID::new(halfedges.len());
-        halfedges.push(HalfEdge { vertex: VertexID::null(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: FaceID::null() });
+        halfedges.push(HalfEdge { id: id.clone(), vertex: VertexID::null(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: FaceID::null() });
         id
     }
 
@@ -66,6 +67,34 @@ impl ConnectivityInfo {
     pub fn set_face_halfedge(&self, id: &FaceID, val: &HalfEdgeID)
     {
         RefCell::borrow_mut(&self.faces)[id.val()].halfedge = val.clone();
+    }
+
+    pub fn halfedge_first_iter(&self) -> Option<HalfEdgeID>
+    {
+        let halfedges = RefCell::borrow(&self.halfedges);
+        let no_halfedges = halfedges.len();
+        let mut i = 0;
+        let mut id = HalfEdgeID::null();
+        while id.is_null() {
+            if i >= no_halfedges { return None; }
+            id = halfedges[i].id.clone();
+            i = i+1;
+        }
+        Some(id)
+    }
+
+    pub fn halfedge_next_iter(&self, index: &HalfEdgeID) -> Option<HalfEdgeID>
+    {
+        let halfedges = RefCell::borrow(&self.halfedges);
+        let no_halfedges = halfedges.len();
+        let mut i = index.val() + 1;
+        let mut id = HalfEdgeID::null();
+        while id.is_null() {
+            if i >= no_halfedges { return None; }
+            id = halfedges[i].id.clone();
+            i = i+1;
+        }
+        Some(id)
     }
 
     fn vertex_halfedge(&self, vertex_id: &VertexID) -> HalfEdgeID
@@ -143,6 +172,7 @@ impl Clone for VertexWalker {
   }
 }
 
+#[derive(Debug)]
 pub struct HalfEdgeWalker
 {
     connectivity_info: Rc<ConnectivityInfo>,
@@ -279,6 +309,7 @@ impl Clone for Vertex {
 
 #[derive(Debug)]
 pub struct HalfEdge {
+    pub id: HalfEdgeID,
     pub vertex: VertexID,
     pub twin: HalfEdgeID,
     pub next: HalfEdgeID,
@@ -287,7 +318,7 @@ pub struct HalfEdge {
 
 impl Clone for HalfEdge {
   fn clone(& self) -> Self {
-    HalfEdge { vertex: self.vertex.clone(), twin: self.twin.clone(), next: self.next.clone(), face: self.face.clone() }
+    HalfEdge { id: self.id.clone(), vertex: self.vertex.clone(), twin: self.twin.clone(), next: self.next.clone(), face: self.face.clone() }
   }
 }
 
