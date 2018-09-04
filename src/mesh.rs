@@ -87,16 +87,11 @@ impl Mesh
 
     fn find_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
-        match self.connecting_edge(vertex_id1, vertex_id2) {
-            Some(e) => { return Some(e) },
-            None => {
-                for halfedge_id in self.halfedge_iterator() {
-                    let mut walker = self.halfedge_walker(&halfedge_id);
-                    if &walker.vertex_id() == vertex_id2 && &walker.twin_mut().vertex_id() == vertex_id1
-                    {
-                        return Some(halfedge_id)
-                    }
-                }
+        for halfedge_id in self.halfedge_iterator() {
+            let mut walker = self.halfedge_walker(&halfedge_id);
+            if &walker.vertex_id() == vertex_id2 && &walker.twin_mut().vertex_id() == vertex_id1
+            {
+                return Some(halfedge_id)
             }
         }
         None
