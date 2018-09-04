@@ -186,7 +186,7 @@ impl HalfEdgeWalker
         HalfEdgeWalker {current, connectivity_info}
     }
 
-    pub fn vertex(&mut self) -> VertexWalker
+    pub fn vertex(&self) -> VertexWalker
     {
         if self.current.is_null()
         {
@@ -196,7 +196,7 @@ impl HalfEdgeWalker
         VertexWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn twin(&mut self) -> HalfEdgeWalker
+    pub fn twin(&self) -> HalfEdgeWalker
     {
         if self.current.is_null()
         {
@@ -206,7 +206,7 @@ impl HalfEdgeWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn next(&mut self) -> HalfEdgeWalker
+    pub fn next(&self) -> HalfEdgeWalker
     {
         if self.current.is_null()
         {
@@ -216,12 +216,12 @@ impl HalfEdgeWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn previous(&mut self) -> HalfEdgeWalker
+    pub fn previous(&self) -> HalfEdgeWalker
     {
         self.next().next()
     }
 
-    pub fn face(&mut self) -> FaceWalker
+    pub fn face(&self) -> FaceWalker
     {
         if self.current.is_null()
         {

@@ -62,12 +62,12 @@ impl Iterator for OneRingIterator {
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
-        self.current = self.current.clone().previous().twin();
+        self.current = self.current.previous().twin();
 
         if self.current.deref().is_null() { // In the case there are holes in the one-ring
             self.current = HalfEdgeWalker::new(self.start.clone(), self.connectivity_info.clone());
             loop {
-                let temp = self.current.clone().twin().next();
+                let temp = self.current.twin().next();
                 match temp.deref_option()
                 {
                     Some(e) => { self.current = temp; },

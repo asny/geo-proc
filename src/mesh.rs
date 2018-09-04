@@ -62,7 +62,7 @@ impl Mesh
             let v0 = VertexID::new(indices[face * 3] as usize);
             let v1 = VertexID::new(indices[face * 3 + 1] as usize);
             let v2 = VertexID::new(indices[face * 3 + 2] as usize);
-            let f = mesh.create_face(&v0, &v1, &v2);
+            mesh.create_face(&v0, &v1, &v2);
         }
 
         Ok(mesh)
@@ -402,7 +402,7 @@ mod tests {
     fn test_edge_iterator() {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
         let indices: Vec<u32> = vec![0, 3, 1,  0, 2, 3,  0, 3, 1];
-        let mut mesh = Mesh::create_indexed(indices, positions).unwrap();
+        let mesh = Mesh::create_indexed(indices, positions).unwrap();
 
         let mut i = 0;
         for halfedge in mesh.halfedge_iterator() {
@@ -415,11 +415,11 @@ mod tests {
     fn test_connectivity() {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        let mut mesh = Mesh::create_indexed(indices, positions).unwrap();
+        let mesh = Mesh::create_indexed(indices, positions).unwrap();
 
-        let mut walker = mesh.vertex_walker(&VertexID::new(0)).halfedge();
-        let start_edge = walker.clone().deref();
-        let one_round_edge = walker.clone().previous().twin().previous().twin().previous().twin().deref();
+        let walker = mesh.vertex_walker(&VertexID::new(0)).halfedge();
+        let start_edge = walker.deref();
+        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().deref();
         assert_eq!(start_edge.val(), one_round_edge.val());
     }
 
@@ -427,12 +427,12 @@ mod tests {
     fn test_one_ring_iterator() {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        let mut mesh = Mesh::create_indexed(indices, positions).unwrap();
+        let mesh = Mesh::create_indexed(indices, positions).unwrap();
 
         let mut i = 0;
         let indices = vec![1, 2, 3];
         for edge in mesh.one_ring_iterator(&VertexID::new(0)) {
-            assert_eq!(edge.clone().vertex().deref().val(), indices[i]);
+            assert_eq!(edge.vertex().deref().val(), indices[i]);
             i = i+1;
         }
         assert_eq!(i,3, "All edges of a one-ring are not visited");
