@@ -139,11 +139,11 @@ impl Iterator for VertexHalfedgeIterator {
         let curr = self.current.clone();
         self.current.previous_mut().twin_mut();
 
-        if self.current.face().id().is_null() { // In the case there are holes in the one-ring
+        if self.current.face_id().is_null() { // In the case there are holes in the one-ring
             self.current.twin_mut();
             loop {
                 self.current.next_mut().twin_mut();
-                if self.current.face().id().is_null() { self.current.twin_mut(); break; }
+                if self.current.face_id().is_null() { self.current.twin_mut(); break; }
             }
         }
         self.is_done = self.current.id() == self.start;

@@ -121,6 +121,14 @@ impl HalfEdgeWalker
         FaceWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
+    pub fn face_id(&self) -> FaceID
+    {
+        match self.current.is_null() {
+            true => { FaceID::null() },
+            false => { self.connectivity_info.halfedge_face(&self.current) }
+        }
+    }
+
     pub fn id(&self) -> HalfEdgeID
     {
         self.current.clone()
