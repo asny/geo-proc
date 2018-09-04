@@ -2,6 +2,7 @@ use std::rc::{Rc};
 use ids::*;
 use connectivity_info::ConnectivityInfo;
 
+#[derive(Debug, Clone)]
 pub struct VertexWalker
 {
     connectivity_info: Rc<ConnectivityInfo>,
@@ -31,13 +32,7 @@ impl VertexWalker
     }
 }
 
-impl Clone for VertexWalker {
-  fn clone(& self) -> Self {
-    VertexWalker { current: self.current.clone(), connectivity_info: self.connectivity_info.clone() }
-  }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct HalfEdgeWalker
 {
     connectivity_info: Rc<ConnectivityInfo>,
@@ -102,12 +97,7 @@ impl HalfEdgeWalker
     }
 }
 
-impl Clone for HalfEdgeWalker {
-  fn clone(& self) -> Self {
-    HalfEdgeWalker { current: self.current.clone(), connectivity_info: self.connectivity_info.clone() }
-  }
-}
-
+#[derive(Debug, Clone)]
 pub struct FaceWalker
 {
     connectivity_info: Rc<ConnectivityInfo>,
@@ -135,11 +125,5 @@ impl FaceWalker
     {
         self.current.clone()
     }
-}
-
-impl Clone for FaceWalker {
-  fn clone(& self) -> Self {
-    FaceWalker { current: self.current.clone(), connectivity_info: self.connectivity_info.clone() }
-  }
 }
 
