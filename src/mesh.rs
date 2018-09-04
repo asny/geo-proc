@@ -198,9 +198,9 @@ impl Mesh
         FaceWalker::new(face_id.clone(), self.connectivity_info.clone())
     }
 
-    pub fn one_ring_iterator(&self, vertex_id: &VertexID) -> VertexOneRingIterator
+    pub fn one_ring_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
     {
-        VertexOneRingIterator::new(vertex_id, self.connectivity_info.clone())
+        VertexHalfedgeIterator::new(vertex_id, self.connectivity_info.clone())
     }
 
     pub fn face_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator

@@ -40,7 +40,7 @@ impl Iterator for HalfEdgeIterator {
     }
 }
 
-pub struct VertexOneRingIterator
+pub struct VertexHalfedgeIterator
 {
     connectivity_info: Rc<ConnectivityInfo>,
     current: HalfEdgeWalker,
@@ -48,16 +48,16 @@ pub struct VertexOneRingIterator
     is_done: bool
 }
 
-impl VertexOneRingIterator {
-    pub fn new(vertex_id: &VertexID, connectivity_info: Rc<ConnectivityInfo>) -> VertexOneRingIterator
+impl VertexHalfedgeIterator {
+    pub fn new(vertex_id: &VertexID, connectivity_info: Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
     {
         let current = VertexWalker::new(vertex_id.clone(), connectivity_info.clone()).halfedge();
         let start = current.id();
-        VertexOneRingIterator { connectivity_info, current, start, is_done: false }
+        VertexHalfedgeIterator { connectivity_info, current, start, is_done: false }
     }
 }
 
-impl Iterator for VertexOneRingIterator {
+impl Iterator for VertexHalfedgeIterator {
     type Item = HalfEdgeWalker;
 
     fn next(&mut self) -> Option<HalfEdgeWalker>
