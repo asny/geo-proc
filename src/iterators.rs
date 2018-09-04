@@ -138,14 +138,15 @@ impl Iterator for VertexHalfedgeIterator {
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
-        self.current = self.current.previous().twin();
+        self.current.previous_mut().twin_mut();
 
         if self.current.id().is_null() { // In the case there are holes in the one-ring
             self.current = HalfEdgeWalker::new(self.start.clone(), self.connectivity_info.clone());
             loop {
-                let temp = self.current.twin().next();
-                if temp.id().is_null() { break; }
-                self.current = temp;
+                let mut walker = self.current.clone();
+                walker.twin_mut().next_mut();
+                if walker.id().is_null() { break; }
+                self.current = walker;
             }
         }
         self.is_done = self.current.id() == self.start;

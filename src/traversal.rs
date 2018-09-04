@@ -106,6 +106,11 @@ impl HalfEdgeWalker
         self.next().next()
     }
 
+    pub fn previous_mut(&mut self) -> &mut HalfEdgeWalker
+    {
+        self.next_mut().next_mut()
+    }
+
     pub fn face(&self) -> FaceWalker
     {
         if self.current.is_null()
