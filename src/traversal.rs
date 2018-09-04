@@ -48,12 +48,19 @@ impl HalfEdgeWalker
 
     pub fn vertex(&self) -> VertexWalker
     {
-        if self.current.is_null()
-        {
-            return VertexWalker { current: VertexID::null(), connectivity_info: self.connectivity_info.clone() }
-        }
-        let id = self.connectivity_info.halfedge_vertex(&self.current);
+        let id = match self.current.is_null() {
+            true => { VertexID::null() },
+            false => { self.connectivity_info.halfedge_vertex(&self.current) }
+        };
         VertexWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+    }
+
+    pub fn vertex_id(&self) -> VertexID
+    {
+        match self.current.is_null() {
+            true => { VertexID::null() },
+            false => { self.connectivity_info.halfedge_vertex(&self.current) }
+        }
     }
 
     pub fn twin(&self) -> HalfEdgeWalker
@@ -66,6 +73,15 @@ impl HalfEdgeWalker
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
+    pub fn twin_mut(&mut self) -> &mut HalfEdgeWalker
+    {
+        if !self.current.is_null()
+        {
+            self.current = self.connectivity_info.halfedge_twin(&self.current);
+        }
+        self
+    }
+
     pub fn next(&self) -> HalfEdgeWalker
     {
         if self.current.is_null()
@@ -74,6 +90,15 @@ impl HalfEdgeWalker
         }
         let id = self.connectivity_info.halfedge_next(&self.current);
         HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+    }
+
+    pub fn next_mut(&mut self) -> &mut HalfEdgeWalker
+    {
+        if !self.current.is_null()
+        {
+            self.current = self.connectivity_info.halfedge_next(&self.current);
+        }
+        self
     }
 
     pub fn previous(&self) -> HalfEdgeWalker

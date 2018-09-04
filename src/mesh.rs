@@ -78,7 +78,7 @@ impl Mesh
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
         for mut halfedge in self.vertex_halfedge_iterator(vertex_id1) {
-            if &halfedge.vertex().id() == vertex_id2 {
+            if &halfedge.vertex_id() == vertex_id2 {
                 return Some(halfedge.id())
             }
         }
@@ -91,8 +91,8 @@ impl Mesh
             Some(e) => { return Some(e) },
             None => {
                 for halfedge_id in self.halfedge_iterator() {
-                    let walker = self.halfedge_walker(&halfedge_id);
-                    if &walker.vertex().id() == vertex_id2 && &walker.twin().vertex().id() == vertex_id1
+                    let mut walker = self.halfedge_walker(&halfedge_id);
+                    if &walker.vertex_id() == vertex_id2 && &walker.twin_mut().vertex_id() == vertex_id1
                     {
                         return Some(halfedge_id)
                     }
