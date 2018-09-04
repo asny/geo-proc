@@ -11,9 +11,9 @@ pub struct VertexWalker
 
 impl VertexWalker
 {
-    pub fn new(current: VertexID, connectivity_info: Rc<ConnectivityInfo>) -> VertexWalker
+    pub fn new(current: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexWalker
     {
-        VertexWalker {current, connectivity_info}
+        VertexWalker {current: current.clone(), connectivity_info: connectivity_info.clone()}
     }
 
     pub fn halfedge(&self) -> HalfEdgeWalker
@@ -41,9 +41,9 @@ pub struct HalfEdgeWalker
 
 impl HalfEdgeWalker
 {
-    pub fn new(current: HalfEdgeID, connectivity_info: Rc<ConnectivityInfo>) -> HalfEdgeWalker
+    pub fn new(current: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> HalfEdgeWalker
     {
-        HalfEdgeWalker {current, connectivity_info}
+        HalfEdgeWalker {current: current.clone(), connectivity_info: connectivity_info.clone()}
     }
 
     pub fn vertex(&self) -> VertexWalker
@@ -136,9 +136,9 @@ pub struct FaceWalker
 
 impl FaceWalker
 {
-    pub fn new(current: FaceID, connectivity_info: Rc<ConnectivityInfo>) -> FaceWalker
+    pub fn new(current: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceWalker
     {
-        FaceWalker {current, connectivity_info}
+        FaceWalker {current: current.clone(), connectivity_info: connectivity_info.clone()}
     }
 
     pub fn halfedge(&self) -> HalfEdgeWalker

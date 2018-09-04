@@ -189,42 +189,42 @@ impl Mesh
 
     pub fn vertex_walker(&self, vertex_id: &VertexID) -> VertexWalker
     {
-        VertexWalker::new(vertex_id.clone(), self.connectivity_info.clone())
+        VertexWalker::new(vertex_id, &self.connectivity_info)
     }
 
     pub fn halfedge_walker(&self, halfedge_id: &HalfEdgeID) -> HalfEdgeWalker
     {
-        HalfEdgeWalker::new(halfedge_id.clone(), self.connectivity_info.clone())
+        HalfEdgeWalker::new(halfedge_id, &self.connectivity_info)
     }
 
     pub fn face_walker(&self, face_id: &FaceID) -> FaceWalker
     {
-        FaceWalker::new(face_id.clone(), self.connectivity_info.clone())
+        FaceWalker::new(&face_id, &self.connectivity_info)
     }
 
     pub fn vertex_halfedge_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
     {
-        VertexHalfedgeIterator::new(vertex_id, self.connectivity_info.clone())
+        VertexHalfedgeIterator::new(vertex_id, &self.connectivity_info)
     }
 
     pub fn face_halfedge_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator
     {
-        FaceHalfedgeIterator::new(face_id, self.connectivity_info.clone())
+        FaceHalfedgeIterator::new(face_id, &self.connectivity_info)
     }
 
     pub fn vertex_iterator(&self) -> VertexIterator
     {
-        VertexIterator::new(self.connectivity_info.clone())
+        VertexIterator::new(&self.connectivity_info)
     }
 
     pub fn halfedge_iterator(&self) -> HalfEdgeIterator
     {
-        HalfEdgeIterator::new(self.connectivity_info.clone())
+        HalfEdgeIterator::new(&self.connectivity_info)
     }
 
     pub fn face_iterator(&self) -> FaceIterator
     {
-        FaceIterator::new(self.connectivity_info.clone())
+        FaceIterator::new(&self.connectivity_info)
     }
 
     pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>

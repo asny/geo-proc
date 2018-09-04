@@ -11,7 +11,7 @@ pub struct VertexIterator
 }
 
 impl VertexIterator {
-    pub fn new(connectivity_info: Rc<ConnectivityInfo>) -> VertexIterator
+    pub fn new(connectivity_info: &Rc<ConnectivityInfo>) -> VertexIterator
     {
         match connectivity_info.vertex_first_iter() {
             Some(vertex_id) => {
@@ -48,7 +48,7 @@ pub struct HalfEdgeIterator
 }
 
 impl HalfEdgeIterator {
-    pub fn new(connectivity_info: Rc<ConnectivityInfo>) -> HalfEdgeIterator
+    pub fn new(connectivity_info: &Rc<ConnectivityInfo>) -> HalfEdgeIterator
     {
         match connectivity_info.halfedge_first_iter() {
             Some(halfedge_id) => {
@@ -85,7 +85,7 @@ pub struct FaceIterator
 }
 
 impl FaceIterator {
-    pub fn new(connectivity_info: Rc<ConnectivityInfo>) -> FaceIterator
+    pub fn new(connectivity_info: &Rc<ConnectivityInfo>) -> FaceIterator
     {
         match connectivity_info.face_first_iter() {
             Some(face_id) => {
@@ -123,11 +123,11 @@ pub struct VertexHalfedgeIterator
 }
 
 impl VertexHalfedgeIterator {
-    pub fn new(vertex_id: &VertexID, connectivity_info: Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
+    pub fn new(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
     {
-        let current = VertexWalker::new(vertex_id.clone(), connectivity_info.clone()).halfedge();
+        let current = VertexWalker::new(vertex_id, connectivity_info).halfedge();
         let start = current.id();
-        VertexHalfedgeIterator { connectivity_info, current, start, is_done: false }
+        VertexHalfedgeIterator { connectivity_info: connectivity_info.clone(), current, start, is_done: false }
     }
 }
 
@@ -141,7 +141,7 @@ impl Iterator for VertexHalfedgeIterator {
         self.current.previous_mut().twin_mut();
 
         if self.current.id().is_null() { // In the case there are holes in the one-ring
-            self.current = HalfEdgeWalker::new(self.start.clone(), self.connectivity_info.clone());
+            self.current = HalfEdgeWalker::new(&self.start, &self.connectivity_info);
             loop {
                 let mut walker = self.current.clone();
                 walker.twin_mut().next_mut();
@@ -162,9 +162,9 @@ pub struct FaceHalfedgeIterator
 }
 
 impl FaceHalfedgeIterator {
-    pub fn new(face_id: &FaceID, connectivity_info: Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
+    pub fn new(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
     {
-        let current = FaceWalker::new(face_id.clone(), connectivity_info.clone()).halfedge();
+        let current = FaceWalker::new(face_id, connectivity_info).halfedge();
         let start = current.id().clone();
         FaceHalfedgeIterator { current, start, is_done: false }
     }
