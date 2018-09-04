@@ -1,6 +1,6 @@
 
 
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct VertexID
 {
     val: usize,
@@ -32,19 +32,7 @@ impl VertexID {
     }
 }
 
-impl Clone for VertexID {
-  fn clone(& self) -> Self {
-    VertexID { val: self.val, dead: self.dead }
-  }
-}
-
-impl PartialEq for VertexID {
-    fn eq(&self, other: &VertexID) -> bool {
-        !self.is_null() && !other.is_null() && self.val == other.val
-    }
-}
-
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct HalfEdgeID
 {
     val: usize,
@@ -76,19 +64,7 @@ impl HalfEdgeID {
     }
 }
 
-impl Clone for HalfEdgeID {
-  fn clone(& self) -> Self {
-    HalfEdgeID { val: self.val, dead: self.dead }
-  }
-}
-
-impl PartialEq for HalfEdgeID {
-    fn eq(&self, other: &HalfEdgeID) -> bool {
-        !self.is_null() && !other.is_null() && self.val == other.val
-    }
-}
-
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct FaceID
 {
     val: usize,
@@ -117,17 +93,5 @@ impl FaceID {
             panic!("Face is dead");
         }
         self.val
-    }
-}
-
-impl Clone for FaceID {
-    fn clone(& self) -> Self {
-        FaceID { val: self.val, dead: self.dead }
-    }
-}
-
-impl PartialEq for FaceID {
-    fn eq(&self, other: &FaceID) -> bool {
-        !self.is_null() && !other.is_null() && self.val == other.val
     }
 }
