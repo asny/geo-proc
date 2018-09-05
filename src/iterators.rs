@@ -125,7 +125,7 @@ impl VertexHalfedgeIterator {
     pub fn new(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
     {
         let current = Walker::new_from_vertex(vertex_id, connectivity_info);
-        let start = current.id();
+        let start = current.halfedge_id();
         VertexHalfedgeIterator { current, start, is_done: false }
     }
 }
@@ -139,16 +139,16 @@ impl Iterator for VertexHalfedgeIterator {
         let curr = self.current.clone();
 
         if self.current.face_id().is_null() { // In the case there are holes in the one-ring
-            self.current.twin_mut();
+            self.current.twin();
             loop {
-                self.current.next_mut().twin_mut();
-                if self.current.face_id().is_null() { self.current.twin_mut(); break; }
+                self.current.next().twin();
+                if self.current.face_id().is_null() { self.current.twin(); break; }
             }
         }
         else {
-            self.current.previous_mut().twin_mut();
+            self.current.previous().twin();
         }
-        self.is_done = self.current.id() == self.start;
+        self.is_done = self.current.halfedge_id() == self.start;
         Some(curr)
     }
 }
@@ -164,7 +164,7 @@ impl FaceHalfedgeIterator {
     pub fn new(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
     {
         let current = Walker::new_from_face(face_id, connectivity_info);
-        let start = current.id().clone();
+        let start = current.halfedge_id().clone();
         FaceHalfedgeIterator { current, start, is_done: false }
     }
 }
@@ -176,8 +176,8 @@ impl Iterator for FaceHalfedgeIterator {
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
-        self.current.next_mut();
-        self.is_done = self.current.id() == self.start;
+        self.current.next();
+        self.is_done = self.current.halfedge_id() == self.start;
         Some(curr)
     }
 }

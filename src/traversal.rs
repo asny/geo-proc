@@ -26,7 +26,7 @@ impl Walker
         Walker {current: connectivity_info.face_halfedge(face_id), connectivity_info: connectivity_info.clone()}
     }
 
-    pub fn twin_mut(&mut self) -> &mut Walker
+    pub fn twin(&mut self) -> &mut Walker
     {
         if !self.current.is_null()
         {
@@ -35,7 +35,7 @@ impl Walker
         self
     }
 
-    pub fn next_mut(&mut self) -> &mut Walker
+    pub fn next(&mut self) -> &mut Walker
     {
         if !self.current.is_null()
         {
@@ -44,9 +44,9 @@ impl Walker
         self
     }
 
-    pub fn previous_mut(&mut self) -> &mut Walker
+    pub fn previous(&mut self) -> &mut Walker
     {
-        self.next_mut().next_mut()
+        self.next().next()
     }
 
     pub fn vertex_id(&self) -> VertexID
@@ -57,7 +57,7 @@ impl Walker
         }
     }
 
-    pub fn id(&self) -> HalfEdgeID
+    pub fn halfedge_id(&self) -> HalfEdgeID
     {
         self.current.clone()
     }

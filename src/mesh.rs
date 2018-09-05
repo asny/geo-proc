@@ -79,7 +79,7 @@ impl Mesh
     {
         for mut halfedge in self.vertex_halfedge_iterator(vertex_id1) {
             if &halfedge.vertex_id() == vertex_id2 {
-                return Some(halfedge.id())
+                return Some(halfedge.halfedge_id())
             }
         }
         None
@@ -89,7 +89,7 @@ impl Mesh
     {
         for halfedge_id in self.halfedge_iterator() {
             let mut walker = self.halfedge_walker(&halfedge_id);
-            if &walker.vertex_id() == vertex_id2 && &walker.twin_mut().vertex_id() == vertex_id1
+            if &walker.vertex_id() == vertex_id2 && &walker.twin().vertex_id() == vertex_id1
             {
                 return Some(halfedge_id)
             }
@@ -393,19 +393,19 @@ mod tests {
         let f1 = mesh.create_face(&v1, &v2, &v3);
         assert_eq!(f1.val(), 0);
 
-        let t1 = mesh.vertex_walker(&v1).id();
+        let t1 = mesh.vertex_walker(&v1).halfedge_id();
         assert_eq!(t1.val(), 0);
 
-        let t2 = mesh.vertex_walker(&v1).twin_mut().id();
+        let t2 = mesh.vertex_walker(&v1).twin().halfedge_id();
         assert_eq!(t2.val(), 3);
 
-        let t3 = mesh.vertex_walker(&v2).next_mut().next_mut().vertex_id();
+        let t3 = mesh.vertex_walker(&v2).next().next().vertex_id();
         assert_eq!(t3.val(), v2.val());
 
-        let t4 = mesh.face_walker(&f1).twin_mut().face_id();
+        let t4 = mesh.face_walker(&f1).twin().face_id();
         assert!(t4.is_null());
 
-        let t5 = mesh.halfedge_walker(&t1).twin_mut().id();
+        let t5 = mesh.halfedge_walker(&t1).twin().halfedge_id();
         assert_eq!(t5.val(), 3);
     }
 
@@ -450,8 +450,8 @@ mod tests {
         let mesh = create_three_connected_faces();
 
         let mut walker = mesh.vertex_walker(&VertexID::new(0));
-        let start_edge = walker.id();
-        let one_round_edge = walker.previous_mut().twin_mut().previous_mut().twin_mut().previous_mut().twin_mut().id();
+        let start_edge = walker.halfedge_id();
+        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id();
         assert_eq!(start_edge.val(), one_round_edge.val());
     }
 
@@ -489,7 +489,7 @@ mod tests {
         let mesh = create_single_face();
         let mut i = 0;
         for mut edge in mesh.face_halfedge_iterator(&FaceID::new(0)) {
-            assert_eq!(edge.id().val(), i);
+            assert_eq!(edge.halfedge_id().val(), i);
             assert_eq!(edge.face_id().val(), 0);
             i = i+1;
         }
