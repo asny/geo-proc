@@ -16,13 +16,13 @@ impl VertexWalker
         VertexWalker {current: current.clone(), connectivity_info: connectivity_info.clone()}
     }
 
-    pub fn halfedge(&self) -> HalfEdgeWalker
+    pub fn halfedge(&self) -> Walker
     {
         let id = match self.current.is_null() {
             true => { HalfEdgeID::null() },
             false => { self.connectivity_info.vertex_halfedge(&self.current) }
         };
-        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+        Walker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn id(&self) -> VertexID
@@ -32,17 +32,17 @@ impl VertexWalker
 }
 
 #[derive(Debug, Clone)]
-pub struct HalfEdgeWalker
+pub struct Walker
 {
     connectivity_info: Rc<ConnectivityInfo>,
     current: HalfEdgeID
 }
 
-impl HalfEdgeWalker
+impl Walker
 {
-    pub fn new(current: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> HalfEdgeWalker
+    pub fn new(current: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
-        HalfEdgeWalker {current: current.clone(), connectivity_info: connectivity_info.clone()}
+        Walker {current: current.clone(), connectivity_info: connectivity_info.clone()}
     }
 
     pub fn vertex(&self) -> VertexWalker
@@ -62,16 +62,16 @@ impl HalfEdgeWalker
         }
     }
 
-    pub fn twin(&self) -> HalfEdgeWalker
+    pub fn twin(&self) -> Walker
     {
         let id = match self.current.is_null() {
             true => { HalfEdgeID::null() },
             false => { self.connectivity_info.halfedge_twin(&self.current) }
         };
-        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+        Walker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn twin_mut(&mut self) -> &mut HalfEdgeWalker
+    pub fn twin_mut(&mut self) -> &mut Walker
     {
         if !self.current.is_null()
         {
@@ -80,16 +80,16 @@ impl HalfEdgeWalker
         self
     }
 
-    pub fn next(&self) -> HalfEdgeWalker
+    pub fn next(&self) -> Walker
     {
         let id = match self.current.is_null() {
             true => { HalfEdgeID::null() },
             false => { self.connectivity_info.halfedge_next(&self.current) }
         };
-        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+        Walker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
-    pub fn next_mut(&mut self) -> &mut HalfEdgeWalker
+    pub fn next_mut(&mut self) -> &mut Walker
     {
         if !self.current.is_null()
         {
@@ -98,12 +98,12 @@ impl HalfEdgeWalker
         self
     }
 
-    pub fn previous(&self) -> HalfEdgeWalker
+    pub fn previous(&self) -> Walker
     {
         self.next().next()
     }
 
-    pub fn previous_mut(&mut self) -> &mut HalfEdgeWalker
+    pub fn previous_mut(&mut self) -> &mut Walker
     {
         self.next_mut().next_mut()
     }
@@ -145,13 +145,13 @@ impl FaceWalker
         FaceWalker {current: current.clone(), connectivity_info: connectivity_info.clone()}
     }
 
-    pub fn halfedge(&self) -> HalfEdgeWalker
+    pub fn halfedge(&self) -> Walker
     {
         let id = match self.current.is_null() {
             true => { HalfEdgeID::null() },
             false => { self.connectivity_info.face_halfedge(&self.current) }
         };
-        HalfEdgeWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+        Walker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn id(&self) -> FaceID

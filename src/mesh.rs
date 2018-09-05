@@ -187,9 +187,9 @@ impl Mesh
         VertexWalker::new(vertex_id, &self.connectivity_info)
     }
 
-    pub fn halfedge_walker(&self, halfedge_id: &HalfEdgeID) -> HalfEdgeWalker
+    pub fn halfedge_walker(&self, halfedge_id: &HalfEdgeID) -> Walker
     {
-        HalfEdgeWalker::new(halfedge_id, &self.connectivity_info)
+        Walker::new(halfedge_id, &self.connectivity_info)
     }
 
     pub fn face_walker(&self, face_id: &FaceID) -> FaceWalker

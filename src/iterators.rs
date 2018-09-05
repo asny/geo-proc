@@ -116,7 +116,7 @@ impl Iterator for FaceIterator {
 
 pub struct VertexHalfedgeIterator
 {
-    current: HalfEdgeWalker,
+    current: Walker,
     start: HalfEdgeID,
     is_done: bool
 }
@@ -131,9 +131,9 @@ impl VertexHalfedgeIterator {
 }
 
 impl Iterator for VertexHalfedgeIterator {
-    type Item = HalfEdgeWalker;
+    type Item = Walker;
 
-    fn next(&mut self) -> Option<HalfEdgeWalker>
+    fn next(&mut self) -> Option<Walker>
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
@@ -155,7 +155,7 @@ impl Iterator for VertexHalfedgeIterator {
 
 pub struct FaceHalfedgeIterator
 {
-    current: HalfEdgeWalker,
+    current: Walker,
     start: HalfEdgeID,
     is_done: bool
 }
@@ -170,9 +170,9 @@ impl FaceHalfedgeIterator {
 }
 
 impl Iterator for FaceHalfedgeIterator {
-    type Item = HalfEdgeWalker;
+    type Item = Walker;
 
-    fn next(&mut self) -> Option<HalfEdgeWalker>
+    fn next(&mut self) -> Option<Walker>
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
