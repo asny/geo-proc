@@ -176,7 +176,7 @@ impl Iterator for FaceHalfedgeIterator {
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
-        self.current = self.current.next();
+        self.current.next_mut();
         self.is_done = self.current.id() == self.start;
         Some(curr)
     }

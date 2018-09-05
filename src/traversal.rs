@@ -26,23 +26,6 @@ impl Walker
         Walker {current: connectivity_info.face_halfedge(face_id), connectivity_info: connectivity_info.clone()}
     }
 
-    pub fn vertex_id(&self) -> VertexID
-    {
-        match self.current.is_null() {
-            true => { VertexID::null() },
-            false => { self.connectivity_info.halfedge_vertex(&self.current) }
-        }
-    }
-
-    pub fn twin(&self) -> Walker
-    {
-        let id = match self.current.is_null() {
-            true => { HalfEdgeID::null() },
-            false => { self.connectivity_info.halfedge_twin(&self.current) }
-        };
-        Walker { current: id, connectivity_info: self.connectivity_info.clone() }
-    }
-
     pub fn twin_mut(&mut self) -> &mut Walker
     {
         if !self.current.is_null()
@@ -50,15 +33,6 @@ impl Walker
             self.current = self.connectivity_info.halfedge_twin(&self.current);
         }
         self
-    }
-
-    pub fn next(&self) -> Walker
-    {
-        let id = match self.current.is_null() {
-            true => { HalfEdgeID::null() },
-            false => { self.connectivity_info.halfedge_next(&self.current) }
-        };
-        Walker { current: id, connectivity_info: self.connectivity_info.clone() }
     }
 
     pub fn next_mut(&mut self) -> &mut Walker
@@ -70,14 +44,22 @@ impl Walker
         self
     }
 
-    pub fn previous(&self) -> Walker
-    {
-        self.next().next()
-    }
-
     pub fn previous_mut(&mut self) -> &mut Walker
     {
         self.next_mut().next_mut()
+    }
+
+    pub fn vertex_id(&self) -> VertexID
+    {
+        match self.current.is_null() {
+            true => { VertexID::null() },
+            false => { self.connectivity_info.halfedge_vertex(&self.current) }
+        }
+    }
+
+    pub fn id(&self) -> HalfEdgeID
+    {
+        self.current.clone()
     }
 
     pub fn face_id(&self) -> FaceID
@@ -86,11 +68,6 @@ impl Walker
             true => { FaceID::null() },
             false => { self.connectivity_info.halfedge_face(&self.current) }
         }
-    }
-
-    pub fn id(&self) -> HalfEdgeID
-    {
-        self.current.clone()
     }
 }
 

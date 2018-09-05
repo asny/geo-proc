@@ -396,16 +396,16 @@ mod tests {
         let t1 = mesh.vertex_walker(&v1).id();
         assert_eq!(t1.val(), 0);
 
-        let t2 = mesh.vertex_walker(&v1).twin().id();
+        let t2 = mesh.vertex_walker(&v1).twin_mut().id();
         assert_eq!(t2.val(), 3);
 
-        let t3 = mesh.vertex_walker(&v2).next().next().vertex_id();
+        let t3 = mesh.vertex_walker(&v2).next_mut().next_mut().vertex_id();
         assert_eq!(t3.val(), v2.val());
 
-        let t4 = mesh.face_walker(&f1).twin().face_id();
+        let t4 = mesh.face_walker(&f1).twin_mut().face_id();
         assert!(t4.is_null());
 
-        let t5 = mesh.halfedge_walker(&t1).twin().id();
+        let t5 = mesh.halfedge_walker(&t1).twin_mut().id();
         assert_eq!(t5.val(), 3);
     }
 
@@ -449,9 +449,9 @@ mod tests {
     fn test_connectivity() {
         let mesh = create_three_connected_faces();
 
-        let walker = mesh.vertex_walker(&VertexID::new(0));
+        let mut walker = mesh.vertex_walker(&VertexID::new(0));
         let start_edge = walker.id();
-        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().id();
+        let one_round_edge = walker.previous_mut().twin_mut().previous_mut().twin_mut().previous_mut().twin_mut().id();
         assert_eq!(start_edge.val(), one_round_edge.val());
     }
 
