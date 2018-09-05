@@ -163,7 +163,7 @@ pub struct FaceHalfedgeIterator
 impl FaceHalfedgeIterator {
     pub fn new(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
     {
-        let current = FaceWalker::new(face_id, connectivity_info).halfedge();
+        let current = Walker::new_from_face(face_id, connectivity_info);
         let start = current.id().clone();
         FaceHalfedgeIterator { current, start, is_done: false }
     }

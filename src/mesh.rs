@@ -490,7 +490,7 @@ mod tests {
         let mut i = 0;
         for mut edge in mesh.face_halfedge_iterator(&FaceID::new(0)) {
             assert_eq!(edge.id().val(), i);
-            assert_eq!(edge.face().id().val(), 0);
+            assert_eq!(edge.face_id().val(), 0);
             i = i+1;
         }
         assert_eq!(i, 3, "All edges of a face are not visited");
