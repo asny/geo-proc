@@ -124,7 +124,7 @@ pub struct VertexHalfedgeIterator
 impl VertexHalfedgeIterator {
     pub fn new(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
     {
-        let current = VertexWalker::new(vertex_id, connectivity_info).halfedge();
+        let current = Walker::new_from_vertex(vertex_id, connectivity_info);
         let start = current.id();
         VertexHalfedgeIterator { current, start, is_done: false }
     }

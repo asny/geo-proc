@@ -3,35 +3,6 @@ use ids::*;
 use connectivity_info::ConnectivityInfo;
 
 #[derive(Debug, Clone)]
-pub struct VertexWalker
-{
-    connectivity_info: Rc<ConnectivityInfo>,
-    current: VertexID
-}
-
-impl VertexWalker
-{
-    pub fn new(current: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexWalker
-    {
-        VertexWalker {current: current.clone(), connectivity_info: connectivity_info.clone()}
-    }
-
-    pub fn halfedge(&self) -> Walker
-    {
-        let id = match self.current.is_null() {
-            true => { HalfEdgeID::null() },
-            false => { self.connectivity_info.vertex_halfedge(&self.current) }
-        };
-        Walker { current: id, connectivity_info: self.connectivity_info.clone() }
-    }
-
-    pub fn id(&self) -> VertexID
-    {
-        self.current.clone()
-    }
-}
-
-#[derive(Debug, Clone)]
 pub struct Walker
 {
     connectivity_info: Rc<ConnectivityInfo>,
@@ -40,18 +11,19 @@ pub struct Walker
 
 impl Walker
 {
-    pub fn new(current: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
+    pub fn new_from_vertex(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
-        Walker {current: current.clone(), connectivity_info: connectivity_info.clone()}
+        Walker {current: connectivity_info.vertex_halfedge(vertex_id), connectivity_info: connectivity_info.clone()}
     }
 
-    pub fn vertex(&self) -> VertexWalker
+    pub fn new(halfedge_id: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
-        let id = match self.current.is_null() {
-            true => { VertexID::null() },
-            false => { self.connectivity_info.halfedge_vertex(&self.current) }
-        };
-        VertexWalker { current: id, connectivity_info: self.connectivity_info.clone() }
+        Walker {current: halfedge_id.clone(), connectivity_info: connectivity_info.clone()}
+    }
+
+    pub fn new_from_face(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
+    {
+        Walker {current: connectivity_info.face_halfedge(face_id), connectivity_info: connectivity_info.clone()}
     }
 
     pub fn vertex_id(&self) -> VertexID
