@@ -1,5 +1,5 @@
 use attribute;
-use glm;
+use glm::*;
 use std::string::String;
 use attribute::Attribute;
 use std::rc::Rc;
@@ -310,58 +310,50 @@ impl Mesh
         Ok(())
     }
 
-    fn indices_of(&self, face_id: usize) -> [usize; 3]
+    pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, Error>
     {
-        let index0: usize;
-        let index1: usize;
-        let index2: usize;
-        match self.indices {
-            Some(ref indices) => {
-                index0 = indices[face_id*3] as usize;
-                index1 = indices[face_id*3+1] as usize;
-                index2 = indices[face_id*3+2] as usize;
-            },
-            None => {
-                index0 = face_id;
-                index1 = face_id+1;
-                index2 = face_id+2;
-            }
-        }
-        [index0, index1, index2]
+        let att = self.get_vec3_attribute(name)?;
+        Ok(att.at(vertex_id))
     }
 
-    fn normal_of(&self, face_id: &FaceID) -> glm::Vec3
+    pub fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), Error>
     {
-        let indices = self.indices_of(face_id.val());
-        let p0 = self.positions.at(&VertexID::new(indices[0]));
-        let p1 = self.positions.at(&VertexID::new(indices[1]));
-        let p2 = self.positions.at(&VertexID::new(indices[2]));
-
-        glm::normalize(glm::cross(p1 - p0, p2 - p0))
+        let att = self.get_vec3_attribute_mut(name)?;
+        att.set(&vertex_id, &value);
+        Ok(())
     }
 
-    pub fn compute_normals(&mut self)
+    fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
     {
-        let mut normals = vec![0.0; 3 * self.no_vertices];
-        {
-            for face_id in 0..self.no_faces {
-                let normal = self.normal_of(&FaceID::new(face_id));
-                let indices = self.indices_of(face_id);
-                for index in indices.iter() {
-                    normals[3 * *index] += normal.x;
-                    normals[3 * *index+1] += normal.y;
-                    normals[3 * *index+2] += normal.z;
-                }
-            }
-        }
-        {
-            let normals_dest = self.get_vec3_attribute_mut("normal").unwrap();
+        let mut walker = self.walker_from_face(face_id);
+        let p0 = self.positions.at(&walker.vertex_id());
+        walker.next();
+        let p1 = self.positions.at(&walker.vertex_id());
+        walker.next();
+        let p2 = self.positions.at(&walker.vertex_id());
 
-            for i in 0..normals.len()/3 {
-                let n = glm::normalize(glm::vec3(normals[i*3], normals[i*3+1], normals[i*3+2]));
-                normals_dest.set(&VertexID::new(i), n);
+        normalize(cross(p1 - p0, p2 - p0))
+    }
+
+    fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
+    {
+        let mut normal = vec3(0.0, 0.0, 0.0);
+        for walker in self.vertex_halfedge_iterator(&vertex_id) {
+            let face_id = walker.face_id();
+            if !face_id.is_null() {
+                normal = normal + self.compute_face_normal(&face_id);
             }
         }
+        normalize(normal)
+    }
+
+    pub fn update_normals(&mut self) -> Result<(), Error>
+    {
+        for vertex_id in self.vertex_iterator() {
+            let normal = self.compute_vertex_normal(&vertex_id);
+            self.set_vec3_attribute_at("normal", &vertex_id, &normal)?;
+        }
+        Ok(())
     }
 }
 
@@ -498,18 +490,42 @@ mod tests {
     }
 
     #[test]
-    fn test_normal() {
-        let mesh = create_test_object().unwrap();
-        let normal = mesh.get_vec3_attribute("normal").unwrap().at(&VertexID::new(0));
-        let computed_normal = mesh.normal_of(&FaceID::new(0));
-        assert_eq!(normal.x, computed_normal.x);
-        assert_eq!(normal.y, computed_normal.y);
-        assert_eq!(normal.z, computed_normal.z);
+    fn test_face_normal() {
+        let mesh = create_single_face();
+        let computed_normal = mesh.compute_face_normal(&FaceID::new(0));
+        assert_eq!(0.0, computed_normal.x);
+        assert_eq!(1.0, computed_normal.y);
+        assert_eq!(0.0, computed_normal.z);
+    }
+
+    #[test]
+    fn test_vertex_normal() {
+        let mesh = create_three_connected_faces();
+        let computed_normal = mesh.compute_vertex_normal(&VertexID::new(0));
+        assert_eq!(0.0, computed_normal.x);
+        assert_eq!(1.0, computed_normal.y);
+        assert_eq!(0.0, computed_normal.z);
+    }
+
+    #[test]
+    fn test_update_normals() {
+        let mut mesh = create_three_connected_faces();
+        let normals: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0];
+        mesh.add_custom_vec3_attribute("normal", normals).unwrap();
+        mesh.update_normals().unwrap();
+
+        for vertex_id in mesh.vertex_iterator() {
+            let normal = mesh.get_vec3_attribute("normal").unwrap().at(&vertex_id);
+            println!("{:?}", normal);
+            assert_eq!(0.0, normal.x);
+            assert_eq!(1.0, normal.y);
+            assert_eq!(0.0, normal.z);
+        }
     }
 
     fn create_single_face() -> Mesh
     {
-        let positions: Vec<f32> = vec![];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
         let mut mesh = Mesh::create(positions).unwrap();
 
         let v0 = mesh.create_vertex();
@@ -521,7 +537,7 @@ mod tests {
 
     fn create_three_connected_faces() -> Mesh
     {
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
         Mesh::create_indexed(indices, positions).unwrap()
     }
