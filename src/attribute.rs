@@ -82,10 +82,10 @@ impl Vec2Attribute
         vec2(self.data[vertex_id.val() * 2], self.data[vertex_id.val() * 2 + 1])
     }
 
-    pub fn set(&mut self, vertex_id: &VertexID, value: Vec2) {
+    pub fn set(&mut self, vertex_id: &VertexID, value: &Vec2) {
         let no_components = self.no_components();
         for i in 0..no_components {
-            self.data[vertex_id.val() * no_components] = value[i];
+            self.data[vertex_id.val() * no_components + i] = value[i];
         }
     }
 }
@@ -131,10 +131,10 @@ impl Vec3Attribute
         vec3(self.data[vertex_id.val() * 3], self.data[vertex_id.val() * 3 + 1], self.data[vertex_id.val() * 3 + 2])
     }
 
-    pub fn set(&mut self, vertex_id: &VertexID, value: Vec3) {
+    pub fn set(&mut self, vertex_id: &VertexID, value: &Vec3) {
         let no_components = self.no_components();
         for i in 0..no_components {
-            self.data[vertex_id.val() * no_components] = value[i];
+            self.data[vertex_id.val() * no_components + i] = value[i];
         }
     }
 }
