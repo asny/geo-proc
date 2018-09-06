@@ -26,6 +26,24 @@ impl Walker
         Walker {current: connectivity_info.face_halfedge(face_id), connectivity_info: connectivity_info.clone()}
     }
 
+    pub fn jump_to_vertex(&mut self, vertex_id: &VertexID) -> &mut Walker
+    {
+        self.current = self.connectivity_info.vertex_halfedge(vertex_id);
+        self
+    }
+
+    pub fn jump_to_edge(&mut self, halfedge_id: &HalfEdgeID) -> &mut Walker
+    {
+        self.current = halfedge_id.clone();
+        self
+    }
+
+    pub fn jump_to_face(&mut self, face_id: &FaceID) -> &mut Walker
+    {
+        self.current = self.connectivity_info.face_halfedge(face_id);
+        self
+    }
+
     pub fn twin(&mut self) -> &mut Walker
     {
         if !self.current.is_null()

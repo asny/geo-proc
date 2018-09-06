@@ -87,8 +87,9 @@ impl Mesh
 
     fn find_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
+        let mut walker = self.halfedge_walker(&HalfEdgeID::null());
         for halfedge_id in self.halfedge_iterator() {
-            let mut walker = self.halfedge_walker(&halfedge_id);
+            walker.jump_to_edge(&halfedge_id);
             if &walker.vertex_id() == vertex_id2 && &walker.twin().vertex_id() == vertex_id1
             {
                 return Some(halfedge_id)
