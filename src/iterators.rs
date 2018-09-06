@@ -124,7 +124,7 @@ pub struct VertexHalfedgeIterator
 impl VertexHalfedgeIterator {
     pub fn new(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
     {
-        let current = Walker::new_from_vertex(vertex_id, connectivity_info);
+        let current = Walker::create_from_vertex(vertex_id, connectivity_info);
         let start = current.halfedge_id();
         VertexHalfedgeIterator { current, start, is_done: false }
     }
@@ -163,7 +163,7 @@ pub struct FaceHalfedgeIterator
 impl FaceHalfedgeIterator {
     pub fn new(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
     {
-        let current = Walker::new_from_face(face_id, connectivity_info);
+        let current = Walker::create_from_face(face_id, connectivity_info);
         let start = current.halfedge_id().clone();
         FaceHalfedgeIterator { current, start, is_done: false }
     }

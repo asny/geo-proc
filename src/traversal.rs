@@ -11,17 +11,17 @@ pub struct Walker
 
 impl Walker
 {
-    pub fn new_from_vertex(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
+    pub fn create_from_vertex(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
         Walker {current: connectivity_info.vertex_halfedge(vertex_id), connectivity_info: connectivity_info.clone()}
     }
 
-    pub fn new(halfedge_id: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
+    pub fn create_from_halfedge(halfedge_id: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
         Walker {current: halfedge_id.clone(), connectivity_info: connectivity_info.clone()}
     }
 
-    pub fn new_from_face(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
+    pub fn create_from_face(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
         Walker {current: connectivity_info.face_halfedge(face_id), connectivity_info: connectivity_info.clone()}
     }

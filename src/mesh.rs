@@ -87,7 +87,7 @@ impl Mesh
 
     fn find_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
-        let mut walker = self.halfedge_walker(&HalfEdgeID::null());
+        let mut walker = self.walker_from_halfedge(&HalfEdgeID::null());
         for halfedge_id in self.halfedge_iterator() {
             walker.jump_to_edge(&halfedge_id);
             if &walker.vertex_id() == vertex_id2 && &walker.twin().vertex_id() == vertex_id1
@@ -183,19 +183,19 @@ impl Mesh
         id
     }
 
-    pub fn vertex_walker(&self, vertex_id: &VertexID) -> Walker
+    pub fn walker_from_vertex(&self, vertex_id: &VertexID) -> Walker
     {
-        Walker::new_from_vertex(vertex_id, &self.connectivity_info)
+        Walker::create_from_vertex(vertex_id, &self.connectivity_info)
     }
 
-    pub fn halfedge_walker(&self, halfedge_id: &HalfEdgeID) -> Walker
+    pub fn walker_from_halfedge(&self, halfedge_id: &HalfEdgeID) -> Walker
     {
-        Walker::new(halfedge_id, &self.connectivity_info)
+        Walker::create_from_halfedge(halfedge_id, &self.connectivity_info)
     }
 
-    pub fn face_walker(&self, face_id: &FaceID) -> Walker
+    pub fn walker_from_face(&self, face_id: &FaceID) -> Walker
     {
-        Walker::new_from_face(&face_id, &self.connectivity_info)
+        Walker::create_from_face(&face_id, &self.connectivity_info)
     }
 
     pub fn vertex_halfedge_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
@@ -394,19 +394,19 @@ mod tests {
         let f1 = mesh.create_face(&v1, &v2, &v3);
         assert_eq!(f1.val(), 0);
 
-        let t1 = mesh.vertex_walker(&v1).halfedge_id();
+        let t1 = mesh.walker_from_vertex(&v1).halfedge_id();
         assert_eq!(t1.val(), 0);
 
-        let t2 = mesh.vertex_walker(&v1).twin().halfedge_id();
+        let t2 = mesh.walker_from_vertex(&v1).twin().halfedge_id();
         assert_eq!(t2.val(), 3);
 
-        let t3 = mesh.vertex_walker(&v2).next().next().vertex_id();
+        let t3 = mesh.walker_from_vertex(&v2).next().next().vertex_id();
         assert_eq!(t3.val(), v2.val());
 
-        let t4 = mesh.face_walker(&f1).twin().face_id();
+        let t4 = mesh.walker_from_face(&f1).twin().face_id();
         assert!(t4.is_null());
 
-        let t5 = mesh.halfedge_walker(&t1).twin().halfedge_id();
+        let t5 = mesh.walker_from_halfedge(&t1).twin().halfedge_id();
         assert_eq!(t5.val(), 3);
     }
 
@@ -450,7 +450,7 @@ mod tests {
     fn test_connectivity() {
         let mesh = create_three_connected_faces();
 
-        let mut walker = mesh.vertex_walker(&VertexID::new(0));
+        let mut walker = mesh.walker_from_vertex(&VertexID::new(0));
         let start_edge = walker.halfedge_id();
         let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id();
         assert_eq!(start_edge.val(), one_round_edge.val());
