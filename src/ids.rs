@@ -95,3 +95,23 @@ impl FaceID {
         self.val
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_equality()
+    {
+        let v0 = VertexID::new(0);
+        let v1 = VertexID::new(1);
+        let v1_ = VertexID::new(1);
+        let vn1 = VertexID::null();
+        let vn2 = VertexID::null();
+
+        assert!(v0 != v1);
+        assert!(v1 == v1_);
+        assert!(v0 != vn1);
+        assert!(vn1 == vn2);
+    }
+}
