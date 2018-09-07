@@ -236,6 +236,10 @@ impl Mesh
 
     pub fn get_vec3_attribute(&self, name: &str) -> Result<&attribute::Vec3Attribute, Error>
     {
+        if name == "position"
+        {
+            return Ok(&self.positions);
+        }
         for attribute in self.vec3_attributes.iter() {
             if attribute.name() == name
             {
@@ -256,6 +260,25 @@ impl Mesh
             att.push(attribute);
         }
         att
+    }
+
+    pub fn get_vec2_attribute_names(&self) -> Vec<String>
+    {
+        let mut names : Vec<String> = Vec::new();
+        for attribute in self.vec2_attributes.iter() {
+            names.push(String::from(attribute.name()));
+        }
+        names
+    }
+
+    pub fn get_vec3_attribute_names(&self) -> Vec<String>
+    {
+        let mut names : Vec<String> = Vec::new();
+        names.push(String::from("position"));
+        for attribute in self.vec3_attributes.iter() {
+            names.push(String::from(attribute.name()));
+        }
+        names
     }
 
     pub fn add_custom_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
