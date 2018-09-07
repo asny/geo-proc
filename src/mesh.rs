@@ -25,7 +25,6 @@ pub struct Mesh {
     pub no_vertices: usize,
     pub no_faces: usize,
     pub indices: Option<Vec<u32>>,
-    pub positions: attribute::Vec3Attribute,
     int_attributes: Vec<attribute::IntAttribute>,
     vec2_attributes: Vec<attribute::Vec2Attribute>,
     vec3_attributes: Vec<attribute::Vec3Attribute>,
@@ -39,14 +38,14 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = no_vertices/3;
-        let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
-        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
         for _face in 0..no_faces {
             let v0 = mesh.create_vertex();
             let v1 = mesh.create_vertex();
             let v2 = mesh.create_vertex();
             mesh.create_face(&v0, &v1, &v2);
         }
+        mesh.add_custom_vec3_attribute( "position", positions)?;
         Ok(mesh)
     }
 
@@ -54,8 +53,7 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
-        let position_attribute = attribute::Vec3Attribute::create("position", positions)?;
-        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices.clone()), positions: position_attribute, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices.clone()), int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
         for _vertex in 0..no_vertices {
             mesh.create_vertex();
         }
@@ -66,6 +64,7 @@ impl Mesh
             let v2 = VertexID::new(indices[face * 3 + 2] as usize);
             mesh.create_face(&v0, &v1, &v2);
         }
+        mesh.add_custom_vec3_attribute( "position", positions)?;
 
         Ok(mesh)
     }
@@ -297,10 +296,6 @@ impl Mesh
 
     pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, Error>
     {
-        if name == "position"
-        {
-            return Ok(self.positions.at(vertex_id));
-        }
         for attribute in self.vec3_attributes.iter() {
             if attribute.name() == name
             {
@@ -322,14 +317,24 @@ impl Mesh
         Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
+    pub fn position_at(&self, vertex_id: &VertexID) -> Vec3
+    {
+        self.vec3_attributes.first().unwrap().at(vertex_id)
+    }
+
+    pub fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
+    {
+        self.vec3_attributes.first_mut().unwrap().set(vertex_id, value);
+    }
+
     fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
-        let p0 = self.positions.at(&walker.vertex_id());
+        let p0 = self.position_at(&walker.vertex_id());
         walker.next();
-        let p1 = self.positions.at(&walker.vertex_id());
+        let p1 = self.position_at(&walker.vertex_id());
         walker.next();
-        let p2 = self.positions.at(&walker.vertex_id());
+        let p2 = self.position_at(&walker.vertex_id());
 
         normalize(cross(p1 - p0, p2 - p0))
     }
@@ -515,7 +520,6 @@ mod tests {
 
         for vertex_id in mesh.vertex_iterator() {
             let normal = mesh.get_vec3_attribute_at("normal", &vertex_id).unwrap();
-            println!("{:?}", normal);
             assert_eq!(0.0, normal.x);
             assert_eq!(1.0, normal.y);
             assert_eq!(0.0, normal.z);
