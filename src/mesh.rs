@@ -310,6 +310,19 @@ impl Mesh
         Ok(())
     }
 
+    pub fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec2, Error>
+    {
+        let att = self.get_vec2_attribute(name)?;
+        Ok(att.at(vertex_id))
+    }
+
+    pub fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), Error>
+    {
+        let att = self.get_vec2_attribute_mut(name)?;
+        att.set(&vertex_id, &value);
+        Ok(())
+    }
+
     pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, Error>
     {
         let att = self.get_vec3_attribute(name)?;
@@ -515,7 +528,7 @@ mod tests {
         mesh.update_normals().unwrap();
 
         for vertex_id in mesh.vertex_iterator() {
-            let normal = mesh.get_vec3_attribute("normal").unwrap().at(&vertex_id);
+            let normal = mesh.get_vec3_attribute_at("normal", &vertex_id).unwrap();
             println!("{:?}", normal);
             assert_eq!(0.0, normal.x);
             assert_eq!(1.0, normal.y);
