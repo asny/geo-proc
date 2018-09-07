@@ -223,45 +223,6 @@ impl Mesh
         FaceIterator::new(&self.connectivity_info)
     }
 
-    pub fn get_vec2_attribute(&self, name: &str) -> Result<&attribute::Vec2Attribute, Error>
-    {
-        for attribute in self.vec2_attributes.iter() {
-            if attribute.name() == name
-            {
-                return Ok(attribute)
-            }
-        }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
-    }
-
-    pub fn get_vec3_attribute(&self, name: &str) -> Result<&attribute::Vec3Attribute, Error>
-    {
-        if name == "position"
-        {
-            return Ok(&self.positions);
-        }
-        for attribute in self.vec3_attributes.iter() {
-            if attribute.name() == name
-            {
-                return Ok(attribute)
-            }
-        }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
-    }
-
-    pub fn get_attributes(&self) -> Vec<&attribute::Attribute>
-    {
-        let mut att : Vec<&Attribute> = Vec::new();
-        att.push(&self.positions);
-        for attribute in self.vec2_attributes.iter() {
-            att.push(attribute);
-        }
-        for attribute in self.vec3_attributes.iter() {
-            att.push(attribute);
-        }
-        att
-    }
-
     pub fn get_vec2_attribute_names(&self) -> Vec<&str>
     {
         let mut names = Vec::new();
@@ -313,8 +274,13 @@ impl Mesh
 
     pub fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec2, Error>
     {
-        let att = self.get_vec2_attribute(name)?;
-        Ok(att.at(vertex_id))
+        for attribute in self.vec2_attributes.iter() {
+            if attribute.name() == name
+            {
+                return Ok(attribute.at(vertex_id))
+            }
+        }
+        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), Error>
@@ -331,8 +297,17 @@ impl Mesh
 
     pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, Error>
     {
-        let att = self.get_vec3_attribute(name)?;
-        Ok(att.at(vertex_id))
+        if name == "position"
+        {
+            return Ok(self.positions.at(vertex_id));
+        }
+        for attribute in self.vec3_attributes.iter() {
+            if attribute.name() == name
+            {
+                return Ok(attribute.at(vertex_id))
+            }
+        }
+        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), Error>
