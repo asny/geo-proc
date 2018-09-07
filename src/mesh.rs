@@ -262,21 +262,21 @@ impl Mesh
         att
     }
 
-    pub fn get_vec2_attribute_names(&self) -> Vec<String>
+    pub fn get_vec2_attribute_names(&self) -> Vec<&str>
     {
-        let mut names : Vec<String> = Vec::new();
+        let mut names = Vec::new();
         for attribute in self.vec2_attributes.iter() {
-            names.push(String::from(attribute.name()));
+            names.push(attribute.name());
         }
         names
     }
 
-    pub fn get_vec3_attribute_names(&self) -> Vec<String>
+    pub fn get_vec3_attribute_names(&self) -> Vec<&str>
     {
-        let mut names : Vec<String> = Vec::new();
-        names.push(String::from("position"));
+        let mut names = Vec::new();
+        names.push("position");
         for attribute in self.vec3_attributes.iter() {
-            names.push(String::from(attribute.name()));
+            names.push(attribute.name());
         }
         names
     }
