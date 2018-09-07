@@ -1,20 +1,6 @@
 use glm::*;
 use ids::*;
 
-#[derive(Debug)]
-pub enum Error {
-
-}
-
-pub trait Attribute
-{
-    fn no_components(&self) -> usize;
-
-    fn name(&self) -> &str;
-
-    fn data(&self) -> &Vec<f32>;
-}
-
 pub struct IntAttribute {
     name: String,
     data: Vec<f32>
@@ -23,10 +9,10 @@ pub struct IntAttribute {
 
 impl IntAttribute
 {
-    pub fn create(name: &str, data: &Vec<u32>) -> Result<IntAttribute, Error>
+    pub fn create(name: &str, data: &Vec<u32>) -> IntAttribute
     {
         let d = data.iter().map(|i| *i as f32).collect();
-        Ok(IntAttribute{name: String::from(name), data: d})
+        IntAttribute{name: String::from(name), data: d}
     }
 
     pub fn at(&self, vertex_id: &VertexID) -> u32
@@ -37,23 +23,10 @@ impl IntAttribute
     pub fn set(&mut self, vertex_id: &VertexID, value: u32) {
         self.data[vertex_id.val()] = value as f32;
     }
-}
 
-impl Attribute for IntAttribute
-{
-    fn no_components(&self) -> usize
+    pub fn name(&self) -> &str
     {
-        1
-    }
-
-    fn name(&self) -> &str
-    {
-        &self.name
-    }
-
-    fn data(&self) -> &Vec<f32>
-    {
-        &self.data
+        self.name.as_ref()
     }
 }
 
@@ -65,9 +38,9 @@ pub struct Vec2Attribute {
 
 impl Vec2Attribute
 {
-    pub fn create(name: &str, data: Vec<f32>) -> Result<Vec2Attribute, Error>
+    pub fn create(name: &str, data: Vec<f32>) -> Vec2Attribute
     {
-        Ok(Vec2Attribute{name: String::from(name), data})
+        Vec2Attribute{name: String::from(name), data}
     }
 
     pub fn at(&self, vertex_id: &VertexID) -> Vec2
@@ -75,29 +48,15 @@ impl Vec2Attribute
         vec2(self.data[vertex_id.val() * 2], self.data[vertex_id.val() * 2 + 1])
     }
 
-    pub fn set(&mut self, vertex_id: &VertexID, value: &Vec2) {
-        let no_components = self.no_components();
-        for i in 0..no_components {
-            self.data[vertex_id.val() * no_components + i] = value[i];
-        }
-    }
-}
-
-impl Attribute for Vec2Attribute
-{
-    fn no_components(&self) -> usize
+    pub fn set(&mut self, vertex_id: &VertexID, value: &Vec2)
     {
-        2
+        self.data[vertex_id.val() * 2] = value[0];
+        self.data[vertex_id.val() * 2 + 1] = value[1];
     }
 
-    fn name(&self) -> &str
+    pub fn name(&self) -> &str
     {
-        &self.name
-    }
-
-    fn data(&self) -> &Vec<f32>
-    {
-        &self.data
+        self.name.as_ref()
     }
 }
 
@@ -109,9 +68,9 @@ pub struct Vec3Attribute {
 
 impl Vec3Attribute
 {
-    pub fn create(name: &str, data: Vec<f32>) -> Result<Vec3Attribute, Error>
+    pub fn create(name: &str, data: Vec<f32>) -> Vec3Attribute
     {
-        Ok(Vec3Attribute{name: String::from(name), data})
+        Vec3Attribute{name: String::from(name), data}
     }
 
     pub fn at(&self, vertex_id: &VertexID) -> Vec3
@@ -120,27 +79,13 @@ impl Vec3Attribute
     }
 
     pub fn set(&mut self, vertex_id: &VertexID, value: &Vec3) {
-        let no_components = self.no_components();
-        for i in 0..no_components {
-            self.data[vertex_id.val() * no_components + i] = value[i];
-        }
-    }
-}
-
-impl Attribute for Vec3Attribute
-{
-    fn no_components(&self) -> usize
-    {
-        3
+        self.data[vertex_id.val() * 3] = value[0];
+        self.data[vertex_id.val() * 3 + 1] = value[1];
+        self.data[vertex_id.val() * 3 + 2] = value[2];
     }
 
-    fn name(&self) -> &str
+    pub fn name(&self) -> &str
     {
-        &self.name
-    }
-
-    fn data(&self) -> &Vec<f32>
-    {
-        &self.data
+        self.name.as_ref()
     }
 }

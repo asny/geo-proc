@@ -1,7 +1,6 @@
 use attribute;
 use glm::*;
 use std::string::String;
-use attribute::Attribute;
 use std::rc::Rc;
 use ids::*;
 use iterators::*;
@@ -11,14 +10,7 @@ use connectivity_info::ConnectivityInfo;
 #[derive(Debug)]
 pub enum Error {
     FailedToFindCustomAttribute {message: String},
-    WrongSizeOfAttribute {message: String},
-    Attribute(attribute::Error)
-}
-
-impl From<attribute::Error> for Error {
-    fn from(other: attribute::Error) -> Self {
-        Error::Attribute(other)
-    }
+    WrongSizeOfAttribute {message: String}
 }
 
 pub struct Mesh {
@@ -246,7 +238,7 @@ impl Mesh
         if self.no_vertices() != data.len()/2 {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
-        let custom_attribute = attribute::Vec2Attribute::create(name, data)?;
+        let custom_attribute = attribute::Vec2Attribute::create(name, data);
         self.vec2_attributes.push(custom_attribute);
         Ok(())
     }
@@ -256,7 +248,7 @@ impl Mesh
         if self.no_vertices() != data.len()/3 {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
-        let custom_attribute = attribute::Vec3Attribute::create(name, data)?;
+        let custom_attribute = attribute::Vec3Attribute::create(name, data);
         self.vec3_attributes.push(custom_attribute);
         Ok(())
     }
@@ -266,7 +258,7 @@ impl Mesh
         if self.no_vertices() != data.len() {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
-        let custom_attribute = attribute::IntAttribute::create(name, data)?;
+        let custom_attribute = attribute::IntAttribute::create(name, data);
         self.int_attributes.push(custom_attribute);
         Ok(())
     }
