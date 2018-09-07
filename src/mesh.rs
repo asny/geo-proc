@@ -14,7 +14,7 @@ pub enum Error {
 }
 
 pub struct Mesh {
-    pub indices: Option<Vec<u32>>,
+    indices: Vec<u32>,
     int_attributes: Vec<attribute::IntAttribute>,
     vec2_attributes: Vec<attribute::Vec2Attribute>,
     vec3_attributes: Vec<attribute::Vec3Attribute>,
@@ -35,7 +35,7 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
-        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices.clone()), int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: indices.clone(), int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
         for _vertex in 0..no_vertices {
             mesh.create_vertex();
         }
@@ -49,6 +49,11 @@ impl Mesh
         mesh.add_custom_vec3_attribute( "position", positions)?;
 
         Ok(mesh)
+    }
+
+    pub fn indices(&self) -> &Vec<u32>
+    {
+        &self.indices
     }
 
     fn create_vertex(&mut self) -> VertexID
