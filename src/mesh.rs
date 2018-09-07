@@ -34,17 +34,9 @@ impl Mesh
 {
     pub fn create(positions: Vec<f32>) -> Result<Mesh, Error>
     {
-        let no_vertices = positions.len()/3;
-        let no_faces = no_vertices/3;
-        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
-        for _face in 0..no_faces {
-            let v0 = mesh.create_vertex();
-            let v1 = mesh.create_vertex();
-            let v2 = mesh.create_vertex();
-            mesh.create_face(&v0, &v1, &v2);
-        }
-        mesh.add_custom_vec3_attribute( "position", positions)?;
-        Ok(mesh)
+        let no_vertices = (positions.len()/3) as u32;
+        let indices = (0..no_vertices).collect();
+        Mesh::create_indexed(indices, positions)
     }
 
     pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
