@@ -13,8 +13,6 @@ pub trait Attribute
     fn name(&self) -> &str;
 
     fn data(&self) -> &Vec<f32>;
-
-    fn data_mut(&mut self) -> &mut Vec<f32>;
 }
 
 pub struct IntAttribute {
@@ -56,11 +54,6 @@ impl Attribute for IntAttribute
     fn data(&self) -> &Vec<f32>
     {
         &self.data
-    }
-
-    fn data_mut(&mut self) -> &mut Vec<f32>
-    {
-        &mut self.data
     }
 }
 
@@ -106,11 +99,6 @@ impl Attribute for Vec2Attribute
     {
         &self.data
     }
-
-    fn data_mut(&mut self) -> &mut Vec<f32>
-    {
-        &mut self.data
-    }
 }
 
 pub struct Vec3Attribute {
@@ -154,10 +142,5 @@ impl Attribute for Vec3Attribute
     fn data(&self) -> &Vec<f32>
     {
         &self.data
-    }
-
-    fn data_mut(&mut self) -> &mut Vec<f32>
-    {
-        &mut self.data
     }
 }
