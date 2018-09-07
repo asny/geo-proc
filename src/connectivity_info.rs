@@ -5,13 +5,25 @@ use ids::*;
 pub struct ConnectivityInfo {
     vertices: RefCell<Vec<Vertex>>,
     halfedges: RefCell<Vec<HalfEdge>>,
-    faces: RefCell<Vec<Face>>
+    faces: RefCell<Vec<Face>>,
+    no_vertices: RefCell<usize>,
+    no_faces: RefCell<usize>
 }
 
 impl ConnectivityInfo {
     pub fn new() -> ConnectivityInfo
     {
-        ConnectivityInfo { vertices: RefCell::new(Vec::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()) }
+        ConnectivityInfo { vertices: RefCell::new(Vec::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()), no_vertices: RefCell::new(0),  no_faces: RefCell::new(0) }
+    }
+
+    pub fn no_vertices(&self) -> usize
+    {
+        RefCell::borrow(&self.no_vertices).clone()
+    }
+
+    pub fn no_faces(&self) -> usize
+    {
+        RefCell::borrow(&self.no_faces).clone()
     }
 
     pub fn create_vertex(&self) -> VertexID
@@ -19,6 +31,7 @@ impl ConnectivityInfo {
         let vec = &mut *RefCell::borrow_mut(&self.vertices);
         let id = VertexID::new(vec.len());
         vec.push(Vertex { id: id.clone(), halfedge: HalfEdgeID::null() });
+        *RefCell::borrow_mut(&self.no_vertices) = self.no_vertices() + 1;
         id
     }
 
@@ -36,6 +49,7 @@ impl ConnectivityInfo {
         let id = FaceID::new(vec.len());
         let face = Face { id: id.clone(), halfedge: HalfEdgeID::null() };
         vec.push(face);
+        *RefCell::borrow_mut(&self.no_faces) = self.no_faces() + 1;
         id
     }
 

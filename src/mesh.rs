@@ -22,8 +22,6 @@ impl From<attribute::Error> for Error {
 }
 
 pub struct Mesh {
-    pub no_vertices: usize,
-    pub no_faces: usize,
     pub indices: Option<Vec<u32>>,
     int_attributes: Vec<attribute::IntAttribute>,
     vec2_attributes: Vec<attribute::Vec2Attribute>,
@@ -38,7 +36,7 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = no_vertices/3;
-        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: None, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
         for _face in 0..no_faces {
             let v0 = mesh.create_vertex();
             let v1 = mesh.create_vertex();
@@ -53,7 +51,7 @@ impl Mesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
-        let mut mesh = Mesh { no_vertices, no_faces, connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices.clone()), int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: Some(indices.clone()), int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
         for _vertex in 0..no_vertices {
             mesh.create_vertex();
         }
@@ -72,6 +70,16 @@ impl Mesh
     fn create_vertex(&mut self) -> VertexID
     {
         self.connectivity_info.create_vertex()
+    }
+
+    pub fn no_vertices(&self) -> usize
+    {
+        self.connectivity_info.no_vertices()
+    }
+
+    pub fn no_faces(&self) -> usize
+    {
+        self.connectivity_info.no_faces()
     }
 
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
@@ -243,8 +251,8 @@ impl Mesh
 
     pub fn add_custom_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
     {
-        if self.no_vertices != data.len()/2 {
-            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
+        if self.no_vertices() != data.len()/2 {
+            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
         let custom_attribute = attribute::Vec2Attribute::create(name, data)?;
         self.vec2_attributes.push(custom_attribute);
@@ -253,8 +261,8 @@ impl Mesh
 
     pub fn add_custom_vec3_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
     {
-        if self.no_vertices != data.len()/3 {
-            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
+        if self.no_vertices() != data.len()/3 {
+            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
         let custom_attribute = attribute::Vec3Attribute::create(name, data)?;
         self.vec3_attributes.push(custom_attribute);
@@ -263,8 +271,8 @@ impl Mesh
 
     pub fn add_custom_int_attribute(&mut self, name: &str, data: &Vec<u32>) -> Result<(), Error>
     {
-        if self.no_vertices != data.len() {
-            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices)})
+        if self.no_vertices() != data.len() {
+            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
         let custom_attribute = attribute::IntAttribute::create(name, data)?;
         self.int_attributes.push(custom_attribute);
