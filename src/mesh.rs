@@ -245,28 +245,6 @@ impl Mesh
         Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
-    pub fn get_vec2_attribute_mut(&mut self, name: &str) -> Result<&mut attribute::Vec2Attribute, Error>
-    {
-        for attribute in self.vec2_attributes.iter_mut() {
-            if attribute.name() == name
-            {
-                return Ok(attribute)
-            }
-        }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
-    }
-
-    pub fn get_vec3_attribute_mut(&mut self, name: &str) -> Result<&mut attribute::Vec3Attribute, Error>
-    {
-        for attribute in self.vec3_attributes.iter_mut() {
-            if attribute.name() == name
-            {
-                return Ok(attribute)
-            }
-        }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
-    }
-
     pub fn get_attributes(&self) -> Vec<&attribute::Attribute>
     {
         let mut att : Vec<&Attribute> = Vec::new();
@@ -318,9 +296,14 @@ impl Mesh
 
     pub fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), Error>
     {
-        let att = self.get_vec2_attribute_mut(name)?;
-        att.set(&vertex_id, &value);
-        Ok(())
+        for attribute in self.vec2_attributes.iter_mut() {
+            if attribute.name() == name
+            {
+                attribute.set(&vertex_id, &value);
+                return Ok(())
+            }
+        }
+        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, Error>
@@ -331,9 +314,14 @@ impl Mesh
 
     pub fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), Error>
     {
-        let att = self.get_vec3_attribute_mut(name)?;
-        att.set(&vertex_id, &value);
-        Ok(())
+        for attribute in self.vec3_attributes.iter_mut() {
+            if attribute.name() == name
+            {
+                attribute.set(&vertex_id, &value);
+                return Ok(())
+            }
+        }
+        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
