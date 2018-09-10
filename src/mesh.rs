@@ -23,9 +23,6 @@ pub trait Mesh
     fn no_vertices(&self) -> usize;
     fn no_faces(&self) -> usize;
 
-    fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>;
-    fn add_vec3_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>;
-
     fn position_at(&self, vertex_id: &VertexID) -> Vec3;
     fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3);
 

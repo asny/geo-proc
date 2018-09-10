@@ -3,8 +3,7 @@ use ids::*;
 
 #[derive(Debug)]
 pub enum Error {
-    FailedToFindCustomAttribute {message: String},
-    WrongSizeOfAttribute {message: String}
+    FailedToFindCustomAttribute {message: String}
 }
 
 pub struct VertexAttributes
@@ -14,31 +13,19 @@ pub struct VertexAttributes
 }
 
 impl VertexAttributes {
-    pub fn new(positions: Vec<f32>) -> VertexAttributes
+    pub fn new() -> VertexAttributes
     {
-        let mut vec3_attributes = Vec::new();
-        vec3_attributes.push(Vec3Attribute::create("position", positions));
-        VertexAttributes {vec2_attributes: Vec::new(), vec3_attributes}
+        VertexAttributes {vec2_attributes: Vec::new(), vec3_attributes: Vec::new()}
     }
 
-    pub fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
+    pub fn create_vec2_attribute(&mut self, name: &str)
     {
-        if self.no_vertices() != data.len()/2 {
-            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
-        }
-        let custom_attribute = Vec2Attribute::create(name, data);
-        self.vec2_attributes.push(custom_attribute);
-        Ok(())
+        self.vec2_attributes.push(Vec2Attribute{ name: String::from(name), data: Vec::new() })
     }
 
-    pub fn add_vec3_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
+    pub fn create_vec3_attribute(&mut self, name: &str, initial_size: usize)
     {
-        if self.no_vertices() != data.len()/3 {
-            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
-        }
-        let custom_attribute = Vec3Attribute::create(name, data);
-        self.vec3_attributes.push(custom_attribute);
-        Ok(())
+        self.vec3_attributes.push(Vec3Attribute{ name: String::from(name), data: vec![0.0; 3 * initial_size] })
     }
 
     pub fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec2, Error>
@@ -96,11 +83,6 @@ impl VertexAttributes {
     {
         self.vec3_attributes.first_mut().unwrap().set(vertex_id, value);
     }
-
-    fn no_vertices(&self) -> usize
-    {
-        self.vec3_attributes.first().unwrap().len()/3
-    }
 }
 
 /*pub struct IntAttribute {
@@ -136,14 +118,8 @@ pub struct Vec2Attribute {
     data: Vec<f32>
 }
 
-
 impl Vec2Attribute
 {
-    pub fn create(name: &str, data: Vec<f32>) -> Vec2Attribute
-    {
-        Vec2Attribute{name: String::from(name), data}
-    }
-
     pub fn at(&self, vertex_id: &VertexID) -> Vec2
     {
         vec2(self.data[vertex_id.val() * 2], self.data[vertex_id.val() * 2 + 1])
@@ -151,8 +127,13 @@ impl Vec2Attribute
 
     pub fn set(&mut self, vertex_id: &VertexID, value: &Vec2)
     {
-        self.data[vertex_id.val() * 2] = value[0];
-        self.data[vertex_id.val() * 2 + 1] = value[1];
+        let i = vertex_id.val() * 2;
+        if i + 1 >= self.data.len()
+        {
+            self.data.append(&mut vec![0.0; 2*(i+2)])
+        }
+        self.data[i] = value[0];
+        self.data[i + 1] = value[1];
     }
 
     pub fn name(&self) -> &str
@@ -169,26 +150,24 @@ pub struct Vec3Attribute {
 
 impl Vec3Attribute
 {
-    pub fn create(name: &str, data: Vec<f32>) -> Vec3Attribute
-    {
-        Vec3Attribute{name: String::from(name), data}
-    }
-
     pub fn at(&self, vertex_id: &VertexID) -> Vec3
     {
         vec3(self.data[vertex_id.val() * 3], self.data[vertex_id.val() * 3 + 1], self.data[vertex_id.val() * 3 + 2])
     }
 
     pub fn set(&mut self, vertex_id: &VertexID, value: &Vec3) {
-        self.data[vertex_id.val() * 3] = value[0];
-        self.data[vertex_id.val() * 3 + 1] = value[1];
-        self.data[vertex_id.val() * 3 + 2] = value[2];
+        let i = vertex_id.val() * 3;
+        if i + 2 >= self.data.len()
+        {
+            self.data.append(&mut vec![0.0; 2*(i+3)])
+        }
+        self.data[i] = value[0];
+        self.data[i + 1] = value[1];
+        self.data[i + 2] = value[2];
     }
 
     pub fn name(&self) -> &str
     {
         self.name.as_ref()
     }
-
-    pub fn len(&self) -> usize { self.data.len() }
 }

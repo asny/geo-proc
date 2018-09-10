@@ -1,5 +1,5 @@
-use mesh::*;
-use simple_mesh::SimpleMesh;
+
+use simple_mesh::{SimpleMesh, Error};
 
 pub fn create_connected_cube() -> Result<SimpleMesh, Error>
 {

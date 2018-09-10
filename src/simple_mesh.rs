@@ -1,8 +1,20 @@
 
-use attribute::VertexAttributes;
+use attribute::{self, VertexAttributes};
 use glm::*;
 use ids::*;
-use mesh;
+use mesh::{self, Mesh};
+
+#[derive(Debug)]
+pub enum Error {
+    WrongSizeOfAttribute {message: String},
+    Attribute(attribute::Error)
+}
+
+impl From<attribute::Error> for Error {
+    fn from(other: attribute::Error) -> Self {
+        Error::Attribute(other)
+    }
+}
 
 pub struct SimpleMesh
 {
@@ -13,13 +25,45 @@ pub struct SimpleMesh
 
 impl SimpleMesh
 {
-    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, mesh::Error>
+    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, Error>
     {
-        Ok(SimpleMesh { indices, no_vertices: positions.len()/3, attributes: VertexAttributes::new(positions) })
+        let mut mesh = SimpleMesh { indices, no_vertices: positions.len()/3, attributes: VertexAttributes::new() };
+        mesh.add_vec3_attribute("position", positions)?;
+        Ok(mesh)
+    }
+
+    pub fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
+    {
+        if self.no_vertices() != data.len()/2 {
+            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
+        }
+        
+        self.attributes.create_vec2_attribute(name);
+        for vertex_id in self.vertex_iterator() {
+            self.attributes.set_vec2_attribute_at(name, &vertex_id, &vec2(data[vertex_id.val() * 2], data[vertex_id.val() * 2 + 1]))?;
+        }
+        
+        Ok(())
+    }
+
+    pub fn add_vec3_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
+    {
+        let no_vertices = self.no_vertices();
+        if no_vertices != data.len()/3 {
+            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
+        }
+
+        self.attributes.create_vec3_attribute(name, no_vertices);
+        for vertex_id in self.vertex_iterator() {
+            let value = vec3(data[vertex_id.val() * 3], data[vertex_id.val() * 3 + 1], data[vertex_id.val() * 3 + 2]);
+            self.attributes.set_vec3_attribute_at(name, &vertex_id, &value)?;
+        }
+
+        Ok(())
     }
 }
 
-impl mesh::Mesh for SimpleMesh
+impl Mesh for SimpleMesh
 {
     fn no_vertices(&self) -> usize
     {
@@ -39,18 +83,6 @@ impl mesh::Mesh for SimpleMesh
     fn vertex_iterator(&self) -> mesh::VertexIterator
     {
         VertexIterator::new(self.no_vertices())
-    }
-
-    fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), mesh::Error>
-    {
-        self.attributes.add_vec2_attribute(name, data)?;
-        Ok(())
-    }
-
-    fn add_vec3_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), mesh::Error>
-    {
-        self.attributes.add_vec3_attribute(name, data)?;
-        Ok(())
     }
 
     fn position_at(&self, vertex_id: &VertexID) -> Vec3
