@@ -103,7 +103,7 @@ impl VertexAttributes {
     }
 }
 
-pub struct IntAttribute {
+/*pub struct IntAttribute {
     name: String,
     data: Vec<f32>
 }
@@ -129,9 +129,7 @@ impl IntAttribute
     {
         self.name.as_ref()
     }
-
-    pub fn len(&self) -> usize { self.data.len() }
-}
+}*/
 
 pub struct Vec2Attribute {
     name: String,
@@ -161,8 +159,6 @@ impl Vec2Attribute
     {
         self.name.as_ref()
     }
-
-    pub fn len(&self) -> usize { self.data.len() }
 }
 
 pub struct Vec3Attribute {

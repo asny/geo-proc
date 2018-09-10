@@ -1,6 +1,5 @@
 use attribute;
 use glm::*;
-use std::string::String;
 use ids::*;
 
 #[derive(Debug)]

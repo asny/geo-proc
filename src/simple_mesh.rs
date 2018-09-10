@@ -1,7 +1,6 @@
 
 use attribute::VertexAttributes;
 use glm::*;
-use std::string::String;
 use ids::*;
 use mesh;
 
