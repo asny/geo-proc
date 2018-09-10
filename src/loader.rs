@@ -22,7 +22,7 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn load_obj(name: &str) -> Result<mesh::Mesh, Error>
+pub fn load_obj(name: &str) -> Result<mesh::SimpleMesh, Error>
 {
     let root_path: PathBuf = PathBuf::from("");
     let (models, _materials) = tobj::load_obj(&resource_name_to_path(&root_path,name))?;
@@ -30,7 +30,7 @@ pub fn load_obj(name: &str) -> Result<mesh::Mesh, Error>
 
     // Create mesh
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
-    let mut mesh = mesh::Mesh::create_indexed(indices, m.positions.clone())?;
+    let mut mesh = mesh::SimpleMesh::create_indexed(indices, m.positions.clone())?;
 
     if m.normals.len() > 0
     {

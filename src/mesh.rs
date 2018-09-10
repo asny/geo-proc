@@ -9,7 +9,7 @@ pub enum Error {
     WrongSizeOfAttribute {message: String}
 }
 
-pub trait Drawable
+pub trait Mesh
 {
     fn indices(&self) -> &Vec<u32>;
 
@@ -21,24 +21,24 @@ pub trait Drawable
 
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 
-pub struct Mesh
+pub struct SimpleMesh
 {
     indices: Vec<u32>,
     vec2_attributes: Vec<attribute::Vec2Attribute>,
     vec3_attributes: Vec<attribute::Vec3Attribute>
 }
 
-impl Mesh
+impl SimpleMesh
 {
-    pub fn create(positions: Vec<f32>) -> Result<Mesh, Error>
+    pub fn create(positions: Vec<f32>) -> Result<SimpleMesh, Error>
     {
         let indices = (0..positions.len() as u32/3).collect();
-        Mesh::create_indexed(indices, positions)
+        SimpleMesh::create_indexed(indices, positions)
     }
 
-    pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
+    pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, Error>
     {
-        let mut mesh = Mesh { indices, vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        let mut mesh = SimpleMesh { indices, vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
         mesh.vec3_attributes.push(attribute::Vec3Attribute::create("position", positions));
         Ok(mesh)
     }
@@ -64,7 +64,7 @@ impl Mesh
     }
 }
 
-impl Drawable for Mesh
+impl Mesh for SimpleMesh
 {
     fn no_vertices(&self) -> usize
     {

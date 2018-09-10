@@ -13,7 +13,7 @@ pub struct HalfEdgeMesh {
     connectivity_info: Rc<ConnectivityInfo>
 }
 
-impl Drawable for HalfEdgeMesh
+impl Mesh for HalfEdgeMesh
 {
     fn no_vertices(&self) -> usize
     {
