@@ -231,7 +231,6 @@ impl Mesh
     pub fn get_vec3_attribute_names(&self) -> Vec<&str>
     {
         let mut names = Vec::new();
-        names.push("position");
         for attribute in self.vec3_attributes.iter() {
             names.push(attribute.name());
         }
