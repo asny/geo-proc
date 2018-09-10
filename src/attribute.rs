@@ -28,6 +28,8 @@ impl IntAttribute
     {
         self.name.as_ref()
     }
+
+    pub fn len(&self) -> usize { self.data.len() }
 }
 
 pub struct Vec2Attribute {
@@ -58,6 +60,8 @@ impl Vec2Attribute
     {
         self.name.as_ref()
     }
+
+    pub fn len(&self) -> usize { self.data.len() }
 }
 
 pub struct Vec3Attribute {
@@ -88,4 +92,6 @@ impl Vec3Attribute
     {
         self.name.as_ref()
     }
+
+    pub fn len(&self) -> usize { self.data.len() }
 }
