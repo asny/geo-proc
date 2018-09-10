@@ -31,7 +31,7 @@ pub fn load_obj(name: &str) -> Result<SimpleMesh, Error>
 
     // Create mesh
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
-    let mut mesh = SimpleMesh::create_indexed(indices, m.positions.clone())?;
+    let mut mesh = SimpleMesh::create(indices, m.positions.clone())?;
 
     if m.normals.len() > 0
     {

@@ -14,6 +14,7 @@ impl From<attribute::Error> for Error {
     }
 }
 
+// Todo: Split in different traits
 pub trait Mesh
 {
     fn indices(&self) -> &Vec<u32>;

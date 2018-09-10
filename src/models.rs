@@ -29,7 +29,7 @@ pub fn create_connected_cube() -> Result<SimpleMesh, Error>
         5, 4, 8
     ];
 
-    let mesh = SimpleMesh::create_indexed(indices, positions)?;
+    let mesh = SimpleMesh::create(indices, positions)?;
     Ok(mesh)
 }
 
@@ -166,7 +166,7 @@ pub fn create_cube() -> Result<SimpleMesh, Error>
         0.0, 0.0
     ];
 
-    let mut mesh = SimpleMesh::create(positions)?;
+    let mut mesh = SimpleMesh::create((0..positions.len() as u32/3).collect(), positions)?;
     mesh.add_vec3_attribute("normal", normals)?;
     mesh.add_vec2_attribute("uv_coordinate", uvs)?;
     Ok(mesh)

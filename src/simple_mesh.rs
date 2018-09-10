@@ -14,12 +14,7 @@ pub struct SimpleMesh
 
 impl SimpleMesh
 {
-    pub fn create(positions: Vec<f32>) -> Result<SimpleMesh, mesh::Error>
-    {
-        SimpleMesh::create_indexed((0..positions.len() as u32/3).collect(), positions)
-    }
-
-    pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, mesh::Error>
+    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, mesh::Error>
     {
         Ok(SimpleMesh { indices, no_vertices: positions.len()/3, attributes: VertexAttributes::new(positions) })
     }

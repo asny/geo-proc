@@ -84,7 +84,7 @@ impl Mesh for HalfEdgeMesh
 impl HalfEdgeMesh
 {
 
-    pub fn create_connected(indices: Vec<u32>, positions: Vec<f32>) -> Result<HalfEdgeMesh, mesh::Error>
+    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<HalfEdgeMesh, mesh::Error>
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
@@ -462,7 +462,7 @@ mod tests {
 
     #[test]
     fn test_create_vertex() {
-        let mut mesh = HalfEdgeMesh::create_connected(vec![], vec![]).unwrap();
+        let mut mesh = HalfEdgeMesh::create(vec![], vec![]).unwrap();
 
         let v1 = mesh.create_vertex();
         let v2 = mesh.create_vertex();
@@ -474,7 +474,7 @@ mod tests {
 
     #[test]
     fn test_create_face() {
-        let mut mesh = HalfEdgeMesh::create_connected(vec![], vec![]).unwrap();
+        let mut mesh = HalfEdgeMesh::create(vec![], vec![]).unwrap();
 
         let v1 = mesh.create_vertex();
         let v2 = mesh.create_vertex();
@@ -561,7 +561,7 @@ mod tests {
     fn test_vertex_halfedge_iterator_with_holes() {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
-        let mesh = HalfEdgeMesh::create_connected(indices, positions).unwrap();
+        let mesh = HalfEdgeMesh::create(indices, positions).unwrap();
 
         let mut i = 0;
         let indices = vec![1, 2, 3, 4];
@@ -625,7 +625,7 @@ mod tests {
     fn create_single_face() -> HalfEdgeMesh
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
-        let mut mesh = HalfEdgeMesh::create_connected((0..positions.len() as u32/3).collect(), positions).unwrap();
+        let mut mesh = HalfEdgeMesh::create((0..positions.len() as u32/3).collect(), positions).unwrap();
 
         let v0 = mesh.create_vertex();
         let v1 = mesh.create_vertex();
@@ -638,7 +638,7 @@ mod tests {
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        HalfEdgeMesh::create_connected(indices, positions).unwrap()
+        HalfEdgeMesh::create(indices, positions).unwrap()
     }
 
     fn create_connected_test_object() -> HalfEdgeMesh
@@ -669,7 +669,7 @@ mod tests {
             4, 3, 7
         ];
 
-        HalfEdgeMesh::create_connected(indices, positions).unwrap()
+        HalfEdgeMesh::create(indices, positions).unwrap()
     }
 
     fn create_test_object() -> HalfEdgeMesh
@@ -805,7 +805,7 @@ mod tests {
             0.0, 0.0
         ];
 
-        let mut mesh = HalfEdgeMesh::create_connected((0..positions.len() as u32/3).collect(), positions).unwrap();
+        let mut mesh = HalfEdgeMesh::create((0..positions.len() as u32/3).collect(), positions).unwrap();
         mesh.add_vec3_attribute("normal", normals).unwrap();
         mesh.add_vec2_attribute("uv_coordinate", uvs).unwrap();
         mesh
