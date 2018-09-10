@@ -3,50 +3,40 @@ use traversal::*;
 use connectivity_info::ConnectivityInfo;
 use std::rc::Rc;
 
-pub struct VertexIterator
+pub type VertexIterator = Box<Iterator<Item = VertexID>>;
+
+pub struct HalfEdgeMeshVertexIterator
 {
-    connectivity_info: Option<Rc<ConnectivityInfo>>,
+    connectivity_info: Rc<ConnectivityInfo>,
     current: VertexID,
-    no_vertices: usize,
     is_done: bool
 }
 
-impl VertexIterator {
+impl HalfEdgeMeshVertexIterator {
     pub fn new(connectivity_info: &Rc<ConnectivityInfo>) -> VertexIterator
     {
         match connectivity_info.vertex_first_iter() {
             Some(vertex_id) => {
-                VertexIterator { no_vertices: 0, connectivity_info: Some(connectivity_info.clone()), current: vertex_id, is_done: false }
+                Box::new(HalfEdgeMeshVertexIterator { connectivity_info: connectivity_info.clone(), current: vertex_id, is_done: false })
             }
             None => {
-                VertexIterator { no_vertices: 0, connectivity_info: None, current: VertexID::null(), is_done: true }
+                Box::new(HalfEdgeMeshVertexIterator { connectivity_info: connectivity_info.clone(), current: VertexID::null(), is_done: true })
             }
         }
     }
-
-    pub fn new_without_connectivity(no_vertices: usize) -> VertexIterator
-    {
-        VertexIterator { no_vertices, connectivity_info: None, current: VertexID::new(0), is_done: false }
-    }
 }
 
-impl Iterator for VertexIterator {
+impl Iterator for HalfEdgeMeshVertexIterator {
     type Item = VertexID;
 
     fn next(&mut self) -> Option<VertexID>
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
-        match self.connectivity_info {
-            Some(ref connectivity_info) => {
-                match connectivity_info.vertex_next_iter(&self.current) {
-                    Some(vertex) => { self.current = vertex },
-                    None => { self.is_done = true; }
-                }},
-            None => {
-                if self.current.val() + 1 == self.no_vertices { self.is_done = true; }
-                else { self.current = VertexID::new(self.current.val() + 1) };
-            }
+        match self.connectivity_info.vertex_next_iter(&self.current)
+        {
+            Some(vertex) => { self.current = vertex },
+            None => { self.is_done = true; }
         }
         Some(curr)
     }
