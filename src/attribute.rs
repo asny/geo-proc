@@ -18,9 +18,9 @@ impl VertexAttributes {
         VertexAttributes {vec2_attributes: Vec::new(), vec3_attributes: Vec::new()}
     }
 
-    pub fn create_vec2_attribute(&mut self, name: &str)
+    pub fn create_vec2_attribute(&mut self, name: &str, initial_size: usize)
     {
-        self.vec2_attributes.push(Vec2Attribute{ name: String::from(name), data: Vec::new() })
+        self.vec2_attributes.push(Vec2Attribute{ name: String::from(name), data: vec![vec2(0.0, 0.0); initial_size] })
     }
 
     pub fn create_vec3_attribute(&mut self, name: &str, initial_size: usize)

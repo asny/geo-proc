@@ -34,11 +34,12 @@ impl SimpleMesh
 
     pub fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
     {
-        if self.no_vertices() != data.len()/2 {
+        let no_vertices = self.no_vertices();
+        if no_vertices != data.len()/2 {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
         
-        self.attributes.create_vec2_attribute(name);
+        self.attributes.create_vec2_attribute(name, no_vertices);
         for vertex_id in self.vertex_iterator() {
             self.attributes.set_vec2_attribute_at(name, &vertex_id, &vec2(data[vertex_id.val() * 2], data[vertex_id.val() * 2 + 1]))?;
         }

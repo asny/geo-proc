@@ -94,12 +94,12 @@ impl HalfEdgeMesh
 
     pub fn add_vec2_attribute(&mut self, name: &str)
     {
-        self.attributes.create_vec2_attribute(name);
+        self.attributes.create_vec2_attribute(name, 10);
     }
 
     pub fn add_vec3_attribute(&mut self, name: &str)
     {
-        self.attributes.create_vec3_attribute(name, 0);
+        self.attributes.create_vec3_attribute(name, 10);
     }
 
     fn create_vertex(&mut self) -> VertexID
