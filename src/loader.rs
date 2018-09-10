@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::path::PathBuf;
 use tobj;
-use mesh;
+use mesh::{self, Mesh};
 use simple_mesh::SimpleMesh;
 
 #[derive(Debug)]
@@ -35,7 +35,7 @@ pub fn load_obj(name: &str) -> Result<SimpleMesh, Error>
 
     if m.normals.len() > 0
     {
-        mesh.add_custom_vec3_attribute("normal", m.normals.clone())?;
+        mesh.add_vec3_attribute("normal", m.normals.clone())?;
     }
 
     Ok(mesh)

@@ -1,16 +1,5 @@
-use mesh;
+use mesh::*;
 use simple_mesh::SimpleMesh;
-
-#[derive(Debug)]
-pub enum Error {
-    Mesh(mesh::Error)
-}
-
-impl From<mesh::Error> for Error {
-    fn from(other: mesh::Error) -> Self {
-        Error::Mesh(other)
-    }
-}
 
 pub fn create_connected_cube() -> Result<SimpleMesh, Error>
 {
@@ -178,7 +167,7 @@ pub fn create_cube() -> Result<SimpleMesh, Error>
     ];
 
     let mut mesh = SimpleMesh::create(positions)?;
-    mesh.add_custom_vec3_attribute("normal", normals)?;
-    mesh.add_custom_vec2_attribute("uv_coordinate", uvs)?;
+    mesh.add_vec3_attribute("normal", normals)?;
+    mesh.add_vec2_attribute("uv_coordinate", uvs)?;
     Ok(mesh)
 }

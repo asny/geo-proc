@@ -1,57 +1,35 @@
-use attribute;
+
+use attribute::VertexAttributes;
 use glm::*;
 use std::string::String;
 use ids::*;
-use mesh::*;
+use mesh;
 
 pub struct SimpleMesh
 {
     indices: Vec<u32>,
-    vec2_attributes: Vec<attribute::Vec2Attribute>,
-    vec3_attributes: Vec<attribute::Vec3Attribute>
+    no_vertices: usize,
+    attributes: VertexAttributes
 }
 
 impl SimpleMesh
 {
-    pub fn create(positions: Vec<f32>) -> Result<SimpleMesh, Error>
+    pub fn create(positions: Vec<f32>) -> Result<SimpleMesh, mesh::Error>
     {
-        let indices = (0..positions.len() as u32/3).collect();
-        SimpleMesh::create_indexed(indices, positions)
+        SimpleMesh::create_indexed((0..positions.len() as u32/3).collect(), positions)
     }
 
-    pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, Error>
+    pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, mesh::Error>
     {
-        let mut mesh = SimpleMesh { indices, vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
-        mesh.vec3_attributes.push(attribute::Vec3Attribute::create("position", positions));
-        Ok(mesh)
-    }
-
-    pub fn add_custom_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
-    {
-        if self.no_vertices() != data.len()/2 {
-            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
-        }
-        let custom_attribute = attribute::Vec2Attribute::create(name, data);
-        self.vec2_attributes.push(custom_attribute);
-        Ok(())
-    }
-
-    pub fn add_custom_vec3_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
-    {
-        if self.no_vertices() != data.len()/3 {
-            return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
-        }
-        let custom_attribute = attribute::Vec3Attribute::create(name, data);
-        self.vec3_attributes.push(custom_attribute);
-        Ok(())
+        Ok(SimpleMesh { indices, no_vertices: positions.len()/3, attributes: VertexAttributes::new(positions) })
     }
 }
 
-impl Mesh for SimpleMesh
+impl mesh::Mesh for SimpleMesh
 {
     fn no_vertices(&self) -> usize
     {
-        self.vec3_attributes.first().unwrap().len()/3
+        self.no_vertices
     }
 
     fn no_faces(&self) -> usize
@@ -64,26 +42,72 @@ impl Mesh for SimpleMesh
         &self.indices
     }
 
-    fn vertex_iterator(&self) -> VertexIterator
+    fn vertex_iterator(&self) -> mesh::VertexIterator
     {
-        StaticVertexIterator::new(self.no_vertices())
+        VertexIterator::new(self.no_vertices())
+    }
+
+    fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), mesh::Error>
+    {
+        self.attributes.add_vec2_attribute(name, data)?;
+        Ok(())
+    }
+
+    fn add_vec3_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), mesh::Error>
+    {
+        self.attributes.add_vec3_attribute(name, data)?;
+        Ok(())
+    }
+
+    fn position_at(&self, vertex_id: &VertexID) -> Vec3
+    {
+        self.attributes.position_at(vertex_id)
+    }
+
+    fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
+    {
+        self.attributes.set_position_at(vertex_id, value);
+    }
+
+    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec2, mesh::Error>
+    {
+        let val = self.attributes.get_vec2_attribute_at(name, vertex_id)?;
+        Ok(val)
+    }
+
+    fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), mesh::Error>
+    {
+        self.attributes.set_vec2_attribute_at(name, vertex_id, value)?;
+        Ok(())
+    }
+
+    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, mesh::Error>
+    {
+        let val = self.attributes.get_vec3_attribute_at(name, vertex_id)?;
+        Ok(val)
+    }
+
+    fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), mesh::Error>
+    {
+        self.attributes.set_vec3_attribute_at(name, vertex_id, value)?;
+        Ok(())
     }
 }
 
-pub struct StaticVertexIterator
+struct VertexIterator
 {
     current: usize,
     no_vertices: usize
 }
 
-impl StaticVertexIterator {
-    pub fn new(no_vertices: usize) -> VertexIterator
+impl VertexIterator {
+    pub fn new(no_vertices: usize) -> mesh::VertexIterator
     {
-        Box::new(StaticVertexIterator {current: 0, no_vertices})
+        Box::new(VertexIterator {current: 0, no_vertices})
     }
 }
 
-impl Iterator for StaticVertexIterator {
+impl Iterator for VertexIterator {
     type Item = VertexID;
 
     fn next(&mut self) -> Option<VertexID>
