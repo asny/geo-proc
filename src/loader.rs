@@ -29,10 +29,8 @@ pub fn load_obj(name: &str) -> Result<mesh::Mesh, Error>
     let m = &models.first().ok_or(Error::FileDoesntContainModel {message: format!("The file {} doesn't contain a model", name)})?.mesh;
 
     // Create mesh
-    let mut mesh = match m.indices.len() > 0 {
-        true => mesh::Mesh::create_indexed(m.indices.clone(), m.positions.clone())?,
-        false => mesh::Mesh::create(m.positions.clone())?
-    };
+    let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
+    let mut mesh = mesh::Mesh::create_indexed(indices, m.positions.clone())?;
 
     if m.normals.len() > 0
     {

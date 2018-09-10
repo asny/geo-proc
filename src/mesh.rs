@@ -21,34 +21,40 @@ pub struct Mesh {
     connectivity_info: Rc<ConnectivityInfo>
 }
 
-
 impl Mesh
 {
     pub fn create(positions: Vec<f32>) -> Result<Mesh, Error>
     {
-        let no_vertices = (positions.len()/3) as u32;
-        let indices = (0..no_vertices).collect();
+        let indices = (0..positions.len() as u32/3).collect();
         Mesh::create_indexed(indices, positions)
     }
 
     pub fn create_indexed(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
     {
-        let no_vertices = positions.len()/3;
-        let no_faces = indices.len()/3;
-        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: indices.clone(), int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
-        for _vertex in 0..no_vertices {
-            mesh.create_vertex();
-        }
-
-        for face in 0..no_faces {
-            let v0 = VertexID::new(indices[face * 3] as usize);
-            let v1 = VertexID::new(indices[face * 3 + 1] as usize);
-            let v2 = VertexID::new(indices[face * 3 + 2] as usize);
-            mesh.create_face(&v0, &v1, &v2);
-        }
-        mesh.add_custom_vec3_attribute( "position", positions)?;
-
+        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: indices, int_attributes: Vec::new(), vec2_attributes: Vec::new(), vec3_attributes: Vec::new() };
+        mesh.vec3_attributes.push(attribute::Vec3Attribute::create("position", positions));
         Ok(mesh)
+    }
+
+    pub fn create_connected(indices: Vec<u32>, positions: Vec<f32>) -> Result<Mesh, Error>
+    {
+        let mut mesh = Mesh::create_indexed(indices, positions)?;
+        mesh.generate_connectivity();
+        Ok(mesh)
+    }
+
+    pub fn generate_connectivity(&mut self)
+    {
+        for _vertex in 0..self.no_vertices() {
+            self.create_vertex();
+        }
+
+        for face in 0..self.no_faces() {
+            let v0 = VertexID::new(self.indices[face * 3] as usize);
+            let v1 = VertexID::new(self.indices[face * 3 + 1] as usize);
+            let v2 = VertexID::new(self.indices[face * 3 + 2] as usize);
+            self.create_face(&v0, &v1, &v2);
+        }
     }
 
     pub fn indices(&self) -> &Vec<u32>
@@ -63,12 +69,12 @@ impl Mesh
 
     pub fn no_vertices(&self) -> usize
     {
-        self.connectivity_info.no_vertices()
+        self.vec3_attributes.first().unwrap().len()/3
     }
 
     pub fn no_faces(&self) -> usize
     {
-        self.connectivity_info.no_faces()
+        self.indices.len()/3
     }
 
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
@@ -206,7 +212,10 @@ impl Mesh
 
     pub fn vertex_iterator(&self) -> VertexIterator
     {
-        VertexIterator::new(&self.connectivity_info)
+        match self.connectivity_info.no_vertices() == 0 {
+            true => VertexIterator::new_without_connectivity(self.no_vertices()),
+            false => VertexIterator::new(&self.connectivity_info)
+        }
     }
 
     pub fn halfedge_iterator(&self) -> HalfEdgeIterator
@@ -323,7 +332,7 @@ impl Mesh
         self.vec3_attributes.first_mut().unwrap().set(vertex_id, value);
     }
 
-    fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
+    pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = self.position_at(&walker.vertex_id());
@@ -335,7 +344,7 @@ impl Mesh
         normalize(cross(p1 - p0, p2 - p0))
     }
 
-    fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
+    pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
     {
         let mut normal = vec3(0.0, 0.0, 0.0);
         for walker in self.vertex_halfedge_iterator(&vertex_id) {
@@ -345,15 +354,6 @@ impl Mesh
             }
         }
         normalize(normal)
-    }
-
-    pub fn update_normals(&mut self) -> Result<(), Error>
-    {
-        for vertex_id in self.vertex_iterator() {
-            let normal = self.compute_vertex_normal(&vertex_id);
-            self.set_vec3_attribute_at("normal", &vertex_id, &normal)?;
-        }
-        Ok(())
     }
 }
 
@@ -465,7 +465,7 @@ mod tests {
     fn test_vertex_halfedge_iterator_with_holes() {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
-        let mesh = Mesh::create_indexed(indices, positions).unwrap();
+        let mesh = Mesh::create_connected(indices, positions).unwrap();
 
         let mut i = 0;
         let indices = vec![1, 2, 3, 4];
@@ -512,7 +512,11 @@ mod tests {
         let mut mesh = create_three_connected_faces();
         let normals: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, 0.0];
         mesh.add_custom_vec3_attribute("normal", normals).unwrap();
-        mesh.update_normals().unwrap();
+
+        for vertex_id in mesh.vertex_iterator() {
+            let normal = mesh.compute_vertex_normal(&vertex_id);
+            mesh.set_vec3_attribute_at("normal", &vertex_id, &normal).unwrap();
+        }
 
         for vertex_id in mesh.vertex_iterator() {
             let normal = mesh.get_vec3_attribute_at("normal", &vertex_id).unwrap();
@@ -525,7 +529,7 @@ mod tests {
     fn create_single_face() -> Mesh
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
-        let mut mesh = Mesh::create(positions).unwrap();
+        let mut mesh = Mesh::create_connected((0..positions.len() as u32/3).collect(),positions).unwrap();
 
         let v0 = mesh.create_vertex();
         let v1 = mesh.create_vertex();
@@ -538,7 +542,7 @@ mod tests {
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        Mesh::create_indexed(indices, positions).unwrap()
+        Mesh::create_connected(indices, positions).unwrap()
     }
 
     fn create_connected_test_object() -> Mesh
@@ -569,7 +573,7 @@ mod tests {
             4, 3, 7
         ];
 
-        Mesh::create_indexed(indices, positions).unwrap()
+        Mesh::create_connected(indices, positions).unwrap()
     }
 
     fn create_test_object() -> Result<Mesh, Error>
@@ -705,7 +709,7 @@ mod tests {
             0.0, 0.0
         ];
 
-        let mut mesh = Mesh::create(positions)?;
+        let mut mesh = Mesh::create_connected((0..positions.len() as u32/3).collect(), positions)?;
         mesh.add_custom_vec3_attribute("normal", normals)?;
         mesh.add_custom_vec2_attribute("uv_coordinate", uvs)?;
         Ok(mesh)

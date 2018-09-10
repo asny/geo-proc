@@ -5,8 +5,9 @@ use std::rc::Rc;
 
 pub struct VertexIterator
 {
-    connectivity_info: Rc<ConnectivityInfo>,
+    connectivity_info: Option<Rc<ConnectivityInfo>>,
     current: VertexID,
+    no_vertices: usize,
     is_done: bool
 }
 
@@ -15,13 +16,17 @@ impl VertexIterator {
     {
         match connectivity_info.vertex_first_iter() {
             Some(vertex_id) => {
-                VertexIterator { connectivity_info: connectivity_info.clone(), current: vertex_id, is_done: false }
+                VertexIterator { no_vertices: 0, connectivity_info: Some(connectivity_info.clone()), current: vertex_id, is_done: false }
             }
             None => {
-                VertexIterator { connectivity_info: connectivity_info.clone(), current: VertexID::new(0), is_done: true }
+                VertexIterator { no_vertices: 0, connectivity_info: None, current: VertexID::null(), is_done: true }
             }
         }
+    }
 
+    pub fn new_without_connectivity(no_vertices: usize) -> VertexIterator
+    {
+        VertexIterator { no_vertices, connectivity_info: None, current: VertexID::new(0), is_done: false }
     }
 }
 
@@ -32,9 +37,16 @@ impl Iterator for VertexIterator {
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
-        match self.connectivity_info.vertex_next_iter(&self.current) {
-            Some(vertex) => { self.current = vertex },
-            None => { self.is_done = true; }
+        match self.connectivity_info {
+            Some(ref connectivity_info) => {
+                match connectivity_info.vertex_next_iter(&self.current) {
+                    Some(vertex) => { self.current = vertex },
+                    None => { self.is_done = true; }
+                }},
+            None => {
+                if self.current.val() + 1 == self.no_vertices { self.is_done = true; }
+                else { self.current = VertexID::new(self.current.val() + 1) };
+            }
         }
         Some(curr)
     }
@@ -55,7 +67,7 @@ impl HalfEdgeIterator {
                 HalfEdgeIterator { connectivity_info: connectivity_info.clone(), current: halfedge_id, is_done: false }
             }
             None => {
-                HalfEdgeIterator { connectivity_info: connectivity_info.clone(), current: HalfEdgeID::new(0), is_done: true }
+                HalfEdgeIterator { connectivity_info: connectivity_info.clone(), current: HalfEdgeID::null(), is_done: true }
             }
         }
 
@@ -92,7 +104,7 @@ impl FaceIterator {
                 FaceIterator { connectivity_info: connectivity_info.clone(), current: face_id, is_done: false }
             }
             None => {
-                FaceIterator { connectivity_info: connectivity_info.clone(), current: FaceID::new(0), is_done: true }
+                FaceIterator { connectivity_info: connectivity_info.clone(), current: FaceID::null(), is_done: true }
             }
         }
 
