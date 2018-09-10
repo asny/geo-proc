@@ -85,7 +85,7 @@ impl Mesh for SimpleMesh
         VertexIterator::new(self.no_vertices())
     }
 
-    fn position_at(&self, vertex_id: &VertexID) -> Vec3
+    fn position_at(&self, vertex_id: &VertexID) -> &Vec3
     {
         self.attributes.position_at(vertex_id)
     }
@@ -95,7 +95,7 @@ impl Mesh for SimpleMesh
         self.attributes.set_position_at(vertex_id, value);
     }
 
-    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec2, mesh::Error>
+    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, mesh::Error>
     {
         let val = self.attributes.get_vec2_attribute_at(name, vertex_id)?;
         Ok(val)
@@ -107,7 +107,7 @@ impl Mesh for SimpleMesh
         Ok(())
     }
 
-    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, mesh::Error>
+    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, mesh::Error>
     {
         let val = self.attributes.get_vec3_attribute_at(name, vertex_id)?;
         Ok(val)

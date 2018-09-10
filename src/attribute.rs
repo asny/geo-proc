@@ -25,10 +25,10 @@ impl VertexAttributes {
 
     pub fn create_vec3_attribute(&mut self, name: &str, initial_size: usize)
     {
-        self.vec3_attributes.push(Vec3Attribute{ name: String::from(name), data: vec![0.0; 3 * initial_size] })
+        self.vec3_attributes.push(Vec3Attribute{ name: String::from(name), data: vec![vec3(0.0, 0.0, 0.0); initial_size] })
     }
 
-    pub fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec2, Error>
+    pub fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, Error>
     {
         for attribute in self.vec2_attributes.iter() {
             if attribute.name() == name
@@ -51,7 +51,7 @@ impl VertexAttributes {
         Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
-    pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, Error>
+    pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
     {
         for attribute in self.vec3_attributes.iter() {
             if attribute.name() == name
@@ -74,7 +74,7 @@ impl VertexAttributes {
         Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
-    pub fn position_at(&self, vertex_id: &VertexID) -> Vec3
+    pub fn position_at(&self, vertex_id: &VertexID) -> &Vec3
     {
         self.vec3_attributes.first().unwrap().at(vertex_id)
     }
@@ -115,25 +115,24 @@ impl IntAttribute
 
 pub struct Vec2Attribute {
     name: String,
-    data: Vec<f32>
+    data: Vec<Vec2>
 }
 
 impl Vec2Attribute
 {
-    pub fn at(&self, vertex_id: &VertexID) -> Vec2
+    pub fn at(&self, vertex_id: &VertexID) -> &Vec2
     {
-        vec2(self.data[vertex_id.val() * 2], self.data[vertex_id.val() * 2 + 1])
+        &self.data[vertex_id.val()]
     }
 
     pub fn set(&mut self, vertex_id: &VertexID, value: &Vec2)
     {
-        let i = vertex_id.val() * 2;
-        if i + 1 >= self.data.len()
+        let id = vertex_id.val();
+        if id >= self.data.len()
         {
-            self.data.append(&mut vec![0.0; 2*(i+2)])
+            self.data.append(&mut vec![vec2(0.0, 0.0); 2*id+1])
         }
-        self.data[i] = value[0];
-        self.data[i + 1] = value[1];
+        self.data[id] = *value;
     }
 
     pub fn name(&self) -> &str
@@ -144,26 +143,25 @@ impl Vec2Attribute
 
 pub struct Vec3Attribute {
     name: String,
-    data: Vec<f32>
+    data: Vec<Vec3>
 }
 
 
 impl Vec3Attribute
 {
-    pub fn at(&self, vertex_id: &VertexID) -> Vec3
+    pub fn at(&self, vertex_id: &VertexID) -> &Vec3
     {
-        vec3(self.data[vertex_id.val() * 3], self.data[vertex_id.val() * 3 + 1], self.data[vertex_id.val() * 3 + 2])
+        &self.data[vertex_id.val()]
     }
 
-    pub fn set(&mut self, vertex_id: &VertexID, value: &Vec3) {
-        let i = vertex_id.val() * 3;
-        if i + 2 >= self.data.len()
+    pub fn set(&mut self, vertex_id: &VertexID, value: &Vec3)
+    {
+        let id = vertex_id.val();
+        if id >= self.data.len()
         {
-            self.data.append(&mut vec![0.0; 2*(i+3)])
+            self.data.append(&mut vec![vec3(0.0, 0.0, 0.0); 2*id+1])
         }
-        self.data[i] = value[0];
-        self.data[i + 1] = value[1];
-        self.data[i + 2] = value[2];
+        self.data[id] = *value;
     }
 
     pub fn name(&self) -> &str

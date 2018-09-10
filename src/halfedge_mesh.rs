@@ -34,7 +34,7 @@ impl Mesh for HalfEdgeMesh
         VertexIterator::new(&self.connectivity_info)
     }
 
-    fn position_at(&self, vertex_id: &VertexID) -> Vec3
+    fn position_at(&self, vertex_id: &VertexID) -> &Vec3
     {
         self.attributes.position_at(vertex_id)
     }
@@ -44,7 +44,7 @@ impl Mesh for HalfEdgeMesh
         self.attributes.set_position_at(vertex_id, value);
     }
 
-    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec2, mesh::Error>
+    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, mesh::Error>
     {
         let val = self.attributes.get_vec2_attribute_at(name, vertex_id)?;
         Ok(val)
@@ -56,7 +56,7 @@ impl Mesh for HalfEdgeMesh
         Ok(())
     }
 
-    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<Vec3, mesh::Error>
+    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, mesh::Error>
     {
         let val = self.attributes.get_vec3_attribute_at(name, vertex_id)?;
         Ok(val)
@@ -253,11 +253,11 @@ impl HalfEdgeMesh
     pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
-        let p0 = self.position_at(&walker.vertex_id());
+        let p0 = *self.position_at(&walker.vertex_id());
         walker.next();
-        let p1 = self.position_at(&walker.vertex_id());
+        let p1 = *self.position_at(&walker.vertex_id());
         walker.next();
-        let p2 = self.position_at(&walker.vertex_id());
+        let p2 = *self.position_at(&walker.vertex_id());
 
         normalize(cross(p1 - p0, p2 - p0))
     }
