@@ -2,7 +2,6 @@ use attribute;
 use glm::*;
 use std::string::String;
 use ids::*;
-use iterators::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -19,6 +18,8 @@ pub trait Drawable
     fn no_vertices(&self) -> usize;
     fn no_faces(&self) -> usize;
 }
+
+pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 
 pub struct Mesh
 {
