@@ -1,4 +1,5 @@
 use mesh;
+use simple_mesh::SimpleMesh;
 
 #[derive(Debug)]
 pub enum Error {
@@ -11,7 +12,7 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn create_connected_cube() -> Result<mesh::SimpleMesh, Error>
+pub fn create_connected_cube() -> Result<SimpleMesh, Error>
 {
     let positions: Vec<f32> = vec![
         1.0, -1.0, -1.0,
@@ -39,11 +40,11 @@ pub fn create_connected_cube() -> Result<mesh::SimpleMesh, Error>
         5, 4, 8
     ];
 
-    let mesh = mesh::SimpleMesh::create_indexed(indices, positions)?;
+    let mesh = SimpleMesh::create_indexed(indices, positions)?;
     Ok(mesh)
 }
 
-pub fn create_cube() -> Result<mesh::SimpleMesh, Error>
+pub fn create_cube() -> Result<SimpleMesh, Error>
 {
     let positions: Vec<f32> = vec![
         1.0, 1.0, -1.0,
@@ -176,7 +177,7 @@ pub fn create_cube() -> Result<mesh::SimpleMesh, Error>
         0.0, 0.0
     ];
 
-    let mut mesh = mesh::SimpleMesh::create(positions)?;
+    let mut mesh = SimpleMesh::create(positions)?;
     mesh.add_custom_vec3_attribute("normal", normals)?;
     mesh.add_custom_vec2_attribute("uv_coordinate", uvs)?;
     Ok(mesh)
