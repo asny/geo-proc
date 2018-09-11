@@ -1,10 +1,10 @@
 use std::cell::{RefCell};
 use ids::*;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub struct ConnectivityInfo {
-    vertices: RefCell<HashMap<VertexID, Vertex>>,
+    vertices: RefCell<BTreeMap<VertexID, Vertex>>,
     halfedges: RefCell<Vec<HalfEdge>>,
     faces: RefCell<Vec<Face>>,
     no_vertices: RefCell<usize>,
@@ -14,7 +14,7 @@ pub struct ConnectivityInfo {
 impl ConnectivityInfo {
     pub fn new() -> ConnectivityInfo
     {
-        ConnectivityInfo { vertices: RefCell::new(HashMap::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()), no_vertices: RefCell::new(0),  no_faces: RefCell::new(0) }
+        ConnectivityInfo { vertices: RefCell::new(BTreeMap::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()), no_vertices: RefCell::new(0),  no_faces: RefCell::new(0) }
     }
 
     pub fn no_vertices(&self) -> usize
@@ -94,7 +94,7 @@ impl ConnectivityInfo {
     pub fn vertex_iterator(&self) -> Box<Iterator<Item = VertexID>>
     {
         let vec = &mut *RefCell::borrow_mut(&self.vertices);
-        let t: Vec<_> = vec.iter().map(|pair| pair.0.clone()).collect();
+        let t: Vec<VertexID> = vec.iter().map(|pair| pair.0.clone()).collect();
         Box::new(t.into_iter())
     }
 
