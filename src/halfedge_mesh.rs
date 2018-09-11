@@ -3,6 +3,7 @@ use attribute::VertexAttributes;
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
 use std::rc::Rc;
+use std::collections::HashSet;
 use ids::*;
 use glm::*;
 
@@ -103,6 +104,28 @@ impl HalfEdgeMesh
         mesh
     }
 
+    pub fn create_sub_mesh(&self, faces: &Vec<FaceID>) -> HalfEdgeMesh
+    {
+        let mut vertices = HashSet::new();
+
+        for face_id in faces {
+            for walker in self.face_halfedge_iterator(face_id) {
+                let vertex_id = walker.vertex_id();
+                vertices.insert(vertex_id);
+            }
+        }
+
+        let mut attributes = self.attributes.clone();
+        for vertex_id in self.vertex_iterator() {
+            if !vertices.contains(&vertex_id) {
+                attributes.remove_vertex(&vertex_id);
+            }
+        }
+        // TODO
+        let indices = self.indices.clone();
+        HalfEdgeMesh::create_from_other(vertices.len(), indices, attributes)
+    }
+
     pub fn add_vec2_attribute(&mut self, name: &str)
     {
         self.attributes.create_vec2_attribute(name);
@@ -116,6 +139,12 @@ impl HalfEdgeMesh
     fn create_vertex(&mut self) -> VertexID
     {
         self.connectivity_info.create_vertex()
+    }
+
+    fn remove_vertex(&mut self, vertex_id: &VertexID)
+    {
+        self.connectivity_info.remove_vertex(vertex_id);
+        self.attributes.remove_vertex(vertex_id);
     }
 
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
