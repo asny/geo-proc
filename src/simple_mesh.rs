@@ -39,7 +39,7 @@ impl SimpleMesh
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
         
-        self.attributes.create_vec2_attribute(name, no_vertices);
+        self.attributes.create_vec2_attribute(name);
         for vertex_id in self.vertex_iterator() {
             self.attributes.set_vec2_attribute_at(name, &vertex_id, &vec2(data[vertex_id.val() * 2], data[vertex_id.val() * 2 + 1]))?;
         }
@@ -54,7 +54,7 @@ impl SimpleMesh
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
 
-        self.attributes.create_vec3_attribute(name, no_vertices);
+        self.attributes.create_vec3_attribute(name);
         for vertex_id in self.vertex_iterator() {
             let value = vec3(data[vertex_id.val() * 3], data[vertex_id.val() * 3 + 1], data[vertex_id.val() * 3 + 2]);
             self.attributes.set_vec3_attribute_at(name, &vertex_id, &value)?;

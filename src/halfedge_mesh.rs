@@ -76,7 +76,7 @@ impl HalfEdgeMesh
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
         let mut mesh = HalfEdgeMesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices, attributes: VertexAttributes::new() };
-        mesh.attributes.create_vec3_attribute("position", no_vertices);
+        mesh.attributes.create_vec3_attribute("position");
 
         for i in 0..no_vertices {
             let vertex_id = mesh.create_vertex();
@@ -94,12 +94,12 @@ impl HalfEdgeMesh
 
     pub fn add_vec2_attribute(&mut self, name: &str)
     {
-        self.attributes.create_vec2_attribute(name, 10);
+        self.attributes.create_vec2_attribute(name);
     }
 
     pub fn add_vec3_attribute(&mut self, name: &str)
     {
-        self.attributes.create_vec3_attribute(name, 10);
+        self.attributes.create_vec3_attribute(name);
     }
 
     fn create_vertex(&mut self) -> VertexID

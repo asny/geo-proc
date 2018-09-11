@@ -1,4 +1,4 @@
-
+use std::fmt;
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct VertexID
@@ -29,6 +29,12 @@ impl VertexID {
             panic!("Vertex is dead");
         }
         self.val
+    }
+}
+
+impl fmt::Display for VertexID {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(id: {}, dead: {}))", self.val, self.dead)
     }
 }
 
@@ -64,6 +70,12 @@ impl HalfEdgeID {
     }
 }
 
+impl fmt::Display for HalfEdgeID {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(id: {}, dead: {}))", self.val, self.dead)
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct FaceID
 {
@@ -93,6 +105,12 @@ impl FaceID {
             panic!("Face is dead");
         }
         self.val
+    }
+}
+
+impl fmt::Display for FaceID {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(id: {}, dead: {}))", self.val, self.dead)
     }
 }
 
