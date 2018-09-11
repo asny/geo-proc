@@ -17,7 +17,7 @@ pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> HashSet<Fa
 
         for mut walker in mesh.face_halfedge_iterator(&test_face) {
             let f = walker.twin().face_id();
-            if(!f.is_null() && !component.contains(&f))
+            if !f.is_null() && !component.contains(&f)
             {
                 component.insert(f.clone());
                 to_be_tested.push(f);

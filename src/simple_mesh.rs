@@ -88,12 +88,12 @@ impl Mesh for SimpleMesh
 
     fn position_at(&self, vertex_id: &VertexID) -> &Vec3
     {
-        self.attributes.position_at(vertex_id)
+        self.attributes.get_vec3_attribute_at("position", vertex_id).unwrap()
     }
 
     fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
     {
-        self.attributes.set_position_at(vertex_id, value);
+        self.attributes.set_vec3_attribute_at("position", vertex_id, value).unwrap();
     }
 
     fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, mesh::Error>
