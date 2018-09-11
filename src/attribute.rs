@@ -8,6 +8,7 @@ pub enum Error {
     FailedToFindEntryForVertexID {message: String}
 }
 
+#[derive(Clone, Debug)]
 pub struct VertexAttributes
 {
     vec2_attributes: HashMap<String, HashMap<VertexID, Vec2>>,

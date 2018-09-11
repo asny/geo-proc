@@ -1,4 +1,5 @@
 use mesh::{self, Mesh};
+use simple_mesh::SimpleMesh;
 use attribute::VertexAttributes;
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
@@ -90,6 +91,23 @@ impl HalfEdgeMesh
             mesh.create_face(&v0, &v1, &v2);
         }
         Ok(mesh)
+    }
+
+    pub fn from_simple_mesh(other: &SimpleMesh) -> HalfEdgeMesh
+    {
+        let mut mesh = HalfEdgeMesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices: other.indices().clone(), attributes: other.clone_attributes() };
+
+        for _ in 0..other.no_vertices() {
+            mesh.create_vertex();
+        }
+
+        for face in 0..other.no_faces() {
+            let v0 = VertexID::new(mesh.indices[face * 3] as usize);
+            let v1 = VertexID::new(mesh.indices[face * 3 + 1] as usize);
+            let v2 = VertexID::new(mesh.indices[face * 3 + 2] as usize);
+            mesh.create_face(&v0, &v1, &v2);
+        }
+        mesh
     }
 
     pub fn add_vec2_attribute(&mut self, name: &str)
@@ -600,6 +618,23 @@ mod tests {
         assert_eq!(0.0, computed_normal.x);
         assert_eq!(1.0, computed_normal.y);
         assert_eq!(0.0, computed_normal.z);
+    }
+
+    #[test]
+    fn test_from_simple_mesh() {
+
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
+        let halfedgemesh1 = HalfEdgeMesh::create(indices.clone(), positions.clone()).unwrap();
+        let simplemesh = SimpleMesh::create(indices, positions).unwrap();
+        let halfedgemesh2 = HalfEdgeMesh::from_simple_mesh(&simplemesh);
+
+        assert_eq!(halfedgemesh1.no_vertices(), halfedgemesh2.no_vertices());
+        assert_eq!(halfedgemesh1.no_faces(), halfedgemesh2.no_faces());
+
+        for vertex_id in halfedgemesh1.vertex_iterator() {
+            assert_eq!(halfedgemesh1.position_at(&vertex_id), halfedgemesh2.position_at(&vertex_id))
+        }
     }
 
     #[test]

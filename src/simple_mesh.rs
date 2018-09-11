@@ -62,6 +62,11 @@ impl SimpleMesh
 
         Ok(())
     }
+
+    pub fn clone_attributes(&self) -> VertexAttributes
+    {
+        self.attributes.clone()
+    }
 }
 
 impl Mesh for SimpleMesh
