@@ -38,7 +38,7 @@ impl fmt::Display for VertexID {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 pub struct HalfEdgeID
 {
     val: usize,
@@ -76,7 +76,7 @@ impl fmt::Display for HalfEdgeID {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
 pub struct FaceID
 {
     val: usize,

@@ -5,14 +5,14 @@ use std::collections::BTreeMap;
 #[derive(Debug)]
 pub struct ConnectivityInfo {
     vertices: RefCell<BTreeMap<VertexID, Vertex>>,
-    halfedges: RefCell<Vec<HalfEdge>>,
-    faces: RefCell<Vec<Face>>
+    halfedges: RefCell<BTreeMap<HalfEdgeID, HalfEdge>>,
+    faces: RefCell<BTreeMap<FaceID, Face>>
 }
 
 impl ConnectivityInfo {
     pub fn new() -> ConnectivityInfo
     {
-        ConnectivityInfo { vertices: RefCell::new(BTreeMap::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()) }
+        ConnectivityInfo { vertices: RefCell::new(BTreeMap::new()), halfedges: RefCell::new(BTreeMap::new()), faces: RefCell::new(BTreeMap::new()) }
     }
 
     pub fn no_vertices(&self) -> usize
@@ -52,17 +52,32 @@ impl ConnectivityInfo {
     pub fn create_halfedge(&self) -> HalfEdgeID
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
-        let id = HalfEdgeID::new(halfedges.len());
-        halfedges.push(HalfEdge { id: id.clone(), vertex: VertexID::null(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: FaceID::null() });
+
+        let mut i = 0;
+        let mut id;
+        loop {
+            if i == usize::max_value() {panic!("Not possible to create a unique id for a new vertex")}
+            id = HalfEdgeID::new(i);
+            if !halfedges.contains_key(&id) { break }
+            i = i+1;
+        }
+        halfedges.insert(id.clone(), HalfEdge { vertex: VertexID::null(), twin: HalfEdgeID::null(), next: HalfEdgeID::null(), face: FaceID::null() });
         id
     }
 
     pub fn create_face(&self) -> FaceID
     {
-        let mut vec = RefCell::borrow_mut(&self.faces);
-        let id = FaceID::new(vec.len());
-        let face = Face { id: id.clone(), halfedge: HalfEdgeID::null() };
-        vec.push(face);
+        let faces = &mut *RefCell::borrow_mut(&self.faces);
+
+        let mut i = 0;
+        let mut id;
+        loop {
+            if i == usize::max_value() {panic!("Not possible to create a unique id for a new vertex")}
+            id = FaceID::new(i);
+            if !faces.contains_key(&id) { break }
+            i = i+1;
+        }
+        faces.insert(id.clone(), Face { halfedge: HalfEdgeID::null() });
         id
     }
 
@@ -73,27 +88,27 @@ impl ConnectivityInfo {
 
     pub fn set_halfedge_vertex(&self, id: &HalfEdgeID, val: &VertexID)
     {
-        RefCell::borrow_mut(&self.halfedges)[id.val()].vertex = val.clone();
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().vertex = val.clone();
     }
 
     pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: &HalfEdgeID)
     {
-        RefCell::borrow_mut(&self.halfedges)[id.val()].next = val.clone();
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().next = val.clone();
     }
 
     pub fn set_halfedge_twin(&self, id: &HalfEdgeID, val: &HalfEdgeID)
     {
-        RefCell::borrow_mut(&self.halfedges)[id.val()].twin = val.clone();
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().twin = val.clone();
     }
 
     pub fn set_halfedge_face(&self, id: &HalfEdgeID, val: &FaceID)
     {
-        RefCell::borrow_mut(&self.halfedges)[id.val()].face = val.clone();
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().face = val.clone();
     }
 
     pub fn set_face_halfedge(&self, id: &FaceID, val: &HalfEdgeID)
     {
-        RefCell::borrow_mut(&self.faces)[id.val()].halfedge = val.clone();
+        RefCell::borrow_mut(&self.faces).get_mut(id).unwrap().halfedge = val.clone();
     }
 
     pub fn vertex_iterator(&self) -> Box<Iterator<Item = VertexID>>
@@ -103,46 +118,18 @@ impl ConnectivityInfo {
         Box::new(t.into_iter())
     }
 
-    pub fn halfedge_first_iter(&self) -> Option<HalfEdgeID>
+    pub fn halfedge_iterator(&self) -> Box<Iterator<Item = HalfEdgeID>>
     {
-        self.next_halfedge(-1)
+        let halfedges = RefCell::borrow(&self.halfedges);
+        let t: Vec<HalfEdgeID> = halfedges.iter().map(|pair| pair.0.clone()).collect();
+        Box::new(t.into_iter())
     }
 
-    pub fn halfedge_next_iter(&self, index: &HalfEdgeID) -> Option<HalfEdgeID>
+    pub fn face_iterator(&self) -> Box<Iterator<Item = FaceID>>
     {
-        self.next_halfedge(index.val() as i32)
-    }
-
-    fn next_halfedge(&self, index: i32) -> Option<HalfEdgeID>
-    {
-        let vec = RefCell::borrow(&self.halfedges);
-        let mut i = (index + 1) as usize;
-        loop {
-            if i >= vec.len() { return None; }
-            if !vec[i].id().is_null() { return Some(vec[i].id().clone()) }
-            i = i+1;
-        }
-    }
-
-    pub fn face_first_iter(&self) -> Option<FaceID>
-    {
-        self.next_face(-1)
-    }
-
-    pub fn face_next_iter(&self, index: &FaceID) -> Option<FaceID>
-    {
-        self.next_face(index.val() as i32)
-    }
-
-    fn next_face(&self, index: i32) -> Option<FaceID>
-    {
-        let vec = RefCell::borrow(&self.faces);
-        let mut i = (index + 1) as usize;
-        loop {
-            if i >= vec.len() { return None; }
-            if !vec[i].id().is_null() { return Some(vec[i].id().clone()) }
-            i = i+1;
-        }
+        let faces = RefCell::borrow(&self.faces);
+        let t: Vec<FaceID> = faces.iter().map(|pair| pair.0.clone()).collect();
+        Box::new(t.into_iter())
     }
 
     pub fn vertex_halfedge(&self, vertex_id: &VertexID) -> HalfEdgeID
@@ -152,27 +139,27 @@ impl ConnectivityInfo {
 
     pub fn halfedge_vertex(&self, halfedge_id: &HalfEdgeID) -> VertexID
     {
-        RefCell::borrow(&self.halfedges)[halfedge_id.val()].vertex.clone()
+        RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().vertex.clone()
     }
 
     pub fn halfedge_twin(&self, halfedge_id: &HalfEdgeID) -> HalfEdgeID
     {
-        RefCell::borrow(&self.halfedges)[halfedge_id.val()].twin.clone()
+        RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().twin.clone()
     }
 
     pub fn halfedge_next(&self, halfedge_id: &HalfEdgeID) -> HalfEdgeID
     {
-        RefCell::borrow(&self.halfedges)[halfedge_id.val()].next.clone()
+        RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().next.clone()
     }
 
     pub fn halfedge_face(&self, halfedge_id: &HalfEdgeID) -> FaceID
     {
-        RefCell::borrow(&self.halfedges)[halfedge_id.val()].face.clone()
+        RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().face.clone()
     }
 
     pub fn face_halfedge(&self, face_id: &FaceID) -> HalfEdgeID
     {
-        RefCell::borrow(&self.faces)[face_id.val()].halfedge.clone()
+        RefCell::borrow(&self.faces).get(face_id).unwrap().halfedge.clone()
     }
 }
 
@@ -183,29 +170,13 @@ pub struct Vertex {
 
 #[derive(Clone, Debug)]
 pub struct HalfEdge {
-    pub id: HalfEdgeID,
     pub vertex: VertexID,
     pub twin: HalfEdgeID,
     pub next: HalfEdgeID,
     pub face: FaceID
 }
 
-impl HalfEdge {
-    pub fn id(&self) -> &HalfEdgeID
-    {
-        &self.id
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct Face {
-    pub id: FaceID,
     pub halfedge: HalfEdgeID
-}
-
-impl Face {
-    pub fn id(&self) -> &FaceID
-    {
-        &self.id
-    }
 }

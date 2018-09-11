@@ -7,6 +7,9 @@ use std::collections::HashSet;
 use ids::*;
 use glm::*;
 
+pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
+pub type FaceIterator = Box<Iterator<Item = FaceID>>;
+
 pub struct HalfEdgeMesh {
     indices: Vec<u32>,
     attributes: VertexAttributes,
@@ -276,12 +279,12 @@ impl HalfEdgeMesh
 
     pub fn halfedge_iterator(&self) -> HalfEdgeIterator
     {
-        HalfEdgeIterator::new(&self.connectivity_info)
+        self.connectivity_info.halfedge_iterator()
     }
 
     pub fn face_iterator(&self) -> FaceIterator
     {
-        FaceIterator::new(&self.connectivity_info)
+        self.connectivity_info.face_iterator()
     }
 
     pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
@@ -306,117 +309,6 @@ impl HalfEdgeMesh
             }
         }
         normalize(normal)
-    }
-}
-
-/*struct VertexIterator
-{
-    connectivity_info: Rc<ConnectivityInfo>,
-    current: VertexID,
-    is_done: bool
-}
-
-impl VertexIterator {
-    pub fn new(connectivity_info: &Rc<ConnectivityInfo>) -> mesh::VertexIterator
-    {
-        match connectivity_info.vertex_first_iter() {
-            Some(vertex_id) => {
-                Box::new(VertexIterator { connectivity_info: connectivity_info.clone(), current: vertex_id, is_done: false })
-            }
-            None => {
-                Box::new(VertexIterator { connectivity_info: connectivity_info.clone(), current: VertexID::null(), is_done: true })
-            }
-        }
-    }
-}
-
-impl Iterator for VertexIterator {
-    type Item = VertexID;
-
-    fn next(&mut self) -> Option<VertexID>
-    {
-        if self.is_done { return None; }
-        let curr = self.current.clone();
-        match self.connectivity_info.vertex_next_iter(&self.current)
-        {
-            Some(vertex) => { self.current = vertex },
-            None => { self.is_done = true; }
-        }
-        Some(curr)
-    }
-}*/
-
-pub struct HalfEdgeIterator
-{
-    connectivity_info: Rc<ConnectivityInfo>,
-    current: HalfEdgeID,
-    is_done: bool
-}
-
-impl HalfEdgeIterator {
-    pub fn new(connectivity_info: &Rc<ConnectivityInfo>) -> HalfEdgeIterator
-    {
-        match connectivity_info.halfedge_first_iter() {
-            Some(halfedge_id) => {
-                HalfEdgeIterator { connectivity_info: connectivity_info.clone(), current: halfedge_id, is_done: false }
-            }
-            None => {
-                HalfEdgeIterator { connectivity_info: connectivity_info.clone(), current: HalfEdgeID::null(), is_done: true }
-            }
-        }
-
-    }
-}
-
-impl Iterator for HalfEdgeIterator {
-    type Item = HalfEdgeID;
-
-    fn next(&mut self) -> Option<HalfEdgeID>
-    {
-        if self.is_done { return None; }
-        let curr = self.current.clone();
-        match self.connectivity_info.halfedge_next_iter(&self.current) {
-            Some(halfedge) => { self.current = halfedge },
-            None => { self.is_done = true; }
-        }
-        Some(curr)
-    }
-}
-
-pub struct FaceIterator
-{
-    connectivity_info: Rc<ConnectivityInfo>,
-    current: FaceID,
-    is_done: bool
-}
-
-impl FaceIterator {
-    pub fn new(connectivity_info: &Rc<ConnectivityInfo>) -> FaceIterator
-    {
-        match connectivity_info.face_first_iter() {
-            Some(face_id) => {
-                FaceIterator { connectivity_info: connectivity_info.clone(), current: face_id, is_done: false }
-            }
-            None => {
-                FaceIterator { connectivity_info: connectivity_info.clone(), current: FaceID::null(), is_done: true }
-            }
-        }
-
-    }
-}
-
-impl Iterator for FaceIterator {
-    type Item = FaceID;
-
-    fn next(&mut self) -> Option<FaceID>
-    {
-        if self.is_done { return None; }
-        let curr = self.current.clone();
-        match self.connectivity_info.face_next_iter(&self.current) {
-            Some(vertex) => { self.current = vertex },
-            None => { self.is_done = true; }
-        }
-        Some(curr)
     }
 }
 
