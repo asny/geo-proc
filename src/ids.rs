@@ -1,6 +1,6 @@
 
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct VertexID
 {
     val: usize,
@@ -32,7 +32,7 @@ impl VertexID {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct HalfEdgeID
 {
     val: usize,
@@ -64,7 +64,7 @@ impl HalfEdgeID {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct FaceID
 {
     val: usize,

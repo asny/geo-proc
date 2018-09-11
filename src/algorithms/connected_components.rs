@@ -1,12 +1,12 @@
 use ids::*;
 use halfedge_mesh::HalfEdgeMesh;
 use mesh::Mesh;
+use std::collections::HashSet;
 
-pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> Vec<FaceID>
+pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> HashSet<FaceID>
 {
-    let mut component = vec![FaceID::null(); mesh.no_faces()];
-    let mut to_be_tested = Vec::new();
-    to_be_tested.push(face_id.clone());
+    let mut component = HashSet::new();
+    let mut to_be_tested = vec![face_id.clone()];
 
     loop {
         let test_face = match to_be_tested.pop() {
@@ -16,16 +16,13 @@ pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> Vec<FaceID
 
         for mut walker in mesh.face_halfedge_iterator(&test_face) {
             let f = walker.twin().face_id();
-            let v = f.val();
-            if(!f.is_null() && !component[v].is_null())
+            if(!f.is_null() && !component.contains(&f))
             {
-                component[v] = f.clone();
+                component.insert(f.clone());
                 to_be_tested.push(f);
             }
         }
     }
-
-
     component
 
 }
