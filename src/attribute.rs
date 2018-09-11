@@ -1,5 +1,6 @@
 use glm::*;
 use ids::*;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum Error {
@@ -8,80 +9,72 @@ pub enum Error {
 
 pub struct VertexAttributes
 {
-    vec2_attributes: Vec<Vec2Attribute>,
-    vec3_attributes: Vec<Vec3Attribute>
+    vec2_attributes: HashMap<String, Vec2Attribute>,
+    vec3_attributes: HashMap<String, Vec3Attribute>
 }
 
 impl VertexAttributes {
     pub fn new() -> VertexAttributes
     {
-        VertexAttributes {vec2_attributes: Vec::new(), vec3_attributes: Vec::new()}
+        VertexAttributes {vec2_attributes: HashMap::new(), vec3_attributes: HashMap::new()}
     }
 
     pub fn create_vec2_attribute(&mut self, name: &str, initial_size: usize)
     {
-        self.vec2_attributes.push(Vec2Attribute{ name: String::from(name), data: vec![vec2(0.0, 0.0); initial_size] })
+        let att = Vec2Attribute{ data: vec![vec2(0.0, 0.0); initial_size] };
+        self.vec2_attributes.insert(String::from(name), att);
     }
 
     pub fn create_vec3_attribute(&mut self, name: &str, initial_size: usize)
     {
-        self.vec3_attributes.push(Vec3Attribute{ name: String::from(name), data: vec![vec3(0.0, 0.0, 0.0); initial_size] })
+        let att = Vec3Attribute{ data: vec![vec3(0.0, 0.0, 0.0); initial_size] };
+        self.vec3_attributes.insert(String::from(name), att);
     }
 
     pub fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, Error>
     {
-        for attribute in self.vec2_attributes.iter() {
-            if attribute.name() == name
-            {
-                return Ok(attribute.at(vertex_id))
-            }
+        match self.vec2_attributes.get(name)
+        {
+            Some(ref att) => Ok(att.at(vertex_id)),
+            None => Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
         }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), Error>
     {
-        for attribute in self.vec2_attributes.iter_mut() {
-            if attribute.name() == name
-            {
-                attribute.set(&vertex_id, &value);
-                return Ok(())
-            }
+        match self.vec2_attributes.get_mut(name)
+        {
+            Some(ref mut att) => {att.set(&vertex_id, &value); Ok(())},
+            None => Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
         }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
     {
-        for attribute in self.vec3_attributes.iter() {
-            if attribute.name() == name
-            {
-                return Ok(attribute.at(vertex_id))
-            }
+        match self.vec3_attributes.get(name)
+        {
+            Some(ref att) => Ok(att.at(vertex_id)),
+            None => Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
         }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), Error>
     {
-        for attribute in self.vec3_attributes.iter_mut() {
-            if attribute.name() == name
-            {
-                attribute.set(&vertex_id, &value);
-                return Ok(())
-            }
+        match self.vec3_attributes.get_mut(name)
+        {
+            Some(ref mut att) => {att.set(&vertex_id, &value); Ok(())},
+            None => Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
         }
-        Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
     }
 
     pub fn position_at(&self, vertex_id: &VertexID) -> &Vec3
     {
-        self.vec3_attributes.first().unwrap().at(vertex_id)
+        self.get_vec3_attribute_at("position", vertex_id).unwrap()
     }
 
     pub fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
     {
-        self.vec3_attributes.first_mut().unwrap().set(vertex_id, value);
+        self.set_vec3_attribute_at("position", vertex_id, value).unwrap()
     }
 }
 
@@ -114,7 +107,6 @@ impl IntAttribute
 }*/
 
 pub struct Vec2Attribute {
-    name: String,
     data: Vec<Vec2>
 }
 
@@ -134,15 +126,9 @@ impl Vec2Attribute
         }
         self.data[id] = *value;
     }
-
-    pub fn name(&self) -> &str
-    {
-        self.name.as_ref()
-    }
 }
 
 pub struct Vec3Attribute {
-    name: String,
     data: Vec<Vec3>
 }
 
@@ -162,10 +148,5 @@ impl Vec3Attribute
             self.data.append(&mut vec![vec3(0.0, 0.0, 0.0); 2*id+1])
         }
         self.data[id] = *value;
-    }
-
-    pub fn name(&self) -> &str
-    {
-        self.name.as_ref()
     }
 }
