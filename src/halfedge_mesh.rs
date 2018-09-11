@@ -32,7 +32,7 @@ impl Mesh for HalfEdgeMesh
 
     fn vertex_iterator(&self) -> mesh::VertexIterator
     {
-        VertexIterator::new(&self.connectivity_info)
+        self.connectivity_info.vertex_iterator()
     }
 
     fn position_at(&self, vertex_id: &VertexID) -> &Vec3
@@ -139,12 +139,6 @@ impl HalfEdgeMesh
     fn create_vertex(&mut self) -> VertexID
     {
         self.connectivity_info.create_vertex()
-    }
-
-    fn remove_vertex(&mut self, vertex_id: &VertexID)
-    {
-        self.connectivity_info.remove_vertex(vertex_id);
-        self.attributes.remove_vertex(vertex_id);
     }
 
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
@@ -315,7 +309,7 @@ impl HalfEdgeMesh
     }
 }
 
-struct VertexIterator
+/*struct VertexIterator
 {
     connectivity_info: Rc<ConnectivityInfo>,
     current: VertexID,
@@ -350,7 +344,7 @@ impl Iterator for VertexIterator {
         }
         Some(curr)
     }
-}
+}*/
 
 pub struct HalfEdgeIterator
 {

@@ -1,6 +1,6 @@
 use std::cell::{RefCell};
 use ids::*;
-use std::collections::{HashMap, hash_map::Iter};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ConnectivityInfo {
@@ -31,7 +31,7 @@ impl ConnectivityInfo {
     {
         let vec = &mut *RefCell::borrow_mut(&self.vertices);
         let id = VertexID::new(vec.len());
-        vec.insert(id, Vertex { id: id.clone(), halfedge: HalfEdgeID::null() });
+        vec.insert(id.clone(), Vertex { id: id.clone(), halfedge: HalfEdgeID::null() });
         *RefCell::borrow_mut(&self.no_vertices) = self.no_vertices() + 1;
         id
     }
@@ -93,7 +93,9 @@ impl ConnectivityInfo {
 
     pub fn vertex_iterator(&self) -> Box<Iterator<Item = VertexID>>
     {
-
+        let vec = &mut *RefCell::borrow_mut(&self.vertices);
+        let t: Vec<_> = vec.iter().map(|pair| pair.0.clone()).collect();
+        Box::new(t.into_iter())
     }
 
     pub fn halfedge_first_iter(&self) -> Option<HalfEdgeID>
