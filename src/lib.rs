@@ -12,3 +12,5 @@ pub mod traversal;
 pub mod mesh;
 pub mod halfedge_mesh;
 pub mod simple_mesh;
+
+pub mod algorithms;
