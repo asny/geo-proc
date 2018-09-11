@@ -6,33 +6,39 @@ use std::collections::BTreeMap;
 pub struct ConnectivityInfo {
     vertices: RefCell<BTreeMap<VertexID, Vertex>>,
     halfedges: RefCell<Vec<HalfEdge>>,
-    faces: RefCell<Vec<Face>>,
-    no_vertices: RefCell<usize>,
-    no_faces: RefCell<usize>
+    faces: RefCell<Vec<Face>>
 }
 
 impl ConnectivityInfo {
     pub fn new() -> ConnectivityInfo
     {
-        ConnectivityInfo { vertices: RefCell::new(BTreeMap::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()), no_vertices: RefCell::new(0),  no_faces: RefCell::new(0) }
+        ConnectivityInfo { vertices: RefCell::new(BTreeMap::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()) }
     }
 
     pub fn no_vertices(&self) -> usize
     {
-        RefCell::borrow(&self.no_vertices).clone()
+        RefCell::borrow(&self.vertices).len()
     }
 
     pub fn no_faces(&self) -> usize
     {
-        RefCell::borrow(&self.no_faces).clone()
+        RefCell::borrow(&self.faces).len()
     }
 
     pub fn create_vertex(&self) -> VertexID
     {
-        let vec = &mut *RefCell::borrow_mut(&self.vertices);
-        let id = VertexID::new(vec.len());
-        vec.insert(id.clone(), Vertex { id: id.clone(), halfedge: HalfEdgeID::null() });
-        *RefCell::borrow_mut(&self.no_vertices) = self.no_vertices() + 1;
+        let vertices = &mut *RefCell::borrow_mut(&self.vertices);
+
+        let mut i = 0;
+        let mut id;
+        loop {
+            if i == usize::max_value() {panic!("Not possible to create a unique id for a new vertex")}
+            id = VertexID::new(i);
+            if !vertices.contains_key(&id) { break }
+            i = i+1;
+        }
+
+        vertices.insert(id.clone(), Vertex { halfedge: HalfEdgeID::null() });
         id
     }
 
@@ -57,7 +63,6 @@ impl ConnectivityInfo {
         let id = FaceID::new(vec.len());
         let face = Face { id: id.clone(), halfedge: HalfEdgeID::null() };
         vec.push(face);
-        *RefCell::borrow_mut(&self.no_faces) = self.no_faces() + 1;
         id
     }
 
@@ -93,8 +98,8 @@ impl ConnectivityInfo {
 
     pub fn vertex_iterator(&self) -> Box<Iterator<Item = VertexID>>
     {
-        let vec = &mut *RefCell::borrow_mut(&self.vertices);
-        let t: Vec<VertexID> = vec.iter().map(|pair| pair.0.clone()).collect();
+        let vertices = RefCell::borrow(&self.vertices);
+        let t: Vec<VertexID> = vertices.iter().map(|pair| pair.0.clone()).collect();
         Box::new(t.into_iter())
     }
 
@@ -173,15 +178,7 @@ impl ConnectivityInfo {
 
 #[derive(Clone, Debug)]
 pub struct Vertex {
-    pub id: VertexID,
     pub halfedge: HalfEdgeID
-}
-
-impl Vertex {
-    pub fn id(&self) -> &VertexID
-    {
-        &self.id
-    }
 }
 
 #[derive(Clone, Debug)]
