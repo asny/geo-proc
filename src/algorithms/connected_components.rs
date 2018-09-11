@@ -84,7 +84,7 @@ mod tests {
             4, 3, 7
         ];
 
-        HalfEdgeMesh::create(indices, positions).unwrap()
+        HalfEdgeMesh::create(indices, positions)
     }
 
     fn create_unconnected_test_object() -> HalfEdgeMesh
@@ -129,6 +129,6 @@ mod tests {
             12, 13, 14
         ];
 
-        HalfEdgeMesh::create(indices, positions).unwrap()
+        HalfEdgeMesh::create(indices, positions)
     }
 }

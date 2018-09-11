@@ -3,6 +3,7 @@ use attribute::{self, VertexAttributes};
 use glm::*;
 use ids::*;
 use mesh::{self, Mesh};
+use halfedge_mesh::HalfEdgeMesh;
 
 #[derive(Debug)]
 pub enum Error {
@@ -30,6 +31,11 @@ impl SimpleMesh
         let mut mesh = SimpleMesh { indices, no_vertices: positions.len()/3, attributes: VertexAttributes::new() };
         mesh.add_vec3_attribute("position", positions)?;
         Ok(mesh)
+    }
+
+    pub fn to_halfedge_mesh(&self) -> HalfEdgeMesh
+    {
+        HalfEdgeMesh::create_from_other(self.no_vertices, self.indices.clone(), self.attributes.clone())
     }
 
     pub fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
@@ -61,11 +67,6 @@ impl SimpleMesh
         }
 
         Ok(())
-    }
-
-    pub fn clone_attributes(&self) -> VertexAttributes
-    {
-        self.attributes.clone()
     }
 }
 
