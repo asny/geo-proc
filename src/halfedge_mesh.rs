@@ -336,7 +336,7 @@ impl Iterator for VertexHalfedgeIterator {
         let curr = self.current.clone();
 
         match self.current.face_id() {
-            Some(face_id) => {
+            Some(_) => {
                 self.current.previous().twin();
             },
             None => { // In the case there are holes in the one-ring
