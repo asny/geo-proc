@@ -21,6 +21,16 @@ impl VertexAttributes {
         VertexAttributes {vec2_attributes: HashMap::new(), vec3_attributes: HashMap::new()}
     }
 
+    pub fn remove_vertex(&mut self, vertex_id: &VertexID)
+    {
+        for attribute in self.vec2_attributes.values_mut() {
+            attribute.remove(vertex_id);
+        }
+        for attribute in self.vec3_attributes.values_mut() {
+            attribute.remove(vertex_id);
+        }
+    }
+
     // Vec2 attribute
     pub fn create_vec2_attribute(&mut self, name: &str)
     {
