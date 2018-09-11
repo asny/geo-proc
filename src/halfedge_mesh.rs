@@ -113,7 +113,7 @@ impl HalfEdgeMesh
 
         for face_id in faces {
             for walker in self.face_halfedge_iterator(face_id) {
-                let vertex_id = walker.vertex_id();
+                let vertex_id = walker.vertex_id().unwrap();
                 vertices.insert(vertex_id);
             }
         }
@@ -147,8 +147,8 @@ impl HalfEdgeMesh
     fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
         for mut halfedge in self.vertex_halfedge_iterator(vertex_id1) {
-            if &halfedge.vertex_id() == vertex_id2 {
-                return Some(halfedge.halfedge_id())
+            if &halfedge.vertex_id().unwrap() == vertex_id2 {
+                return halfedge.halfedge_id()
             }
         }
         None
@@ -159,7 +159,7 @@ impl HalfEdgeMesh
         let mut walker = self.walker_from_halfedge(&HalfEdgeID::null());
         for halfedge_id in self.halfedge_iterator() {
             walker.jump_to_edge(&halfedge_id);
-            if &walker.vertex_id() == vertex_id2 && &walker.twin().vertex_id() == vertex_id1
+            if &walker.vertex_id().unwrap() == vertex_id2 && &walker.twin().vertex_id().unwrap() == vertex_id1
             {
                 return Some(halfedge_id)
             }
@@ -290,11 +290,11 @@ impl HalfEdgeMesh
     pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
-        let p0 = *self.position_at(&walker.vertex_id());
+        let p0 = *self.position_at(&walker.vertex_id().unwrap());
         walker.next();
-        let p1 = *self.position_at(&walker.vertex_id());
+        let p1 = *self.position_at(&walker.vertex_id().unwrap());
         walker.next();
-        let p2 = *self.position_at(&walker.vertex_id());
+        let p2 = *self.position_at(&walker.vertex_id().unwrap());
 
         normalize(cross(p1 - p0, p2 - p0))
     }
@@ -303,9 +303,8 @@ impl HalfEdgeMesh
     {
         let mut normal = vec3(0.0, 0.0, 0.0);
         for walker in self.vertex_halfedge_iterator(&vertex_id) {
-            let face_id = walker.face_id();
-            if !face_id.is_null() {
-                normal = normal + self.compute_face_normal(&face_id);
+            if let Some(face_id) = walker.face_id() {
+                normal = normal + self.compute_face_normal(&face_id)
             }
         }
         normalize(normal)
@@ -323,7 +322,7 @@ impl VertexHalfedgeIterator {
     pub fn new(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
     {
         let current = Walker::create_from_vertex(vertex_id, connectivity_info);
-        let start = current.halfedge_id();
+        let start = current.halfedge_id().unwrap();
         VertexHalfedgeIterator { current, start, is_done: false }
     }
 }
@@ -336,17 +335,19 @@ impl Iterator for VertexHalfedgeIterator {
         if self.is_done { return None; }
         let curr = self.current.clone();
 
-        if self.current.face_id().is_null() { // In the case there are holes in the one-ring
-            self.current.twin();
-            loop {
-                self.current.next().twin();
-                if self.current.face_id().is_null() { self.current.twin(); break; }
+        match self.current.face_id() {
+            Some(face_id) => {
+                self.current.previous().twin();
+            },
+            None => { // In the case there are holes in the one-ring
+                self.current.twin();
+                loop {
+                    self.current.next().twin();
+                    if self.current.face_id().is_none() { self.current.twin(); break; }
+                }
             }
         }
-        else {
-            self.current.previous().twin();
-        }
-        self.is_done = self.current.halfedge_id() == self.start;
+        self.is_done = self.current.halfedge_id().unwrap() == self.start;
         Some(curr)
     }
 }
@@ -362,7 +363,7 @@ impl FaceHalfedgeIterator {
     pub fn new(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
     {
         let current = Walker::create_from_face(face_id, connectivity_info);
-        let start = current.halfedge_id().clone();
+        let start = current.halfedge_id().unwrap().clone();
         FaceHalfedgeIterator { current, start, is_done: false }
     }
 }
@@ -375,7 +376,7 @@ impl Iterator for FaceHalfedgeIterator {
         if self.is_done { return None; }
         let curr = self.current.clone();
         self.current.next();
-        self.is_done = self.current.halfedge_id() == self.start;
+        self.is_done = self.current.halfedge_id().unwrap() == self.start;
         Some(curr)
     }
 }
@@ -407,19 +408,19 @@ mod tests {
         let f1 = mesh.create_face(&v1, &v2, &v3);
         assert_eq!(f1.val(), 0);
 
-        let t1 = mesh.walker_from_vertex(&v1).halfedge_id();
+        let t1 = mesh.walker_from_vertex(&v1).halfedge_id().unwrap();
         assert_eq!(t1.val(), 0);
 
-        let t2 = mesh.walker_from_vertex(&v1).twin().halfedge_id();
+        let t2 = mesh.walker_from_vertex(&v1).twin().halfedge_id().unwrap();
         assert_eq!(t2.val(), 3);
 
-        let t3 = mesh.walker_from_vertex(&v2).next().next().vertex_id();
+        let t3 = mesh.walker_from_vertex(&v2).next().next().vertex_id().unwrap();
         assert_eq!(t3.val(), v2.val());
 
         let t4 = mesh.walker_from_face(&f1).twin().face_id();
-        assert!(t4.is_null());
+        assert!(t4.is_none());
 
-        let t5 = mesh.walker_from_halfedge(&t1).twin().halfedge_id();
+        let t5 = mesh.walker_from_halfedge(&t1).twin().halfedge_id().unwrap();
         assert_eq!(t5.val(), 3);
     }
 
@@ -464,8 +465,8 @@ mod tests {
         let mesh = create_three_connected_faces();
 
         let mut walker = mesh.walker_from_vertex(&VertexID::new(0));
-        let start_edge = walker.halfedge_id();
-        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id();
+        let start_edge = walker.halfedge_id().unwrap();
+        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id().unwrap();
         assert_eq!(start_edge.val(), one_round_edge.val());
     }
 
@@ -476,7 +477,7 @@ mod tests {
         let mut i = 0;
         let indices = vec![1, 2, 3];
         for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
-            assert_eq!(edge.vertex_id().val(), indices[i]);
+            assert_eq!(edge.vertex_id().unwrap().val(), indices[i]);
             i = i + 1;
         }
         assert_eq!(i, 3, "All edges of a one-ring are not visited");
@@ -491,7 +492,7 @@ mod tests {
         let mut i = 0;
         let indices = vec![1, 2, 3, 4];
         for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
-            assert_eq!(edge.vertex_id().val(), indices[i]);
+            assert_eq!(edge.vertex_id().unwrap().val(), indices[i]);
             i = i+1;
         }
         assert_eq!(i,4, "All edges of a one-ring are not visited");
@@ -503,8 +504,8 @@ mod tests {
         let mesh = create_single_face();
         let mut i = 0;
         for mut edge in mesh.face_halfedge_iterator(&FaceID::new(0)) {
-            assert_eq!(edge.halfedge_id().val(), i);
-            assert_eq!(edge.face_id().val(), 0);
+            assert_eq!(edge.halfedge_id().unwrap().val(), i);
+            assert_eq!(edge.face_id().unwrap().val(), 0);
             i = i+1;
         }
         assert_eq!(i, 3, "All edges of a face are not visited");

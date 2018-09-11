@@ -6,7 +6,7 @@ use connectivity_info::ConnectivityInfo;
 pub struct Walker
 {
     connectivity_info: Rc<ConnectivityInfo>,
-    current: HalfEdgeID
+    current: Option<HalfEdgeID>
 }
 
 impl Walker
@@ -18,7 +18,7 @@ impl Walker
 
     pub fn create_from_halfedge(halfedge_id: &HalfEdgeID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
-        Walker {current: halfedge_id.clone(), connectivity_info: connectivity_info.clone()}
+        Walker {current: Some(halfedge_id.clone()), connectivity_info: connectivity_info.clone()}
     }
 
     pub fn create_from_face(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
@@ -34,7 +34,7 @@ impl Walker
 
     pub fn jump_to_edge(&mut self, halfedge_id: &HalfEdgeID) -> &mut Walker
     {
-        self.current = halfedge_id.clone();
+        self.current = Some(halfedge_id.clone());
         self
     }
 
@@ -46,19 +46,17 @@ impl Walker
 
     pub fn twin(&mut self) -> &mut Walker
     {
-        if !self.current.is_null()
-        {
-            self.current = self.connectivity_info.halfedge_twin(&self.current);
-        }
+        if let Some(ref mut current) = self.current {
+            if let Some(new) = self.connectivity_info.halfedge_twin(current) { *current = new }
+        };
         self
     }
 
     pub fn next(&mut self) -> &mut Walker
     {
-        if !self.current.is_null()
-        {
-            self.current = self.connectivity_info.halfedge_next(&self.current);
-        }
+        if let Some(ref mut current) = self.current {
+            if let Some(new) = self.connectivity_info.halfedge_next(current) { *current = new }
+        };
         self
     }
 
@@ -67,24 +65,24 @@ impl Walker
         self.next().next()
     }
 
-    pub fn vertex_id(&self) -> VertexID
+    pub fn vertex_id(&self) -> Option<VertexID>
     {
-        match self.current.is_null() {
-            true => { VertexID::null() },
-            false => { self.connectivity_info.halfedge_vertex(&self.current) }
+        match self.current {
+            Some(ref current) => self.connectivity_info.halfedge_vertex(current),
+            None => None
         }
     }
 
-    pub fn halfedge_id(&self) -> HalfEdgeID
+    pub fn halfedge_id(&self) -> Option<HalfEdgeID>
     {
         self.current.clone()
     }
 
-    pub fn face_id(&self) -> FaceID
+    pub fn face_id(&self) -> Option<FaceID>
     {
-        match self.current.is_null() {
-            true => { FaceID::null() },
-            false => { self.connectivity_info.halfedge_face(&self.current) }
+        match self.current {
+            Some(ref current) => self.connectivity_info.halfedge_face(current),
+            None => None
         }
     }
 }
