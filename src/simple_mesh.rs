@@ -46,8 +46,10 @@ impl SimpleMesh
         }
         
         self.attributes.create_vec2_attribute(name);
+        let mut i = 0;
         for vertex_id in self.vertex_iterator() {
-            self.attributes.set_vec2_attribute_at(name, &vertex_id, &vec2(data[vertex_id.val() * 2], data[vertex_id.val() * 2 + 1]))?;
+            self.attributes.set_vec2_attribute_at(name, &vertex_id, &vec2(data[i], data[i + 1]))?;
+            i = i+2;
         }
         
         Ok(())
@@ -61,9 +63,11 @@ impl SimpleMesh
         }
 
         self.attributes.create_vec3_attribute(name);
+        let mut i = 0;
         for vertex_id in self.vertex_iterator() {
-            let value = vec3(data[vertex_id.val() * 3], data[vertex_id.val() * 3 + 1], data[vertex_id.val() * 3 + 2]);
+            let value = vec3(data[i], data[i + 1], data[i + 2]);
             self.attributes.set_vec3_attribute_at(name, &vertex_id, &value)?;
+            i = i+3;
         }
 
         Ok(())

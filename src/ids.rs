@@ -11,11 +11,6 @@ impl VertexID {
     {
         VertexID {val}
     }
-
-    pub fn val(&self) -> usize
-    {
-        self.val
-    }
 }
 
 impl fmt::Display for VertexID {
@@ -35,11 +30,6 @@ impl HalfEdgeID {
     {
         HalfEdgeID {val}
     }
-
-    pub fn val(&self) -> usize
-    {
-        self.val
-    }
 }
 
 impl fmt::Display for HalfEdgeID {
@@ -58,11 +48,6 @@ impl FaceID {
     pub fn new(val: usize) -> FaceID
     {
         FaceID {val}
-    }
-
-    pub fn val(&self) -> usize
-    {
-        self.val
     }
 }
 
