@@ -156,7 +156,7 @@ impl HalfEdgeMesh
 
     fn find_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
-        let mut walker = self.walker_from_halfedge(&HalfEdgeID::null());
+        let mut walker = Walker::create(&self.connectivity_info);
         for halfedge_id in self.halfedge_iterator() {
             walker.jump_to_edge(&halfedge_id);
             if &walker.vertex_id().unwrap() == vertex_id2 && &walker.twin().vertex_id().unwrap() == vertex_id1

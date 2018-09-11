@@ -11,6 +11,11 @@ pub struct Walker
 
 impl Walker
 {
+    pub fn create(connectivity_info: &Rc<ConnectivityInfo>) -> Walker
+    {
+        Walker {current: None, connectivity_info: connectivity_info.clone()}
+    }
+
     pub fn create_from_vertex(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> Walker
     {
         Walker {current: connectivity_info.vertex_halfedge(vertex_id), connectivity_info: connectivity_info.clone()}
