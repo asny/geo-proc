@@ -1,9 +1,10 @@
 use std::cell::{RefCell};
 use ids::*;
+use std::collections::{HashMap, hash_map::Iter};
 
 #[derive(Debug)]
 pub struct ConnectivityInfo {
-    vertices: RefCell<Vec<Vertex>>,
+    vertices: RefCell<HashMap<VertexID, Vertex>>,
     halfedges: RefCell<Vec<HalfEdge>>,
     faces: RefCell<Vec<Face>>,
     no_vertices: RefCell<usize>,
@@ -13,7 +14,7 @@ pub struct ConnectivityInfo {
 impl ConnectivityInfo {
     pub fn new() -> ConnectivityInfo
     {
-        ConnectivityInfo { vertices: RefCell::new(Vec::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()), no_vertices: RefCell::new(0),  no_faces: RefCell::new(0) }
+        ConnectivityInfo { vertices: RefCell::new(HashMap::new()), halfedges: RefCell::new(Vec::new()), faces: RefCell::new(Vec::new()), no_vertices: RefCell::new(0),  no_faces: RefCell::new(0) }
     }
 
     pub fn no_vertices(&self) -> usize
@@ -30,9 +31,16 @@ impl ConnectivityInfo {
     {
         let vec = &mut *RefCell::borrow_mut(&self.vertices);
         let id = VertexID::new(vec.len());
-        vec.push(Vertex { id: id.clone(), halfedge: HalfEdgeID::null() });
+        vec.insert(id, Vertex { id: id.clone(), halfedge: HalfEdgeID::null() });
         *RefCell::borrow_mut(&self.no_vertices) = self.no_vertices() + 1;
         id
+    }
+
+    pub fn remove_vertex(&mut self, vertex_id: &VertexID)
+    {
+        let vec = &mut *RefCell::borrow_mut(&self.vertices);
+        vec.remove(vertex_id);
+        // TODO: Update references!
     }
 
     pub fn create_halfedge(&self) -> HalfEdgeID
@@ -55,7 +63,7 @@ impl ConnectivityInfo {
 
     pub fn set_vertex_halfedge(&self, id: &VertexID, val: &HalfEdgeID)
     {
-        RefCell::borrow_mut(&self.vertices)[id.val()].halfedge = val.clone();
+        RefCell::borrow_mut(&self.vertices).get_mut(id).unwrap().halfedge = val.clone();
     }
 
     pub fn set_halfedge_vertex(&self, id: &HalfEdgeID, val: &VertexID)
@@ -83,25 +91,9 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.faces)[id.val()].halfedge = val.clone();
     }
 
-    pub fn vertex_first_iter(&self) -> Option<VertexID>
+    pub fn vertex_iterator(&self) -> Box<Iterator<Item = VertexID>>
     {
-        self.next_vertex(-1)
-    }
 
-    pub fn vertex_next_iter(&self, index: &VertexID) -> Option<VertexID>
-    {
-        self.next_vertex(index.val() as i32)
-    }
-
-    fn next_vertex(&self, index: i32) -> Option<VertexID>
-    {
-        let vec = RefCell::borrow(&self.vertices);
-        let mut i = (index + 1) as usize;
-        loop {
-            if i >= vec.len() { return None; }
-            if !vec[i].id().is_null() { return Some(vec[i].id().clone()) }
-            i = i+1;
-        }
     }
 
     pub fn halfedge_first_iter(&self) -> Option<HalfEdgeID>
@@ -148,7 +140,7 @@ impl ConnectivityInfo {
 
     pub fn vertex_halfedge(&self, vertex_id: &VertexID) -> HalfEdgeID
     {
-        RefCell::borrow(&self.vertices)[vertex_id.val()].halfedge.clone()
+        RefCell::borrow(&self.vertices).get(vertex_id).unwrap().halfedge.clone()
     }
 
     pub fn halfedge_vertex(&self, halfedge_id: &HalfEdgeID) -> VertexID
