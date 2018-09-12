@@ -85,10 +85,7 @@ mod tests {
             4, 0, 3,
             4, 3, 7
         ];
-        let mut attributes = HashMap::new();
-        attributes.insert("position", positions);
-
-        HalfEdgeMesh::create(indices, attributes)
+        HalfEdgeMesh::create(indices, positions, None)
     }
 
     fn create_unconnected_test_object() -> HalfEdgeMesh
@@ -132,9 +129,7 @@ mod tests {
 
             12, 13, 14
         ];
-        let mut attributes = HashMap::new();
-        attributes.insert("position", positions);
 
-        HalfEdgeMesh::create(indices, attributes)
+        HalfEdgeMesh::create(indices, positions, None)
     }
 }

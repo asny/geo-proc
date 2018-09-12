@@ -50,18 +50,11 @@ pub fn load_obj_as_simple_mesh(name: &str) -> Result<SimpleMesh, Error>
 pub fn load_obj_as_halfedge_mesh(name: &str) -> Result<HalfEdgeMesh, Error>
 {
     let m = load_obj(name)?;
-    // Create mesh
+
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
+    let normals = match m.normals.len() > 0 { true => Some(m.normals.clone()), false => None };
 
-    let mut attributes = HashMap::new();
-    attributes.insert("position", m.positions.clone());
-    if m.normals.len() > 0
-    {
-        attributes.insert("normal", m.normals.clone());
-    }
-    let mesh = HalfEdgeMesh::create(indices, attributes);
-
-    Ok(mesh)
+    Ok(HalfEdgeMesh::create(indices, m.positions.clone(), normals))
 }
 
 fn load_obj(name: &str) -> Result<tobj::Mesh, Error>

@@ -66,6 +66,30 @@ impl SimpleMesh
 
         Ok(())
     }
+
+    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, mesh::Error>
+    {
+        let val = self.attributes.get_vec2_attribute_at(name, vertex_id)?;
+        Ok(val)
+    }
+
+    fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), mesh::Error>
+    {
+        self.attributes.set_vec2_attribute_at(name, vertex_id, value)?;
+        Ok(())
+    }
+
+    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, mesh::Error>
+    {
+        let val = self.attributes.get_vec3_attribute_at(name, vertex_id)?;
+        Ok(val)
+    }
+
+    fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), mesh::Error>
+    {
+        self.attributes.set_vec3_attribute_at(name, vertex_id, value)?;
+        Ok(())
+    }
 }
 
 impl Mesh for SimpleMesh
@@ -98,30 +122,6 @@ impl Mesh for SimpleMesh
     fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
     {
         self.attributes.set_vec3_attribute_at("position", vertex_id, value).unwrap();
-    }
-
-    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, mesh::Error>
-    {
-        let val = self.attributes.get_vec2_attribute_at(name, vertex_id)?;
-        Ok(val)
-    }
-
-    fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), mesh::Error>
-    {
-        self.attributes.set_vec2_attribute_at(name, vertex_id, value)?;
-        Ok(())
-    }
-
-    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, mesh::Error>
-    {
-        let val = self.attributes.get_vec3_attribute_at(name, vertex_id)?;
-        Ok(val)
-    }
-
-    fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), mesh::Error>
-    {
-        self.attributes.set_vec3_attribute_at(name, vertex_id, value)?;
-        Ok(())
     }
 }
 
