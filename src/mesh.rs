@@ -34,3 +34,14 @@ pub trait Mesh
 }
 
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
+
+/*
+macro_rules! hashmap {
+    ($( $key: expr => $val: expr ),*) => {{
+         let mut map = ::std::collections::HashMap::new();
+         $( map.insert($key, $val); )*
+         map
+    }}
+}
+let counts = hashmap!['A' => 0, 'C' => 0, 'G' => 0, 'T' => 0];
+*/
