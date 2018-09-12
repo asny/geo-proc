@@ -1,7 +1,7 @@
 use ids::*;
 use halfedge_mesh::HalfEdgeMesh;
 use mesh::Mesh;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> HashSet<FaceID>
 {
@@ -84,8 +84,10 @@ mod tests {
             4, 0, 3,
             4, 3, 7
         ];
+        let mut attributes = HashMap::new();
+        attributes.insert("position", positions);
 
-        HalfEdgeMesh::create(indices, positions)
+        HalfEdgeMesh::create(indices, attributes)
     }
 
     fn create_unconnected_test_object() -> HalfEdgeMesh
@@ -129,7 +131,9 @@ mod tests {
 
             12, 13, 14
         ];
+        let mut attributes = HashMap::new();
+        attributes.insert("position", positions);
 
-        HalfEdgeMesh::create(indices, positions)
+        HalfEdgeMesh::create(indices, attributes)
     }
 }

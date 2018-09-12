@@ -3,7 +3,7 @@ use attribute::VertexAttributes;
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
 use std::rc::Rc;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use ids::*;
 use glm::*;
 
@@ -75,16 +75,21 @@ impl Mesh for HalfEdgeMesh
 
 impl HalfEdgeMesh
 {
-    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> HalfEdgeMesh
+    pub fn create(indices: Vec<u32>, vec3_attributes: HashMap<&str, Vec<f32>>) -> HalfEdgeMesh
     {
-        let no_vertices = positions.len()/3;
+        let no_vertices = vec3_attributes.get("position").unwrap().len()/3;
         let no_faces = indices.len()/3;
         let mut mesh = HalfEdgeMesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)), indices, attributes: VertexAttributes::new()};
-        mesh.attributes.create_vec3_attribute("position");
+
+        for attribute in vec3_attributes.iter() {
+            mesh.attributes.create_vec3_attribute(attribute.0);
+        }
 
         for i in 0..no_vertices {
             let vertex_id = mesh.create_vertex();
-            mesh.set_position_at(&vertex_id, &vec3(positions[i*3], positions[i*3+1], positions[i*3+2]));
+            for attribute in vec3_attributes.iter() {
+                mesh.set_vec3_attribute_at(attribute.0, &vertex_id, &vec3(attribute.1[i*3], attribute.1[i*3+1], attribute.1[i*3+2]));
+            }
         }
 
         for face in 0..no_faces {
@@ -97,26 +102,7 @@ impl HalfEdgeMesh
         mesh
     }
 
-    pub fn create_from_other(no_vertices: usize, indices: Vec<u32>, attributes: VertexAttributes) -> HalfEdgeMesh
-    {
-        let no_faces = indices.len()/3;
-        let mut mesh = HalfEdgeMesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)), indices, attributes };
-
-        for _ in 0..no_vertices {
-            mesh.create_vertex();
-        }
-
-        for face in 0..no_faces {
-            let v0 = VertexID::new(mesh.indices[face * 3] as usize);
-            let v1 = VertexID::new(mesh.indices[face * 3 + 1] as usize);
-            let v2 = VertexID::new(mesh.indices[face * 3 + 2] as usize);
-            mesh.create_face(&v0, &v1, &v2);
-        }
-        mesh.create_twin_connectivity();
-        mesh
-    }
-
-    pub fn create_sub_mesh(&self, faces: &Vec<FaceID>) -> HalfEdgeMesh
+    /*pub fn create_sub_mesh(&self, faces: &Vec<FaceID>) -> HalfEdgeMesh
     {
         let mut vertices = HashSet::new();
 
@@ -136,7 +122,7 @@ impl HalfEdgeMesh
         // TODO
         let indices = self.indices.clone();
         HalfEdgeMesh::create_from_other(vertices.len(), indices, attributes)
-    }
+    }*/
 
     pub fn add_vec2_attribute(&mut self, name: &str)
     {
@@ -378,7 +364,9 @@ mod tests {
 
     #[test]
     fn test_create_face() {
-        let mut mesh = HalfEdgeMesh::create(vec![], vec![]);
+        let mut attributes = HashMap::new();
+        attributes.insert("position", vec![]);
+        let mut mesh = HalfEdgeMesh::create(vec![], attributes);
 
         let v1 = mesh.create_vertex();
         let v2 = mesh.create_vertex();
@@ -497,8 +485,10 @@ mod tests {
     #[test]
     fn test_vertex_halfedge_iterator_with_holes() {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let mut attributes = HashMap::new();
+        attributes.insert("position", positions);
         let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
-        let mesh = HalfEdgeMesh::create(indices, positions);
+        let mesh = HalfEdgeMesh::create(indices, attributes);
 
         let mut i = 0;
         for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
@@ -540,23 +530,6 @@ mod tests {
     }
 
     #[test]
-    fn test_from_simple_mesh() {
-
-        let positions: Vec<f32> = vec![0.0, 1.0, 2.0,  3.0, 4.0, 5.0,  6.0, 7.0, 8.0,  9.0, 10.0, 11.0];
-        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        let halfedgemesh1 = HalfEdgeMesh::create(indices.clone(), positions.clone());
-        let simplemesh = SimpleMesh::create(indices, positions).unwrap();
-        let halfedgemesh2 = simplemesh.to_halfedge_mesh();
-
-        assert_eq!(halfedgemesh1.no_vertices(), halfedgemesh2.no_vertices());
-        assert_eq!(halfedgemesh1.no_faces(), halfedgemesh2.no_faces());
-
-        for vertex_id in halfedgemesh1.vertex_iterator() {
-            assert_eq!(halfedgemesh1.position_at(&vertex_id), halfedgemesh2.position_at(&vertex_id))
-        }
-    }
-
-    #[test]
     fn test_update_normals() {
         let mut mesh = create_three_connected_faces();
         mesh.add_vec3_attribute("normal");
@@ -580,7 +553,10 @@ mod tests {
     fn create_single_face() -> HalfEdgeMesh
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
-        let mut mesh = HalfEdgeMesh::create((0..positions.len() as u32/3).collect(), positions);
+        let indices = (0..positions.len() as u32/3).collect();
+        let mut attributes = HashMap::new();
+        attributes.insert("position", positions);
+        let mut mesh = HalfEdgeMesh::create(indices, attributes);
 
         let v0 = mesh.create_vertex();
         let v1 = mesh.create_vertex();
@@ -592,8 +568,10 @@ mod tests {
     fn create_three_connected_faces() -> HalfEdgeMesh
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
+        let mut attributes = HashMap::new();
+        attributes.insert("position", positions);
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
-        HalfEdgeMesh::create(indices, positions)
+        HalfEdgeMesh::create(indices, attributes)
     }
 
     /*fn create_connected_test_object() -> HalfEdgeMesh

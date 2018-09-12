@@ -33,11 +33,6 @@ impl SimpleMesh
         Ok(mesh)
     }
 
-    pub fn to_halfedge_mesh(&self) -> HalfEdgeMesh
-    {
-        HalfEdgeMesh::create_from_other(self.no_vertices, self.indices.clone(), self.attributes.clone())
-    }
-
     pub fn add_vec2_attribute(&mut self, name: &str, data: Vec<f32>) -> Result<(), Error>
     {
         let no_vertices = self.no_vertices();
