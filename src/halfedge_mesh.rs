@@ -395,18 +395,6 @@ mod tests {
     use simple_mesh::SimpleMesh;
 
     #[test]
-    fn test_create_vertex() {
-        let mut mesh = HalfEdgeMesh::create(vec![], vec![]);
-
-        let v1 = mesh.create_vertex();
-        let v2 = mesh.create_vertex();
-        let v3 = mesh.create_vertex();
-        assert_eq!(v1, VertexID::new(0));
-        assert_eq!(v2, VertexID::new(1));
-        assert_eq!(v3, VertexID::new(2));
-    }
-
-    #[test]
     fn test_create_face() {
         let mut mesh = HalfEdgeMesh::create(vec![], vec![]);
 
@@ -414,22 +402,26 @@ mod tests {
         let v2 = mesh.create_vertex();
         let v3 = mesh.create_vertex();
         let f1 = mesh.create_face(&v1, &v2, &v3);
-        assert_eq!(f1, FaceID::new(0));
 
-        let t1 = mesh.walker_from_vertex(&v1).halfedge_id().unwrap();
-        assert_eq!(t1, HalfEdgeID::new(0));
+        let t1 = mesh.walker_from_vertex(&v1).halfedge_id();
+        assert!(t1.is_some());
 
-        let t2 = mesh.walker_from_vertex(&v1).twin().halfedge_id().unwrap();
-        assert_eq!(t2, HalfEdgeID::new(3));
+        let t2 = mesh.walker_from_vertex(&v1).twin().halfedge_id();
+        assert!(t2.is_some());
 
-        let t3 = mesh.walker_from_vertex(&v2).next().next().vertex_id().unwrap();
-        assert_eq!(t3, v2);
+        let t3 = mesh.walker_from_vertex(&v2).next().next().vertex_id();
+        assert!(t3.is_some());
+        assert_eq!(t3.unwrap(), v2);
 
         let t4 = mesh.walker_from_face(&f1).twin().face_id();
         assert!(t4.is_none());
 
-        let t5 = mesh.walker_from_halfedge(&t1).twin().halfedge_id().unwrap();
-        assert_eq!(t5, HalfEdgeID::new(3));
+        let t5 = mesh.walker_from_halfedge(&t1.unwrap()).twin().halfedge_id();
+        assert!(t5.is_some());
+
+        let t6 = mesh.walker_from_vertex(&v3).face_id();
+        assert!(t6.is_some());
+        assert_eq!(t6.unwrap(), f1);
     }
 
     #[test]
@@ -492,8 +484,15 @@ mod tests {
     #[test]
     fn test_connectivity() {
         let mesh = create_three_connected_faces();
-
-        let mut walker = mesh.walker_from_vertex(&VertexID::new(0));
+        let mut id = None;
+        for vertex_id in mesh.vertex_iterator() {
+            let mut round = true;
+            for walker in mesh.vertex_halfedge_iterator(&vertex_id) {
+                if walker.face_id().is_none() { round = false; break; }
+            }
+            if(round) { id = Some(vertex_id); break; }
+        }
+        let mut walker = mesh.walker_from_vertex(&id.unwrap());
         let start_edge = walker.halfedge_id().unwrap();
         let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id().unwrap();
         assert_eq!(start_edge, one_round_edge);
@@ -504,9 +503,9 @@ mod tests {
         let mesh = create_three_connected_faces();
 
         let mut i = 0;
-        let indices = vec![1, 2, 3];
-        for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
-            assert_eq!(edge.vertex_id().unwrap(), VertexID::new(indices[i]));
+        let vertex_id = mesh.vertex_iterator().last().unwrap();
+        for edge in mesh.vertex_halfedge_iterator(&vertex_id) {
+            assert!(edge.vertex_id().is_some());
             i = i + 1;
         }
         assert_eq!(i, 3, "All edges of a one-ring are not visited");
@@ -519,9 +518,8 @@ mod tests {
         let mesh = HalfEdgeMesh::create(indices, positions);
 
         let mut i = 0;
-        let indices = vec![1, 2, 3, 4];
         for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
-            assert_eq!(edge.vertex_id().unwrap(), VertexID::new(indices[i]));
+            assert!(edge.vertex_id().is_some());
             i = i+1;
         }
         assert_eq!(i,4, "All edges of a one-ring are not visited");
@@ -533,8 +531,8 @@ mod tests {
         let mesh = create_single_face();
         let mut i = 0;
         for mut edge in mesh.face_halfedge_iterator(&FaceID::new(0)) {
-            assert_eq!(edge.halfedge_id().unwrap(), HalfEdgeID::new(i));
-            assert_eq!(edge.face_id().unwrap(), FaceID::new(0));
+            assert!(edge.halfedge_id().is_some());
+            assert!(edge.face_id().is_some());
             i = i+1;
         }
         assert_eq!(i, 3, "All edges of a face are not visited");
