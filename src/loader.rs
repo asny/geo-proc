@@ -59,7 +59,7 @@ pub fn load_obj_as_halfedge_mesh(name: &str) -> Result<HalfEdgeMesh, Error>
     {
         attributes.insert("normal", m.normals.clone());
     }
-    let mut mesh = HalfEdgeMesh::create(indices, attributes);
+    let mesh = HalfEdgeMesh::create(indices, attributes);
 
     Ok(mesh)
 }

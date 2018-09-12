@@ -3,7 +3,6 @@ use attribute::{self, VertexAttributes};
 use glm::*;
 use ids::*;
 use mesh::{self, Mesh};
-use halfedge_mesh::HalfEdgeMesh;
 
 #[derive(Debug)]
 pub enum Error {

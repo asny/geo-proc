@@ -3,7 +3,7 @@ use attribute::VertexAttributes;
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
 use std::rc::Rc;
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
 use ids::*;
 use glm::*;
 
@@ -88,7 +88,7 @@ impl HalfEdgeMesh
         for i in 0..no_vertices {
             let vertex_id = mesh.create_vertex();
             for attribute in vec3_attributes.iter() {
-                mesh.set_vec3_attribute_at(attribute.0, &vertex_id, &vec3(attribute.1[i*3], attribute.1[i*3+1], attribute.1[i*3+2]));
+                mesh.set_vec3_attribute_at(attribute.0, &vertex_id, &vec3(attribute.1[i*3], attribute.1[i*3+1], attribute.1[i*3+2])).unwrap();
             }
         }
 
@@ -360,7 +360,6 @@ impl Iterator for FaceHalfedgeIterator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use simple_mesh::SimpleMesh;
 
     #[test]
     fn test_create_face() {
@@ -461,7 +460,7 @@ mod tests {
             for walker in mesh.vertex_halfedge_iterator(&vertex_id) {
                 if walker.face_id().is_none() { round = false; break; }
             }
-            if(round) { id = Some(vertex_id); break; }
+            if round { id = Some(vertex_id); break; }
         }
         let mut walker = mesh.walker_from_vertex(&id.unwrap());
         let start_edge = walker.halfedge_id().unwrap();

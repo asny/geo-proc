@@ -1,7 +1,6 @@
 use ids::*;
 use halfedge_mesh::HalfEdgeMesh;
-use mesh::Mesh;
-use std::collections::{HashSet, HashMap};
+use std::collections::HashSet;
 
 pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> HashSet<FaceID>
 {
@@ -33,6 +32,8 @@ pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> HashSet<Fa
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+    use mesh::Mesh;
 
     #[test]
     fn test_one_connected_component()
