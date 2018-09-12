@@ -341,10 +341,10 @@ impl Iterator for VertexHalfedgeIterator {
             },
             None => { // In the case there are holes in the one-ring
                 self.current.twin();
-                loop {
+                while let Some(_) = self.current.face_id() {
                     self.current.next().twin();
-                    if self.current.face_id().is_none() { self.current.twin(); break; }
                 }
+                self.current.twin();
             }
         }
         self.is_done = self.current.halfedge_id().unwrap() == self.start;
