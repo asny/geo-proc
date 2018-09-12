@@ -1,5 +1,6 @@
 use std::cell::{RefCell};
 use ids::*;
+use std;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -33,13 +34,11 @@ impl ConnectivityInfo {
     {
         let vertices = &mut *RefCell::borrow_mut(&self.vertices);
 
-        let mut i = 0;
-        let mut id;
-        loop {
-            if i == usize::max_value() {panic!("Not possible to create a unique id for a new vertex")}
-            id = VertexID::new(i);
+        let len = vertices.len();
+        let mut id = VertexID::new(len);
+        for i in len+1..std::usize::MAX {
             if !vertices.contains_key(&id) { break }
-            i = i+1;
+            id = VertexID::new(i);
         }
 
         vertices.insert(id.clone(), Vertex { halfedge: None });
@@ -57,14 +56,13 @@ impl ConnectivityInfo {
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
 
-        let mut i = 0;
-        let mut id;
-        loop {
-            if i == usize::max_value() {panic!("Not possible to create a unique id for a new vertex")}
-            id = HalfEdgeID::new(i);
+        let len = halfedges.len();
+        let mut id = HalfEdgeID::new(len);
+        for i in len+1..std::usize::MAX {
             if !halfedges.contains_key(&id) { break }
-            i = i+1;
+            id = HalfEdgeID::new(i);
         }
+
         halfedges.insert(id.clone(), HalfEdge { vertex: None, twin: None, next: None, face: None });
         id
     }
@@ -73,14 +71,13 @@ impl ConnectivityInfo {
     {
         let faces = &mut *RefCell::borrow_mut(&self.faces);
 
-        let mut i = 0;
-        let mut id;
-        loop {
-            if i == usize::max_value() {panic!("Not possible to create a unique id for a new vertex")}
-            id = FaceID::new(i);
+        let len = faces.len();
+        let mut id = FaceID::new(len);
+        for i in len+1..std::usize::MAX {
             if !faces.contains_key(&id) { break }
-            i = i+1;
+            id = FaceID::new(i);
         }
+
         faces.insert(id.clone(), Face { halfedge: None });
         id
     }
