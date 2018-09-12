@@ -192,6 +192,7 @@ impl HalfEdgeMesh
     fn create_twin_connectivity(&mut self)
     {
         let mut walker = Walker::create(&self.connectivity_info);
+        let edges: Vec<HalfEdgeID> = self.halfedge_iterator().collect();
 
         for halfedge_id1 in self.halfedge_iterator()
         {
@@ -204,14 +205,14 @@ impl HalfEdgeMesh
                 let vertex_id2 = walker.previous().vertex_id().unwrap();
 
                 let mut halfedge2 = None;
-                for halfedge_id2 in self.halfedge_iterator() {
-                    let twin = walker.jump_to_edge(&halfedge_id2).twin().halfedge_id();
+                for halfedge_id2 in edges.iter() {
+                    let twin = walker.jump_to_edge(halfedge_id2).twin().halfedge_id();
                     if twin.is_none()
                     {
-                        walker.jump_to_edge(&halfedge_id2);
+                        walker.jump_to_edge(halfedge_id2);
                         if walker.vertex_id().unwrap() == vertex_id2 && walker.previous().vertex_id().unwrap() == vertex_id1
                             {
-                                halfedge2 = Some(halfedge_id2);
+                                halfedge2 = Some(halfedge_id2.clone());
                                 break;
                             }
                     }
