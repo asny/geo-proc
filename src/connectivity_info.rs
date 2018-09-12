@@ -10,9 +10,13 @@ pub struct ConnectivityInfo {
 }
 
 impl ConnectivityInfo {
-    pub fn new() -> ConnectivityInfo
+    pub fn new(no_vertices: usize, no_faces: usize) -> ConnectivityInfo
     {
-        ConnectivityInfo { vertices: RefCell::new(HashMap::new()), halfedges: RefCell::new(HashMap::new()), faces: RefCell::new(HashMap::new()) }
+        ConnectivityInfo {
+            vertices: RefCell::new(HashMap::with_capacity(no_vertices)),
+            halfedges: RefCell::new(HashMap::with_capacity(4 * no_faces)),
+            faces: RefCell::new(HashMap::with_capacity(no_faces))
+        }
     }
 
     pub fn no_vertices(&self) -> usize
