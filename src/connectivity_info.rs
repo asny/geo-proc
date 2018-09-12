@@ -1,18 +1,18 @@
 use std::cell::{RefCell};
 use ids::*;
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ConnectivityInfo {
-    vertices: RefCell<BTreeMap<VertexID, Vertex>>,
-    halfedges: RefCell<BTreeMap<HalfEdgeID, HalfEdge>>,
-    faces: RefCell<BTreeMap<FaceID, Face>>
+    vertices: RefCell<HashMap<VertexID, Vertex>>,
+    halfedges: RefCell<HashMap<HalfEdgeID, HalfEdge>>,
+    faces: RefCell<HashMap<FaceID, Face>>
 }
 
 impl ConnectivityInfo {
     pub fn new() -> ConnectivityInfo
     {
-        ConnectivityInfo { vertices: RefCell::new(BTreeMap::new()), halfedges: RefCell::new(BTreeMap::new()), faces: RefCell::new(BTreeMap::new()) }
+        ConnectivityInfo { vertices: RefCell::new(HashMap::new()), halfedges: RefCell::new(HashMap::new()), faces: RefCell::new(HashMap::new()) }
     }
 
     pub fn no_vertices(&self) -> usize

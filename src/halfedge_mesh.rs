@@ -78,14 +78,22 @@ impl HalfEdgeMesh
     pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> HalfEdgeMesh
     {
         let no_vertices = positions.len()/3;
-        let mut mesh = HalfEdgeMesh::create_from_other(no_vertices, indices, VertexAttributes::new());
-
+        let no_faces = indices.len()/3;
+        let mut mesh = HalfEdgeMesh { connectivity_info: Rc::new(ConnectivityInfo::new()), indices, attributes: VertexAttributes::new()};
         mesh.attributes.create_vec3_attribute("position");
-        let mut i = 0;
-        for vertex_id in mesh.vertex_iterator() {
-            mesh.set_position_at(&vertex_id, &vec3(positions[i], positions[i+1], positions[i+2]));
-            i = i + 3;
+
+        for i in 0..no_vertices {
+            let vertex_id = mesh.create_vertex();
+            mesh.set_position_at(&vertex_id, &vec3(positions[i*3], positions[i*3+1], positions[i*3+2]));
         }
+
+        for face in 0..no_faces {
+            let v0 = VertexID::new(mesh.indices[face * 3] as usize);
+            let v1 = VertexID::new(mesh.indices[face * 3 + 1] as usize);
+            let v2 = VertexID::new(mesh.indices[face * 3 + 2] as usize);
+            mesh.create_face(&v0, &v1, &v2);
+        }
+
         mesh
     }
 
@@ -429,11 +437,18 @@ mod tests {
         let mesh = create_three_connected_faces();
 
         let mut i = 0;
-        for vertex_id in mesh.vertex_iterator() {
-            assert_eq!(vertex_id, VertexID::new(i));
+        for _ in mesh.vertex_iterator() {
             i = i+1;
         }
         assert_eq!(4, i);
+
+        // Test that two iterations return the same result
+        let vec: Vec<VertexID> = mesh.vertex_iterator().collect();
+        i = 0;
+        for vertex_id in mesh.vertex_iterator() {
+            assert_eq!(vertex_id, vec[i]);
+            i = i+1;
+        }
     }
 
     #[test]
@@ -441,11 +456,18 @@ mod tests {
         let mesh = create_three_connected_faces();
 
         let mut i = 0;
-        for halfedge_id in mesh.halfedge_iterator() {
-            assert_eq!(halfedge_id, HalfEdgeID::new(i));
+        for _ in mesh.halfedge_iterator() {
             i = i+1;
         }
         assert_eq!(12, i);
+
+        // Test that two iterations return the same result
+        let vec: Vec<HalfEdgeID> = mesh.halfedge_iterator().collect();
+        i = 0;
+        for halfedge_id in mesh.halfedge_iterator() {
+            assert_eq!(halfedge_id, vec[i]);
+            i = i+1;
+        }
     }
 
     #[test]
@@ -453,11 +475,18 @@ mod tests {
         let mesh = create_three_connected_faces();
 
         let mut i = 0;
-        for face_id in mesh.face_iterator() {
-            assert_eq!(face_id, FaceID::new(i));
+        for _ in mesh.face_iterator() {
             i = i+1;
         }
         assert_eq!(3, i);
+
+        // Test that two iterations return the same result
+        let vec: Vec<FaceID> = mesh.face_iterator().collect();
+        i = 0;
+        for face_id in mesh.face_iterator() {
+            assert_eq!(face_id, vec[i]);
+            i = i+1;
+        }
     }
 
     #[test]
@@ -532,7 +561,7 @@ mod tests {
     #[test]
     fn test_from_simple_mesh() {
 
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
+        let positions: Vec<f32> = vec![0.0, 1.0, 2.0,  3.0, 4.0, 5.0,  6.0, 7.0, 8.0,  9.0, 10.0, 11.0];
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
         let halfedgemesh1 = HalfEdgeMesh::create(indices.clone(), positions.clone());
         let simplemesh = SimpleMesh::create(indices, positions).unwrap();
