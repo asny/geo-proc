@@ -51,16 +51,18 @@ impl Walker
 
     pub fn twin(&mut self) -> &mut Walker
     {
-        if let Some(ref mut current) = self.current {
-            if let Some(new) = self.connectivity_info.halfedge_twin(current) { *current = new }
+        self.current = match self.current {
+            Some(ref current) => {self.connectivity_info.halfedge_twin(current)},
+            None => None
         };
         self
     }
 
     pub fn next(&mut self) -> &mut Walker
     {
-        if let Some(ref mut current) = self.current {
-            if let Some(new) = self.connectivity_info.halfedge_next(current) { *current = new }
+        self.current = match self.current {
+            Some(ref current) => {self.connectivity_info.halfedge_next(current)},
+            None => None
         };
         self
     }

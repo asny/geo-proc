@@ -93,7 +93,7 @@ impl HalfEdgeMesh
             let v2 = VertexID::new(mesh.indices[face * 3 + 2] as usize);
             mesh.create_face(&v0, &v1, &v2);
         }
-
+        mesh.create_twin_connectivity();
         mesh
     }
 
@@ -112,6 +112,7 @@ impl HalfEdgeMesh
             let v2 = VertexID::new(mesh.indices[face * 3 + 2] as usize);
             mesh.create_face(&v0, &v1, &v2);
         }
+        mesh.create_twin_connectivity();
         mesh
     }
 
@@ -180,84 +181,65 @@ impl HalfEdgeMesh
         let id = self.connectivity_info.create_face();
 
         // Create inner halfedges
-        let halfedge1 = match self.find_edge(vertex_id1, vertex_id2)
-            {
-                Some(e) => { e },
-                None => {
-                    let halfedge_id = self.connectivity_info.create_halfedge();
-                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id2);
-                    halfedge_id
-                }
-            };
-        self.connectivity_info.set_face_halfedge(&id, &halfedge1);
+        let halfedge1 = self.connectivity_info.create_halfedge();
+        self.connectivity_info.set_halfedge_vertex(&halfedge1, &vertex_id2);
         self.connectivity_info.set_vertex_halfedge(&vertex_id1, &halfedge1);
         self.connectivity_info.set_halfedge_face(&halfedge1, &id);
+        self.connectivity_info.set_face_halfedge(&id, &halfedge1);
 
-        let halfedge2 = match self.find_edge(vertex_id2, vertex_id3)
-            {
-                Some(e) => { e },
-                None => {
-                    let halfedge_id = self.connectivity_info.create_halfedge();
-                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id3);
-                    halfedge_id
-                }
-            };
+        let halfedge2 = self.connectivity_info.create_halfedge();
+        self.connectivity_info.set_halfedge_vertex(&halfedge2, &vertex_id3);
         self.connectivity_info.set_vertex_halfedge(&vertex_id2, &halfedge2);
         self.connectivity_info.set_halfedge_next(&halfedge1, &halfedge2);
         self.connectivity_info.set_halfedge_face(&halfedge2, &id);
 
-        let halfedge3 = match self.find_edge(vertex_id3, vertex_id1)
-            {
-                Some(e) => { e },
-                None => {
-                    let halfedge_id = self.connectivity_info.create_halfedge();
-                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id1);
-                    halfedge_id
-                }
-            };
+        let halfedge3 = self.connectivity_info.create_halfedge();
+        self.connectivity_info.set_halfedge_vertex(&halfedge3, &vertex_id1);
         self.connectivity_info.set_vertex_halfedge(&vertex_id3, &halfedge3);
         self.connectivity_info.set_halfedge_next(&halfedge2, &halfedge3);
         self.connectivity_info.set_halfedge_next(&halfedge3, &halfedge1);
         self.connectivity_info.set_halfedge_face(&halfedge3, &id);
 
-        // Create outer halfedges
-        let halfedge4 = match self.find_edge(vertex_id2, vertex_id1)
-            {
-                Some(e) => { e },
-                None => {
-                    let halfedge_id = self.connectivity_info.create_halfedge();
-                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id1);
-                    halfedge_id
-                }
-            };
-        self.connectivity_info.set_halfedge_twin(&halfedge1, &halfedge4);
-        self.connectivity_info.set_halfedge_twin(&halfedge4, &halfedge1);
-
-        let halfedge5 = match self.find_edge(vertex_id3, vertex_id2)
-            {
-                Some(e) => { e },
-                None => {
-                    let halfedge_id = self.connectivity_info.create_halfedge();
-                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id2);
-                    halfedge_id
-                }
-            };
-        self.connectivity_info.set_halfedge_twin(&halfedge2, &halfedge5);
-        self.connectivity_info.set_halfedge_twin(&halfedge5, &halfedge2);
-
-        let halfedge6 = match self.find_edge(vertex_id1, vertex_id3)
-            {
-                Some(e) => { e },
-                None => {
-                    let halfedge_id = self.connectivity_info.create_halfedge();
-                    self.connectivity_info.set_halfedge_vertex(&halfedge_id, &vertex_id3);
-                    halfedge_id
-                }
-            };
-        self.connectivity_info.set_halfedge_twin(&halfedge3, &halfedge6);
-        self.connectivity_info.set_halfedge_twin(&halfedge6, &halfedge3);
-
         id
+    }
+
+    fn create_twin_connectivity(&mut self)
+    {
+        let mut walker = Walker::create(&self.connectivity_info);
+
+        for halfedge_id1 in self.halfedge_iterator()
+        {
+            let twin = walker.jump_to_edge(&halfedge_id1).twin().halfedge_id();
+
+            if twin.is_none()
+            {
+                walker.jump_to_edge(&halfedge_id1);
+                let vertex_id1 = walker.vertex_id().unwrap();
+                let vertex_id2 = walker.previous().vertex_id().unwrap();
+
+                let mut halfedge2 = None;
+                for halfedge_id2 in self.halfedge_iterator() {
+                    let twin = walker.jump_to_edge(&halfedge_id2).twin().halfedge_id();
+                    if twin.is_none()
+                    {
+                        walker.jump_to_edge(&halfedge_id2);
+                        if walker.vertex_id().unwrap() == vertex_id2 && walker.previous().vertex_id().unwrap() == vertex_id1
+                            {
+                                halfedge2 = Some(halfedge_id2);
+                                break;
+                            }
+                    }
+                }
+                let halfedge_id2 = halfedge2.unwrap_or_else(|| {
+                    let halfedge_id2 = self.connectivity_info.create_halfedge();
+                    self.connectivity_info.set_halfedge_vertex(&halfedge_id2, &vertex_id2);
+                    halfedge_id2}
+                );
+                self.connectivity_info.set_halfedge_twin(&halfedge_id1, &halfedge_id2);
+                self.connectivity_info.set_halfedge_twin(&halfedge_id2, &halfedge_id1);
+
+            }
+        }
     }
 
     pub fn walker_from_vertex(&self, vertex_id: &VertexID) -> Walker
@@ -402,6 +384,7 @@ mod tests {
         let v2 = mesh.create_vertex();
         let v3 = mesh.create_vertex();
         let f1 = mesh.create_face(&v1, &v2, &v3);
+        mesh.create_twin_connectivity();
 
         let t1 = mesh.walker_from_vertex(&v1).halfedge_id();
         assert!(t1.is_some());
