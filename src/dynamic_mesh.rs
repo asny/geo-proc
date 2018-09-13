@@ -1,5 +1,4 @@
-use mesh::{self, Error, Mesh};
-use attribute::VertexAttributes;
+use mesh::{self, Error, Renderable};
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
 use std::rc::Rc;
@@ -10,14 +9,14 @@ use glm::*;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
 
-pub struct HalfEdgeMesh {
+pub struct DynamicMesh {
     indices: Vec<u32>,
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,
     connectivity_info: Rc<ConnectivityInfo>
 }
 
-impl Mesh for HalfEdgeMesh
+impl Renderable for DynamicMesh
 {
     fn indices(&self) -> &Vec<u32>
     {
@@ -29,9 +28,9 @@ impl Mesh for HalfEdgeMesh
         self.connectivity_info.vertex_iterator()
     }
 
-    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, Error>
+    fn get_vec2_attribute_at(&self, name: &str, _vertex_id: &VertexID) -> Result<&Vec2, Error>
     {
-        panic!("Half edge meshes only contains positions and normals");
+        panic!("Half edge meshes does not contain {}, only positions and normals", name);
     }
 
     fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
@@ -39,7 +38,7 @@ impl Mesh for HalfEdgeMesh
         Ok(match name {
             "position" => self.position_at(vertex_id),
             "normal" => self.normal_at(vertex_id),
-            _ => panic!("Half edge meshes only contains positions and normals")
+            _ => panic!("Half edge meshes does not contain {}, only positions and normals", name)
         })
     }
 
@@ -54,13 +53,13 @@ impl Mesh for HalfEdgeMesh
     }
 }
 
-impl HalfEdgeMesh
+impl DynamicMesh
 {
-    pub fn create(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> HalfEdgeMesh
+    pub fn create(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
-        let mut mesh = HalfEdgeMesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)),
+        let mut mesh = DynamicMesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)),
             indices, positions: HashMap::new(), normals: HashMap::new()};
 
         for i in 0..no_vertices {
@@ -354,7 +353,7 @@ mod tests {
 
     #[test]
     fn test_create_face() {
-        let mut mesh = HalfEdgeMesh::create(vec![], vec![], None);
+        let mut mesh = DynamicMesh::create(vec![], vec![], None);
 
         let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0));
         let v2 = mesh.create_vertex(vec3(0.0, 0.0, 0.0));
@@ -474,7 +473,7 @@ mod tests {
     fn test_vertex_halfedge_iterator_with_holes() {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
         let positions: Vec<f32> = vec![0.0; 5 * 3];
-        let mesh = HalfEdgeMesh::create(indices, positions, None);
+        let mesh = DynamicMesh::create(indices, positions, None);
 
         let mut i = 0;
         for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
@@ -532,18 +531,18 @@ mod tests {
         }
     }
 
-    fn create_single_face() -> HalfEdgeMesh
+    fn create_single_face() -> DynamicMesh
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
-        HalfEdgeMesh::create( (0..3).collect(), positions, None)
+        DynamicMesh::create((0..3).collect(), positions, None)
     }
 
-    fn create_three_connected_faces() -> HalfEdgeMesh
+    fn create_three_connected_faces() -> DynamicMesh
     {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
         let normals: Vec<f32> = vec![0.0; 4 * 3];
-        HalfEdgeMesh::create( indices, positions, Some(normals))
+        DynamicMesh::create(indices, positions, Some(normals))
     }
 
     /*fn create_connected_test_object() -> HalfEdgeMesh

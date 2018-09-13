@@ -10,7 +10,7 @@ mod connectivity_info;
 pub mod traversal;
 
 pub mod mesh;
-pub mod halfedge_mesh;
-pub mod simple_mesh;
+pub mod dynamic_mesh;
+pub mod static_mesh;
 
 pub mod algorithms;

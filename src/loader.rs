@@ -2,9 +2,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use tobj;
 use mesh;
-use simple_mesh::{self, SimpleMesh};
-use halfedge_mesh::HalfEdgeMesh;
-use std::collections::HashMap;
+use static_mesh::StaticMesh;
+use dynamic_mesh::DynamicMesh;
 
 #[derive(Debug)]
 pub enum Error {
@@ -25,12 +24,12 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn load_obj_as_simple_mesh(name: &str) -> Result<SimpleMesh, Error>
+pub fn load_obj_as_simple_mesh(name: &str) -> Result<StaticMesh, Error>
 {
     let m = load_obj(name)?;
     // Create mesh
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
-    let mut mesh = SimpleMesh::create(indices, m.positions.clone())?;
+    let mut mesh = StaticMesh::create(indices, m.positions.clone())?;
 
     if m.normals.len() > 0
     {
@@ -40,14 +39,14 @@ pub fn load_obj_as_simple_mesh(name: &str) -> Result<SimpleMesh, Error>
     Ok(mesh)
 }
 
-pub fn load_obj_as_halfedge_mesh(name: &str) -> Result<HalfEdgeMesh, Error>
+pub fn load_obj_as_halfedge_mesh(name: &str) -> Result<DynamicMesh, Error>
 {
     let m = load_obj(name)?;
 
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
     let normals = match m.normals.len() > 0 { true => Some(m.normals.clone()), false => None };
 
-    Ok(HalfEdgeMesh::create(indices, m.positions.clone(), normals))
+    Ok(DynamicMesh::create(indices, m.positions.clone(), normals))
 }
 
 fn load_obj(name: &str) -> Result<tobj::Mesh, Error>

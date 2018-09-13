@@ -1,21 +1,23 @@
 
-use attribute::{self, VertexAttributes};
+use attribute::VertexAttributes;
 use glm::*;
 use ids::*;
-use mesh::{self, Error, Mesh};
+use mesh::{self, Error, Renderable};
 
-pub struct SimpleMesh
+pub struct StaticMesh
 {
     indices: Vec<u32>,
     no_vertices: usize,
     attributes: VertexAttributes
 }
 
-impl SimpleMesh
+// TODO: Remove setters and initialize from constructor
+// TODO: Contain all attributes in vec<f32>
+impl StaticMesh
 {
-    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<SimpleMesh, Error>
+    pub fn create(indices: Vec<u32>, positions: Vec<f32>) -> Result<StaticMesh, Error>
     {
-        let mut mesh = SimpleMesh { indices, no_vertices: positions.len()/3, attributes: VertexAttributes::new() };
+        let mut mesh = StaticMesh { indices, no_vertices: positions.len()/3, attributes: VertexAttributes::new() };
         mesh.add_vec3_attribute("position", positions)?;
         Ok(mesh)
     }
@@ -66,7 +68,7 @@ impl SimpleMesh
     }
 }
 
-impl Mesh for SimpleMesh
+impl Renderable for StaticMesh
 {
     fn indices(&self) -> &Vec<u32>
     {

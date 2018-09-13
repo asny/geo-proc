@@ -1,8 +1,8 @@
 use ids::*;
-use halfedge_mesh::HalfEdgeMesh;
+use dynamic_mesh::DynamicMesh;
 use std::collections::HashSet;
 
-pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> HashSet<FaceID>
+pub fn connected_components(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>
 {
     let mut component = HashSet::new();
     component.insert(face_id.clone());
@@ -32,8 +32,7 @@ pub fn connected_components(mesh: &HalfEdgeMesh, face_id: &FaceID) -> HashSet<Fa
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
-    use mesh::Mesh;
+    use mesh::Renderable;
 
     #[test]
     fn test_one_connected_component()
@@ -58,7 +57,7 @@ mod tests {
         assert_eq!(cc.len(), 1);
     }
 
-    fn create_connected_test_object() -> HalfEdgeMesh
+    fn create_connected_test_object() -> DynamicMesh
     {
         let positions: Vec<f32> = vec![
             1.0, -1.0, -1.0,
@@ -85,10 +84,10 @@ mod tests {
             4, 0, 3,
             4, 3, 7
         ];
-        HalfEdgeMesh::create(indices, positions, None)
+        DynamicMesh::create(indices, positions, None)
     }
 
-    fn create_unconnected_test_object() -> HalfEdgeMesh
+    fn create_unconnected_test_object() -> DynamicMesh
     {
         let positions: Vec<f32> = vec![
             1.0, -1.0, -1.0,
@@ -130,6 +129,6 @@ mod tests {
             12, 13, 14
         ];
 
-        HalfEdgeMesh::create(indices, positions, None)
+        DynamicMesh::create(indices, positions, None)
     }
 }

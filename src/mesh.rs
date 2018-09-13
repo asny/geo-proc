@@ -1,4 +1,3 @@
-use attribute;
 use glm::*;
 use ids::*;
 
@@ -9,8 +8,7 @@ pub enum Error {
     WrongSizeOfAttribute {message: String}
 }
 
-// Todo: Split in different traits
-pub trait Mesh
+pub trait Renderable
 {
     fn indices(&self) -> &Vec<u32>;
 
