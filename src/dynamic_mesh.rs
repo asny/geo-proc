@@ -357,7 +357,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_create_face() {
+    fn test_one_face_connectivity() {
         let mut mesh = DynamicMesh::create(vec![], vec![], None);
 
         let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0));
@@ -389,6 +389,23 @@ mod tests {
 
         let t8 = mesh.walker_from_vertex(&v3).face_id();
         assert_eq!(t8, Some(f1));
+    }
+
+    #[test]
+    fn test_three_face_connectivity() {
+        let mesh = create_three_connected_faces();
+        let mut id = None;
+        for vertex_id in mesh.vertex_iterator() {
+            let mut round = true;
+            for walker in mesh.vertex_halfedge_iterator(&vertex_id) {
+                if walker.face_id().is_none() { round = false; break; }
+            }
+            if round { id = Some(vertex_id); break; }
+        }
+        let mut walker = mesh.walker_from_vertex(&id.unwrap());
+        let start_edge = walker.halfedge_id().unwrap();
+        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id().unwrap();
+        assert_eq!(start_edge, one_round_edge);
     }
 
     #[test]
@@ -446,23 +463,6 @@ mod tests {
             assert_eq!(face_id, vec[i]);
             i = i+1;
         }
-    }
-
-    #[test]
-    fn test_connectivity() {
-        let mesh = create_three_connected_faces();
-        let mut id = None;
-        for vertex_id in mesh.vertex_iterator() {
-            let mut round = true;
-            for walker in mesh.vertex_halfedge_iterator(&vertex_id) {
-                if walker.face_id().is_none() { round = false; break; }
-            }
-            if round { id = Some(vertex_id); break; }
-        }
-        let mut walker = mesh.walker_from_vertex(&id.unwrap());
-        let start_edge = walker.halfedge_id().unwrap();
-        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id().unwrap();
-        assert_eq!(start_edge, one_round_edge);
     }
 
     #[test]
