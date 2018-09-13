@@ -366,25 +366,29 @@ mod tests {
         let f1 = mesh.create_face(&v1, &v2, &v3);
         mesh.create_twin_connectivity();
 
-        let t1 = mesh.walker_from_vertex(&v1).halfedge_id();
-        assert!(t1.is_some());
+        let t1 = mesh.walker_from_vertex(&v1).vertex_id();
+        assert_eq!(t1, Some(v2.clone()));
 
-        let t2 = mesh.walker_from_vertex(&v1).twin().halfedge_id();
-        assert!(t2.is_some());
+        let t2 = mesh.walker_from_vertex(&v1).twin().vertex_id();
+        assert_eq!(t2, Some(v1));
 
-        let t3 = mesh.walker_from_vertex(&v2).next().next().vertex_id();
-        assert!(t3.is_some());
-        assert_eq!(t3.unwrap(), v2);
+        let t3 = mesh.walker_from_vertex(&v2.clone()).next().next().vertex_id();
+        assert_eq!(t3, Some(v2.clone()));
 
-        let t4 = mesh.walker_from_face(&f1).twin().face_id();
+        let t4 = mesh.walker_from_face(&f1.clone()).twin().face_id();
         assert!(t4.is_none());
 
-        let t5 = mesh.walker_from_halfedge(&t1.unwrap()).twin().halfedge_id();
-        assert!(t5.is_some());
+        let t5 = mesh.walker_from_face(&f1.clone()).twin().next().halfedge_id();
+        assert!(t5.is_none());
 
-        let t6 = mesh.walker_from_vertex(&v3).face_id();
-        assert!(t6.is_some());
-        assert_eq!(t6.unwrap(), f1);
+        let t6 = mesh.walker_from_face(&f1.clone()).previous().previous().twin().twin().face_id();
+        assert_eq!(t6, Some(f1.clone()));
+
+        let t7 = mesh.walker_from_vertex(&v2.clone()).next().next().next().halfedge_id();
+        assert_eq!(t7, mesh.walker_from_vertex(&v2).halfedge_id());
+
+        let t8 = mesh.walker_from_vertex(&v3).face_id();
+        assert_eq!(t8, Some(f1));
     }
 
     #[test]
