@@ -44,12 +44,7 @@ impl Renderable for DynamicMesh
 
     fn no_vertices(&self) -> usize
     {
-        self.connectivity_info.no_vertices()
-    }
-
-    fn no_faces(&self) -> usize
-    {
-        self.connectivity_info.no_faces()
+        self.no_vertices()
     }
 }
 
@@ -77,6 +72,16 @@ impl DynamicMesh
         }
         mesh.create_twin_connectivity();
         mesh
+    }
+
+    pub fn no_vertices(&self) -> usize
+    {
+        self.connectivity_info.no_vertices()
+    }
+
+    pub fn no_faces(&self) -> usize
+    {
+        self.connectivity_info.no_faces()
     }
 
     /*pub fn create_sub_mesh(&self, faces: &Vec<FaceID>) -> HalfEdgeMesh

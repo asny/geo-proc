@@ -66,6 +66,16 @@ impl StaticMesh
         self.attributes.set_vec3_attribute_at(name, vertex_id, value);
         Ok(())
     }
+
+    fn no_vertices(&self) -> usize
+    {
+        self.no_vertices
+    }
+
+    fn no_faces(&self) -> usize
+    {
+        self.indices.len()/3
+    }
 }
 
 impl Renderable for StaticMesh
@@ -94,12 +104,7 @@ impl Renderable for StaticMesh
 
     fn no_vertices(&self) -> usize
     {
-        self.no_vertices
-    }
-
-    fn no_faces(&self) -> usize
-    {
-        self.indices.len()/3
+        self.no_vertices()
     }
 }
 
