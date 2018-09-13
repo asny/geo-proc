@@ -32,7 +32,6 @@ pub fn connected_components(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<Fac
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mesh::Renderable;
 
     #[test]
     fn test_one_connected_component()

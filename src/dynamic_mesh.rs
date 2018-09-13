@@ -2,7 +2,7 @@ use mesh::{self, Error, Renderable};
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
 use std::rc::Rc;
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 use ids::*;
 use glm::*;
 
@@ -19,7 +19,7 @@ impl Renderable for DynamicMesh
 {
     fn indices(&self) -> Vec<u32>
     {
-        let mut vertices: Vec<VertexID> = self.vertex_iterator().collect();
+        let vertices: Vec<VertexID> = self.vertex_iterator().collect();
         let mut indices = Vec::with_capacity(self.no_faces() * 3);
         for face_id in self.face_iterator()
         {
@@ -88,32 +88,30 @@ impl DynamicMesh
         self.connectivity_info.no_vertices()
     }
 
+    pub fn no_halfedges(&self) -> usize
+    {
+        self.connectivity_info.no_halfedges()
+    }
+
     pub fn no_faces(&self) -> usize
     {
         self.connectivity_info.no_faces()
     }
 
-    /*pub fn create_sub_mesh(&self, faces: &Vec<FaceID>) -> HalfEdgeMesh
+    pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
     {
-        let mut vertices = HashSet::new();
+        let mut submesh = DynamicMesh {positions: self.positions.clone(), normals: self.normals.clone(),
+            connectivity_info: Rc::new((*self.connectivity_info).clone())};
 
-        for face_id in faces {
-            for walker in self.face_halfedge_iterator(face_id) {
-                let vertex_id = walker.vertex_id().unwrap();
-                vertices.insert(vertex_id);
+        let current_faces: Vec<FaceID> = self.face_iterator().collect();
+        for face_id in current_faces.iter() {
+            if !faces.contains(face_id) {
+                submesh.remove_face(face_id);
             }
         }
 
-        let mut attributes = self.attributes.clone();
-        for vertex_id in self.vertex_iterator() {
-            if !vertices.contains(&vertex_id) {
-                attributes.remove_vertex(&vertex_id);
-            }
-        }
-        // TODO
-        let indices = self.indices.clone();
-        HalfEdgeMesh::create_from_other(vertices.len(), indices, attributes)
-    }*/
+        submesh
+    }
 
     fn position_at(&self, vertex_id: &VertexID) -> &Vec3
     {
@@ -230,6 +228,11 @@ impl DynamicMesh
 
             }
         }
+    }
+
+    pub fn remove_face(&mut self, face_id: &FaceID)
+    {
+        self.connectivity_info.remove_face(face_id);
     }
 
     pub fn walker_from_vertex(&self, vertex_id: &VertexID) -> Walker
@@ -549,6 +552,29 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_remove_face()
+    {
+        let mut mesh = create_connected_box();
+        let face_id = mesh.face_iterator().next().unwrap();
+        mesh.remove_face(&face_id);
+
+        assert_eq!(8, mesh.no_vertices());
+        assert_eq!(36, mesh.no_halfedges());
+        assert_eq!(11, mesh.no_faces());
+
+        let mut i = 0;
+        for face_id in mesh.face_iterator()
+        {
+            mesh.remove_face(&face_id);
+            i = i+1;
+        }
+        assert_eq!(i, 11);
+        assert_eq!(0, mesh.no_vertices());
+        assert_eq!(0, mesh.no_halfedges());
+        assert_eq!(0, mesh.no_faces());
+    }
+
     fn create_single_face() -> DynamicMesh
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
@@ -563,7 +589,7 @@ mod tests {
         DynamicMesh::create(indices, positions, Some(normals))
     }
 
-    /*fn create_connected_test_object() -> HalfEdgeMesh
+    fn create_connected_box() -> DynamicMesh
     {
         let positions: Vec<f32> = vec![
             1.0, -1.0, -1.0,
@@ -591,145 +617,6 @@ mod tests {
             4, 3, 7
         ];
 
-        HalfEdgeMesh::create(indices, positions).unwrap()
+        DynamicMesh::create(indices, positions, None)
     }
-
-    fn create_test_object() -> HalfEdgeMesh
-    {
-        let positions: Vec<f32> = vec![
-            1.0, 1.0, -1.0,
-            -1.0, 1.0, -1.0,
-            1.0, 1.0, 1.0,
-            -1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0,
-            -1.0, 1.0, -1.0,
-
-            -1.0, -1.0, -1.0,
-            1.0, -1.0, -1.0,
-            1.0, -1.0, 1.0,
-            1.0, -1.0, 1.0,
-            -1.0, -1.0, 1.0,
-            -1.0, -1.0, -1.0,
-
-            1.0, -1.0, -1.0,
-            -1.0, -1.0, -1.0,
-            1.0, 1.0, -1.0,
-            -1.0, 1.0, -1.0,
-            1.0, 1.0, -1.0,
-            -1.0, -1.0, -1.0,
-
-            -1.0, -1.0, 1.0,
-            1.0, -1.0, 1.0,
-            1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0,
-            -1.0, 1.0, 1.0,
-            -1.0, -1.0, 1.0,
-
-            1.0, -1.0, -1.0,
-            1.0, 1.0, -1.0,
-            1.0, 1.0, 1.0,
-            1.0, 1.0, 1.0,
-            1.0, -1.0, 1.0,
-            1.0, -1.0, -1.0,
-
-            -1.0, 1.0, -1.0,
-            -1.0, -1.0, -1.0,
-            -1.0, 1.0, 1.0,
-            -1.0, -1.0, 1.0,
-            -1.0, 1.0, 1.0,
-            -1.0, -1.0, -1.0
-        ];
-        let normals: Vec<f32> = vec![
-            0.0, 1.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 1.0, 0.0,
-            0.0, 1.0, 0.0,
-
-            0.0, -1.0, 0.0,
-            0.0, -1.0, 0.0,
-            0.0, -1.0, 0.0,
-            0.0, -1.0, 0.0,
-            0.0, -1.0, 0.0,
-            0.0, -1.0, 0.0,
-
-            0.0, 0.0, -1.0,
-            0.0, 0.0, -1.0,
-            0.0, 0.0, -1.0,
-            0.0, 0.0, -1.0,
-            0.0, 0.0, -1.0,
-            0.0, 0.0, -1.0,
-
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-            0.0, 0.0, 1.0,
-
-            1.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,
-
-            -1.0, 0.0, 0.0,
-            -1.0, 0.0, 0.0,
-            -1.0, 0.0, 0.0,
-            -1.0, 0.0, 0.0,
-            -1.0, 0.0, 0.0,
-            -1.0, 0.0, 0.0
-        ];
-
-        let uvs: Vec<f32> = vec![
-            1.0, 0.0,
-            0.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0,
-
-            1.0, 0.0,
-            0.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0,
-            1.0, 1.0,
-            0.0, 0.0
-        ];
-
-        let mut mesh = HalfEdgeMesh::create((0..positions.len() as u32/3).collect(), positions).unwrap();
-        mesh.add_vec3_attribute("normal", normals).unwrap();
-        mesh.add_vec2_attribute("uv_coordinate", uvs).unwrap();
-        mesh
-    }*/
 }

@@ -3,7 +3,7 @@ use ids::*;
 use std;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ConnectivityInfo {
     vertices: RefCell<HashMap<VertexID, Vertex>>,
     halfedges: RefCell<HashMap<HalfEdgeID, HalfEdge>>,
@@ -25,6 +25,11 @@ impl ConnectivityInfo {
         RefCell::borrow(&self.vertices).len()
     }
 
+    pub fn no_halfedges(&self) -> usize
+    {
+        RefCell::borrow(&self.halfedges).len()
+    }
+
     pub fn no_faces(&self) -> usize
     {
         RefCell::borrow(&self.faces).len()
@@ -43,13 +48,6 @@ impl ConnectivityInfo {
 
         vertices.insert(id.clone(), Vertex { halfedge: None });
         id
-    }
-
-    pub fn remove_vertex(&mut self, vertex_id: &VertexID)
-    {
-        let vec = &mut *RefCell::borrow_mut(&self.vertices);
-        vec.remove(vertex_id);
-        // TODO: Update references!
     }
 
     pub fn create_halfedge(&self) -> HalfEdgeID
@@ -80,6 +78,70 @@ impl ConnectivityInfo {
 
         faces.insert(id.clone(), Face { halfedge: None });
         id
+    }
+
+    fn remove_vertex_if_lonely(&self, vertex_id: &VertexID)
+    {
+        let vertices = &mut *RefCell::borrow_mut(&self.vertices);
+
+        for halfedge_id in self.halfedge_iterator() {
+            if let Some(ref test_vertex_id) = self.halfedge_vertex(&halfedge_id) {
+                if test_vertex_id == vertex_id {
+                    vertices.get_mut(&vertex_id).unwrap().halfedge = self.halfedge_twin(&halfedge_id);
+                    return;
+                }
+            }
+        }
+        vertices.remove(vertex_id);
+    }
+
+    fn remove_halfedge(&self, halfedge_id: &HalfEdgeID, twin_id: &HalfEdgeID, prev_id: &HalfEdgeID)
+    {
+        let vertex_id1 = self.halfedge_vertex(halfedge_id).unwrap();
+        let vertex_id2 = self.halfedge_vertex(twin_id).unwrap();
+
+        {
+            let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+            if let Some(ref mut prev) = halfedges.get_mut(prev_id) { prev.next = None };
+            halfedges.remove(twin_id);
+            halfedges.remove(halfedge_id);
+        }
+
+        if &self.vertex_halfedge(&vertex_id1).unwrap() == twin_id {
+            self.remove_vertex_if_lonely(&vertex_id1);
+        }
+
+        if &self.vertex_halfedge(&vertex_id2).unwrap() == halfedge_id {
+            self.remove_vertex_if_lonely(&vertex_id2);
+        }
+    }
+
+    pub fn remove_face(&self, face_id: &FaceID)
+    {
+        let mut edge_ids = vec![];
+        let mut id = self.face_halfedge(face_id).unwrap(); edge_ids.push(id);
+        id = self.halfedge_next(&edge_ids[0]).unwrap(); edge_ids.push(id);
+        id = self.halfedge_next(&edge_ids[1]).unwrap(); edge_ids.push(id);
+
+        let faces = &mut *RefCell::borrow_mut(&self.faces);
+        faces.remove(face_id);
+
+        {
+            let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+            for halfedge_id in edge_ids.iter() {
+                halfedges.get_mut(halfedge_id).unwrap().face = None;
+            }
+        }
+
+        for i in 0..3
+        {
+            let halfedge_id = &edge_ids[i];
+            let twin_id = self.halfedge_twin(halfedge_id).unwrap();
+            if self.halfedge_face(halfedge_id).is_none() && self.halfedge_face(&twin_id).is_none()
+            {
+                self.remove_halfedge(halfedge_id, &twin_id, &edge_ids[(i+2)%3]);
+            }
+        }
     }
 
     pub fn set_vertex_halfedge(&self, id: &VertexID, val: &HalfEdgeID)
