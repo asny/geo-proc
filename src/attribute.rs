@@ -32,11 +32,6 @@ impl VertexAttributes {
     }
 
     // Vec2 attribute
-    pub fn create_vec2_attribute(&mut self, name: &str)
-    {
-        self.vec2_attributes.insert(String::from(name), HashMap::new());
-    }
-
     pub fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, Error>
     {
         match self.vec2_attributes.get(name)
@@ -47,21 +42,19 @@ impl VertexAttributes {
         }
     }
 
-    pub fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), Error>
+    pub fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2)
     {
-        match self.vec2_attributes.get_mut(name)
+        if !self.vec2_attributes.contains_key(name)
         {
-            Some(ref mut att) => {att.insert(vertex_id.clone(), *value); Ok(())},
-            None => Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
+            self.vec2_attributes.insert(String::from(name), HashMap::new());
+        }
+        if let Some(ref mut att) = self.vec2_attributes.get_mut(name)
+        {
+            att.insert(vertex_id.clone(), *value);
         }
     }
 
     // Vec3 attribute
-    pub fn create_vec3_attribute(&mut self, name: &str)
-    {
-        self.vec3_attributes.insert(String::from(name), HashMap::new());
-    }
-
     pub fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
     {
         match self.vec3_attributes.get(name)
@@ -72,12 +65,15 @@ impl VertexAttributes {
         }
     }
 
-    pub fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), Error>
+    pub fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3)
     {
-        match self.vec3_attributes.get_mut(name)
+        if !self.vec3_attributes.contains_key(name)
         {
-            Some(ref mut att) => {att.insert(vertex_id.clone(), *value); Ok(())},
-            None => Err(Error::FailedToFindCustomAttribute{message: format!("Failed to find {} attribute", name)})
+            self.vec3_attributes.insert(String::from(name), HashMap::new());
+        }
+        if let Some(ref mut att) = self.vec3_attributes.get_mut(name)
+        {
+            att.insert(vertex_id.clone(), *value);
         }
     }
 }

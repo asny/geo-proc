@@ -38,11 +38,10 @@ impl SimpleMesh
         if no_vertices != data.len()/2 {
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
-        
-        self.attributes.create_vec2_attribute(name);
+
         let mut i = 0;
         for vertex_id in self.vertex_iterator() {
-            self.attributes.set_vec2_attribute_at(name, &vertex_id, &vec2(data[i], data[i + 1]))?;
+            self.attributes.set_vec2_attribute_at(name, &vertex_id, &vec2(data[i], data[i + 1]));
             i = i+2;
         }
         
@@ -56,11 +55,10 @@ impl SimpleMesh
             return Err(Error::WrongSizeOfAttribute {message: format!("The data for {} does not have the correct size, it should be {}", name, self.no_vertices())})
         }
 
-        self.attributes.create_vec3_attribute(name);
         let mut i = 0;
         for vertex_id in self.vertex_iterator() {
             let value = vec3(data[i], data[i + 1], data[i + 2]);
-            self.attributes.set_vec3_attribute_at(name, &vertex_id, &value)?;
+            self.attributes.set_vec3_attribute_at(name, &vertex_id, &value);
             i = i+3;
         }
 
@@ -75,7 +73,7 @@ impl SimpleMesh
 
     fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), mesh::Error>
     {
-        self.attributes.set_vec2_attribute_at(name, vertex_id, value)?;
+        self.attributes.set_vec2_attribute_at(name, vertex_id, value);
         Ok(())
     }
 
@@ -87,7 +85,7 @@ impl SimpleMesh
 
     fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), mesh::Error>
     {
-        self.attributes.set_vec3_attribute_at(name, vertex_id, value)?;
+        self.attributes.set_vec3_attribute_at(name, vertex_id, value);
         Ok(())
     }
 }
@@ -121,7 +119,7 @@ impl Mesh for SimpleMesh
 
     fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
     {
-        self.attributes.set_vec3_attribute_at("position", vertex_id, value).unwrap();
+        self.attributes.set_vec3_attribute_at("position", vertex_id, value);
     }
 }
 
