@@ -1,4 +1,4 @@
-use mesh::{self, Mesh};
+use mesh::{self, Error, Mesh};
 use attribute::VertexAttributes;
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
@@ -19,16 +19,6 @@ pub struct HalfEdgeMesh {
 
 impl Mesh for HalfEdgeMesh
 {
-    fn no_vertices(&self) -> usize
-    {
-        self.connectivity_info.no_vertices()
-    }
-
-    fn no_faces(&self) -> usize
-    {
-        self.connectivity_info.no_faces()
-    }
-
     fn indices(&self) -> &Vec<u32>
     {
         &self.indices
@@ -39,14 +29,28 @@ impl Mesh for HalfEdgeMesh
         self.connectivity_info.vertex_iterator()
     }
 
-    fn position_at(&self, vertex_id: &VertexID) -> &Vec3
+    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, Error>
     {
-        self.positions.get(vertex_id).unwrap()
+        panic!("Half edge meshes only contains positions and normals");
     }
 
-    fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
+    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
     {
-        self.positions.insert(vertex_id.clone(), value.clone());
+        Ok(match name {
+            "position" => self.position_at(vertex_id),
+            "normal" => self.normal_at(vertex_id),
+            _ => panic!("Half edge meshes only contains positions and normals")
+        })
+    }
+
+    fn no_vertices(&self) -> usize
+    {
+        self.connectivity_info.no_vertices()
+    }
+
+    fn no_faces(&self) -> usize
+    {
+        self.connectivity_info.no_faces()
     }
 }
 
@@ -97,6 +101,16 @@ impl HalfEdgeMesh
         let indices = self.indices.clone();
         HalfEdgeMesh::create_from_other(vertices.len(), indices, attributes)
     }*/
+
+    fn position_at(&self, vertex_id: &VertexID) -> &Vec3
+    {
+        self.positions.get(vertex_id).unwrap()
+    }
+
+    fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
+    {
+        self.positions.insert(vertex_id.clone(), value.clone());
+    }
 
     pub fn normal_at(&self, vertex_id: &VertexID) -> &Vec3
     {

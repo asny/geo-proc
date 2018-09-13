@@ -1,12 +1,7 @@
 use glm::*;
 use ids::*;
 use std::collections::HashMap;
-
-#[derive(Debug)]
-pub enum Error {
-    FailedToFindCustomAttribute {message: String},
-    FailedToFindEntryForVertexID {message: String}
-}
+use mesh::Error;
 
 #[derive(Clone, Debug)]
 pub struct VertexAttributes

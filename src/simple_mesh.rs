@@ -2,19 +2,7 @@
 use attribute::{self, VertexAttributes};
 use glm::*;
 use ids::*;
-use mesh::{self, Mesh};
-
-#[derive(Debug)]
-pub enum Error {
-    WrongSizeOfAttribute {message: String},
-    Attribute(attribute::Error)
-}
-
-impl From<attribute::Error> for Error {
-    fn from(other: attribute::Error) -> Self {
-        Error::Attribute(other)
-    }
-}
+use mesh::{self, Error, Mesh};
 
 pub struct SimpleMesh
 {
@@ -65,25 +53,13 @@ impl SimpleMesh
         Ok(())
     }
 
-    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, mesh::Error>
-    {
-        let val = self.attributes.get_vec2_attribute_at(name, vertex_id)?;
-        Ok(val)
-    }
-
-    fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), mesh::Error>
+    pub fn set_vec2_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec2) -> Result<(), Error>
     {
         self.attributes.set_vec2_attribute_at(name, vertex_id, value);
         Ok(())
     }
 
-    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, mesh::Error>
-    {
-        let val = self.attributes.get_vec3_attribute_at(name, vertex_id)?;
-        Ok(val)
-    }
-
-    fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), mesh::Error>
+    pub fn set_vec3_attribute_at(&mut self, name: &str, vertex_id: &VertexID, value: &Vec3) -> Result<(), Error>
     {
         self.attributes.set_vec3_attribute_at(name, vertex_id, value);
         Ok(())
@@ -92,16 +68,6 @@ impl SimpleMesh
 
 impl Mesh for SimpleMesh
 {
-    fn no_vertices(&self) -> usize
-    {
-        self.no_vertices
-    }
-
-    fn no_faces(&self) -> usize
-    {
-        self.indices.len()/3
-    }
-
     fn indices(&self) -> &Vec<u32>
     {
         &self.indices
@@ -112,14 +78,26 @@ impl Mesh for SimpleMesh
         VertexIterator::new(self.no_vertices())
     }
 
-    fn position_at(&self, vertex_id: &VertexID) -> &Vec3
+    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, Error>
     {
-        self.attributes.get_vec3_attribute_at("position", vertex_id).unwrap()
+        let val = self.attributes.get_vec2_attribute_at(name, vertex_id)?;
+        Ok(val)
     }
 
-    fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
+    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
     {
-        self.attributes.set_vec3_attribute_at("position", vertex_id, value);
+        let val = self.attributes.get_vec3_attribute_at(name, vertex_id)?;
+        Ok(val)
+    }
+
+    fn no_vertices(&self) -> usize
+    {
+        self.no_vertices
+    }
+
+    fn no_faces(&self) -> usize
+    {
+        self.indices.len()/3
     }
 }
 

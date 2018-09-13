@@ -10,7 +10,6 @@ use std::collections::HashMap;
 pub enum Error {
     ObjLoader(tobj::LoadError),
     Mesh(mesh::Error),
-    SimpleMesh(simple_mesh::Error),
     FileDoesntContainModel{message: String}
 }
 
@@ -23,12 +22,6 @@ impl From<tobj::LoadError> for Error {
 impl From<mesh::Error> for Error {
     fn from(other: mesh::Error) -> Self {
         Error::Mesh(other)
-    }
-}
-
-impl From<simple_mesh::Error> for Error {
-    fn from(other: simple_mesh::Error) -> Self {
-        Error::SimpleMesh(other)
     }
 }
 
