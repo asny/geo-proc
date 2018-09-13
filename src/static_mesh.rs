@@ -80,9 +80,9 @@ impl StaticMesh
 
 impl Renderable for StaticMesh
 {
-    fn indices(&self) -> &Vec<u32>
+    fn indices(&self) -> Vec<u32>
     {
-        &self.indices
+        self.indices.clone()
     }
 
     fn vertex_iterator(&self) -> mesh::VertexIterator

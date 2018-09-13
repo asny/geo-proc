@@ -10,7 +10,6 @@ pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
 
 pub struct DynamicMesh {
-    indices: Vec<u32>,
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,
     connectivity_info: Rc<ConnectivityInfo>
@@ -18,9 +17,19 @@ pub struct DynamicMesh {
 
 impl Renderable for DynamicMesh
 {
-    fn indices(&self) -> &Vec<u32>
+    fn indices(&self) -> Vec<u32>
     {
-        &self.indices
+        let mut vertices: Vec<VertexID> = self.vertex_iterator().collect();
+        let mut indices = Vec::with_capacity(self.no_faces() * 3);
+        for face_id in self.face_iterator()
+        {
+            for walker in self.face_halfedge_iterator(&face_id) {
+                let vertex_id = walker.vertex_id().unwrap();
+                let index = vertices.iter().position(|v| v == &vertex_id).unwrap();
+                indices.push(index as u32);
+            }
+        }
+        indices
     }
 
     fn vertex_iterator(&self) -> mesh::VertexIterator
@@ -55,7 +64,7 @@ impl DynamicMesh
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
         let mut mesh = DynamicMesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)),
-            indices, positions: HashMap::new(), normals: HashMap::new()};
+            positions: HashMap::new(), normals: HashMap::new()};
 
         for i in 0..no_vertices {
             let vertex_id = mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]));
@@ -65,9 +74,9 @@ impl DynamicMesh
         }
 
         for face in 0..no_faces {
-            let v0 = VertexID::new(mesh.indices[face * 3] as usize);
-            let v1 = VertexID::new(mesh.indices[face * 3 + 1] as usize);
-            let v2 = VertexID::new(mesh.indices[face * 3 + 2] as usize);
+            let v0 = VertexID::new(indices[face * 3] as usize);
+            let v1 = VertexID::new(indices[face * 3 + 1] as usize);
+            let v2 = VertexID::new(indices[face * 3 + 2] as usize);
             mesh.create_face(&v0, &v1, &v2);
         }
         mesh.create_twin_connectivity();

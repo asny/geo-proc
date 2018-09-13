@@ -10,7 +10,7 @@ pub enum Error {
 
 pub trait Renderable
 {
-    fn indices(&self) -> &Vec<u32>;
+    fn indices(&self) -> Vec<u32>;
 
     fn vertex_iterator(&self) -> VertexIterator;
 
