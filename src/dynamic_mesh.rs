@@ -292,6 +292,14 @@ impl DynamicMesh
         }
         normalize(normal)
     }
+
+    pub fn update_vertex_normals(&mut self)
+    {
+        for vertex_id in self.vertex_iterator() {
+            let normal = self.compute_vertex_normal(&vertex_id);
+            self.set_normal(vertex_id, normal);
+        }
+    }
 }
 
 pub struct VertexHalfedgeIterator
@@ -538,11 +546,7 @@ mod tests {
     #[test]
     fn test_update_normals() {
         let mut mesh = create_three_connected_faces();
-
-        for vertex_id in mesh.vertex_iterator() {
-            let normal = mesh.compute_vertex_normal(&vertex_id);
-            mesh.set_normal(vertex_id, normal);
-        }
+        mesh.update_vertex_normals();
 
         for vertex_id in mesh.vertex_iterator() {
             let normal = mesh.normal(&vertex_id);
