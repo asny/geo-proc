@@ -6,6 +6,7 @@ use std::collections::{HashSet, HashMap};
 use ids::*;
 use glm::*;
 
+pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
 
@@ -30,11 +31,6 @@ impl Renderable for DynamicMesh
             }
         }
         indices
-    }
-
-    fn vertex_iterator(&self) -> mesh::VertexIterator
-    {
-        self.connectivity_info.vertex_iterator()
     }
 
     fn get_attribute(&self, name: &str) -> Option<&mesh::Attribute>
@@ -254,6 +250,11 @@ impl DynamicMesh
     pub fn face_halfedge_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator
     {
         FaceHalfedgeIterator::new(face_id, &self.connectivity_info)
+    }
+
+    fn vertex_iterator(&self) -> VertexIterator
+    {
+        self.connectivity_info.vertex_iterator()
     }
 
     pub fn halfedge_iterator(&self) -> HalfEdgeIterator

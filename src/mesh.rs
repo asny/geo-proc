@@ -25,11 +25,7 @@ pub trait Renderable
 {
     fn indices(&self) -> Vec<u32>;
 
-    fn vertex_iterator(&self) -> VertexIterator;
-
     fn get_attribute(&self, name: &str) -> Option<&Attribute>;
 
     fn no_vertices(&self) -> usize;
 }
-
-pub type VertexIterator = Box<Iterator<Item = VertexID>>;
