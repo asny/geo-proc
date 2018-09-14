@@ -24,10 +24,10 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn load_obj_as_simple_mesh(name: &str) -> Result<StaticMesh, Error>
+pub fn load_obj_as_static_mesh(name: &str) -> Result<StaticMesh, Error>
 {
     let m = load_obj(name)?;
-    // Create mesh
+
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
     let mut mesh = StaticMesh::create(indices, m.positions.clone())?;
 
@@ -39,7 +39,7 @@ pub fn load_obj_as_simple_mesh(name: &str) -> Result<StaticMesh, Error>
     Ok(mesh)
 }
 
-pub fn load_obj_as_halfedge_mesh(name: &str) -> Result<DynamicMesh, Error>
+pub fn load_obj_as_dynamic_mesh(name: &str) -> Result<DynamicMesh, Error>
 {
     let m = load_obj(name)?;
 
