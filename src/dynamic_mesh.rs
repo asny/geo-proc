@@ -188,20 +188,18 @@ impl DynamicMesh
         let mut walker = Walker::create(&self.connectivity_info);
         let edges: Vec<HalfEdgeID> = self.halfedge_iterator().collect();
 
-        for halfedge_id1 in self.halfedge_iterator()
+        for halfedge_id1 in edges.iter()
         {
-            let twin = walker.jump_to_edge(&halfedge_id1).twin().halfedge_id();
-
-            if twin.is_none()
+            if walker.jump_to_edge(halfedge_id1).twin().halfedge_id().is_none()
             {
-                walker.jump_to_edge(&halfedge_id1);
+                walker.jump_to_edge(halfedge_id1);
                 let vertex_id1 = walker.vertex_id().unwrap();
                 let vertex_id2 = walker.previous().vertex_id().unwrap();
 
                 let mut halfedge2 = None;
-                for halfedge_id2 in edges.iter() {
-                    let twin = walker.jump_to_edge(halfedge_id2).twin().halfedge_id();
-                    if twin.is_none()
+                for halfedge_id2 in edges.iter()
+                {
+                    if walker.jump_to_edge(halfedge_id2).twin().halfedge_id().is_none()
                     {
                         walker.jump_to_edge(halfedge_id2);
                         if walker.vertex_id().unwrap() == vertex_id2 && walker.previous().vertex_id().unwrap() == vertex_id1
@@ -215,8 +213,8 @@ impl DynamicMesh
                     self.connectivity_info.create_halfedge(Some(vertex_id2), None,None)
                 }
                 );
-                self.connectivity_info.set_halfedge_twin(&halfedge_id1, &halfedge_id2);
-                self.connectivity_info.set_halfedge_twin(&halfedge_id2, &halfedge_id1);
+                self.connectivity_info.set_halfedge_twin(halfedge_id1, &halfedge_id2);
+                self.connectivity_info.set_halfedge_twin(&halfedge_id2, halfedge_id1);
 
             }
         }
