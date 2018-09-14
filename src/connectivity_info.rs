@@ -50,7 +50,7 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_halfedge(&self, vertex: Option<VertexID>, face: Option<FaceID>) -> HalfEdgeID
+    pub fn create_halfedge(&self, vertex: Option<VertexID>, next: Option<HalfEdgeID>, face: Option<FaceID>) -> HalfEdgeID
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
 
@@ -61,7 +61,7 @@ impl ConnectivityInfo {
             id = HalfEdgeID::new(i);
         }
 
-        halfedges.insert(id.clone(), HalfEdge { vertex, twin: None, next: None, face });
+        halfedges.insert(id.clone(), HalfEdge { vertex, twin: None, next, face });
         id
     }
 

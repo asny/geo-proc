@@ -168,20 +168,17 @@ impl DynamicMesh
         let id = self.connectivity_info.create_face();
 
         // Create inner halfedges
-        let halfedge1 = self.connectivity_info.create_halfedge(Some(vertex_id2.clone()), Some(id.clone()));
-        let halfedge2 = self.connectivity_info.create_halfedge(Some(vertex_id3.clone()), Some(id.clone()));
-        let halfedge3 = self.connectivity_info.create_halfedge(Some(vertex_id1.clone()), Some(id.clone()));
+        let halfedge1 = self.connectivity_info.create_halfedge(Some(vertex_id2.clone()), None, Some(id.clone()));
+        let halfedge3 = self.connectivity_info.create_halfedge(Some(vertex_id1.clone()), Some(halfedge1.clone()),Some(id.clone()));
+        let halfedge2 = self.connectivity_info.create_halfedge(Some(vertex_id3.clone()), Some(halfedge3.clone()),Some(id.clone()));
 
+        self.connectivity_info.set_halfedge_next(&halfedge1, &halfedge2);
 
         self.connectivity_info.set_vertex_halfedge(&vertex_id1, &halfedge1);
         self.connectivity_info.set_vertex_halfedge(&vertex_id2, &halfedge2);
         self.connectivity_info.set_vertex_halfedge(&vertex_id3, &halfedge3);
 
         self.connectivity_info.set_face_halfedge(&id, &halfedge1);
-
-        self.connectivity_info.set_halfedge_next(&halfedge1, &halfedge2);
-        self.connectivity_info.set_halfedge_next(&halfedge2, &halfedge3);
-        self.connectivity_info.set_halfedge_next(&halfedge3, &halfedge1);
 
         id
     }
@@ -215,7 +212,7 @@ impl DynamicMesh
                     }
                 }
                 let halfedge_id2 = halfedge2.unwrap_or_else(|| {
-                    self.connectivity_info.create_halfedge(Some(vertex_id2), None)
+                    self.connectivity_info.create_halfedge(Some(vertex_id2), None,None)
                 }
                 );
                 self.connectivity_info.set_halfedge_twin(&halfedge_id1, &halfedge_id2);
