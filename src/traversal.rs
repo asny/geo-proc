@@ -40,7 +40,7 @@ impl Walker
 
     fn set_current(&mut self, halfedge_id: Option<HalfEdgeID>)
     {
-        self.current_info = if let Some(ref id) = halfedge_id { self.connectivity_info.halfedge_info(id) } else { None };
+        self.current_info = if let Some(ref id) = halfedge_id { self.connectivity_info.halfedge(id) } else { None };
         self.current = halfedge_id;
     }
 

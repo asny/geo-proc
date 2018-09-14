@@ -200,7 +200,7 @@ impl ConnectivityInfo {
         RefCell::borrow(&self.vertices).get(vertex_id).unwrap().halfedge.clone()
     }
 
-    pub fn halfedge_info(&self, halfedge_id: &HalfEdgeID) -> Option<HalfEdge>
+    pub fn halfedge(&self, halfedge_id: &HalfEdgeID) -> Option<HalfEdge>
     {
         RefCell::borrow(&self.halfedges).get(halfedge_id).and_then(|halfedge| Some(halfedge.clone()))
     }
