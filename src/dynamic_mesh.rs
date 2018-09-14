@@ -570,6 +570,20 @@ mod tests {
     }
 
     #[test]
+    fn test_get_attribute() {
+        let mut mesh = create_three_connected_faces();
+        mesh.update_vertex_normals();
+
+        let data = mesh.get_attribute("normal").unwrap().data;
+        assert_eq!(data.len(), mesh.no_vertices() * 3);
+        for i in 0..mesh.no_vertices() {
+            assert_eq!(0.0, data[i * 3]);
+            assert_eq!(1.0, data[i * 3+1]);
+            assert_eq!(0.0, data[i * 3+2]);
+        }
+    }
+
+    #[test]
     fn test_remove_face()
     {
         let mut mesh = create_connected_box();
