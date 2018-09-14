@@ -1,4 +1,4 @@
-use mesh::{self, Error, Renderable};
+use mesh::{self, Renderable};
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
 use std::rc::Rc;
@@ -91,7 +91,7 @@ impl DynamicMesh
 
     pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
     {
-        let mut info = ConnectivityInfo::new(faces.len(), faces.len());
+        let info = ConnectivityInfo::new(faces.len(), faces.len());
         for face_id in faces {
             let face = self.connectivity_info.face(face_id).unwrap();
             for walker in self.face_halfedge_iterator(face_id) {

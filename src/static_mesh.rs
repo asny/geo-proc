@@ -1,7 +1,3 @@
-
-use attribute::VertexAttributes;
-use std::collections::HashMap;
-use glm::*;
 use ids::*;
 use mesh::{self, Attribute, Error, Renderable};
 

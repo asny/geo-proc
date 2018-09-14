@@ -12,5 +12,4 @@ pub mod loader;
 pub mod models;
 pub mod algorithms;
 
-mod attribute;
 mod connectivity_info;

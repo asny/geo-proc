@@ -1,4 +1,3 @@
-use glm::*;
 use ids::*;
 
 #[derive(Debug)]

@@ -34,8 +34,7 @@ pub fn load_obj_as_static_mesh(name: &str) -> Result<StaticMesh, Error>
     {
         attributes.push(mesh::Attribute::new("normal", 3, m.normals.clone()));
     }
-    let mut mesh = StaticMesh::create(indices, attributes)?;
-
+    let mesh = StaticMesh::create(indices, attributes)?;
     Ok(mesh)
 }
 
