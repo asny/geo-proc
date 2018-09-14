@@ -2,7 +2,7 @@ use ids::*;
 use dynamic_mesh::DynamicMesh;
 use std::collections::HashSet;
 
-pub fn connected_components(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>
+pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>
 {
     let mut component = HashSet::new();
     component.insert(face_id.clone());
@@ -25,9 +25,17 @@ pub fn connected_components(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<Fac
         }
     }
     component
-
 }
 
+pub fn connected_components(mesh: &DynamicMesh) -> Vec<HashSet<FaceID>>
+{
+    let mut result = Vec::new();
+    while let Some(ref face_id) = mesh.face_iterator().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
+    {
+        result.push(connected_component(mesh, face_id));
+    }
+    result
+}
 
 #[cfg(test)]
 mod tests {
@@ -37,7 +45,7 @@ mod tests {
     fn test_one_connected_component()
     {
         let mesh = create_connected_test_object();
-        let cc = connected_components(&mesh, &FaceID::new(0));
+        let cc = connected_component(&mesh, &FaceID::new(0));
         assert_eq!(cc.len(), mesh.no_faces());
     }
 
@@ -46,13 +54,13 @@ mod tests {
     {
         let mesh = create_unconnected_test_object();
 
-        let mut cc = connected_components(&mesh, &FaceID::new(0));
+        let mut cc = connected_component(&mesh, &FaceID::new(0));
         assert_eq!(cc.len(), 12);
 
-        cc = connected_components(&mesh, &FaceID::new(13));
+        cc = connected_component(&mesh, &FaceID::new(13));
         assert_eq!(cc.len(), 2);
 
-        cc = connected_components(&mesh, &FaceID::new(14));
+        cc = connected_component(&mesh, &FaceID::new(14));
         assert_eq!(cc.len(), 1);
     }
 
