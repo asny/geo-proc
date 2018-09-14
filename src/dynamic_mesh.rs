@@ -100,17 +100,32 @@ impl DynamicMesh
 
     pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
     {
-        let mut submesh = DynamicMesh {positions: self.positions.clone(), normals: self.normals.clone(),
-            connectivity_info: Rc::new((*self.connectivity_info).clone())};
+        let mut info = ConnectivityInfo::new(faces.len(), faces.len());
+        for face_id in faces {
+            let face = self.connectivity_info.face(face_id).unwrap();
+            for walker in self.face_halfedge_iterator(face_id) {
+                let halfedge_id = walker.halfedge_id().unwrap();
+                let halfedge = self.connectivity_info.halfedge(&halfedge_id).unwrap();
+                info.add_halfedge(halfedge_id, halfedge);
 
-        let current_faces: Vec<FaceID> = self.face_iterator().collect();
-        for face_id in current_faces.iter() {
-            if !faces.contains(face_id) {
-                submesh.remove_face(face_id);
+                let vertex_id = walker.vertex_id().unwrap();
+                let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
+                info.add_vertex(vertex_id, vertex);
             }
+
+            info.add_face(face_id.clone(), face);
         }
 
-        submesh
+        let mut positions = HashMap::with_capacity(info.no_vertices());
+        let mut normals = HashMap::with_capacity(info.no_vertices());
+        for vertex_id in info.vertex_iterator() {
+            let p = self.position(&vertex_id).clone();
+            positions.insert(vertex_id.clone(), p);
+            let n = self.normal(&vertex_id).clone();
+            normals.insert(vertex_id, n);
+        }
+        
+        DynamicMesh {positions, normals, connectivity_info: Rc::new(info)}
     }
 
     pub fn position(&self, vertex_id: &VertexID) -> &Vec3

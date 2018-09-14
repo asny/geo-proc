@@ -80,6 +80,24 @@ impl ConnectivityInfo {
         id
     }
 
+    pub fn add_vertex(&self, vertex_id: VertexID, vertex: Vertex)
+    {
+        let vertices = &mut *RefCell::borrow_mut(&self.vertices);
+        vertices.insert(vertex_id, vertex);
+    }
+
+    pub fn add_halfedge(&self, halfedge_id: HalfEdgeID, halfedge: HalfEdge)
+    {
+        let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+        halfedges.insert(halfedge_id, halfedge);
+    }
+
+    pub fn add_face(&self, face_id: FaceID, face: Face)
+    {
+        let faces = &mut *RefCell::borrow_mut(&self.faces);
+        faces.insert(face_id, face);
+    }
+
     fn remove_vertex_if_lonely(&self, vertex_id: &VertexID)
     {
         let vertices = &mut *RefCell::borrow_mut(&self.vertices);
@@ -149,11 +167,6 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.vertices).get_mut(id).unwrap().halfedge = Some(val.clone());
     }
 
-    pub fn set_halfedge_vertex(&self, id: &HalfEdgeID, val: &VertexID)
-    {
-        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().vertex = Some(val.clone());
-    }
-
     pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: &HalfEdgeID)
     {
         RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().next = Some(val.clone());
@@ -162,11 +175,6 @@ impl ConnectivityInfo {
     pub fn set_halfedge_twin(&self, id: &HalfEdgeID, val: &HalfEdgeID)
     {
         RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().twin = Some(val.clone());
-    }
-
-    pub fn set_halfedge_face(&self, id: &HalfEdgeID, val: &FaceID)
-    {
-        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().face = Some(val.clone());
     }
 
     pub fn set_face_halfedge(&self, id: &FaceID, val: &HalfEdgeID)
@@ -193,6 +201,11 @@ impl ConnectivityInfo {
         let faces = RefCell::borrow(&self.faces);
         let t: Vec<FaceID> = faces.iter().map(|pair| pair.0.clone()).collect();
         Box::new(t.into_iter())
+    }
+
+    pub fn vertex(&self, vertex_id: &VertexID) -> Option<Vertex>
+    {
+        RefCell::borrow(&self.vertices).get(vertex_id).and_then(|vertex| Some(vertex.clone()))
     }
 
     pub fn vertex_halfedge(&self, vertex_id: &VertexID) -> Option<HalfEdgeID>
@@ -223,6 +236,11 @@ impl ConnectivityInfo {
     fn halfedge_face(&self, halfedge_id: &HalfEdgeID) -> Option<FaceID>
     {
         RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().face.clone()
+    }
+
+    pub fn face(&self, face_id: &FaceID) -> Option<Face>
+    {
+        RefCell::borrow(&self.faces).get(face_id).and_then(|face| Some(face.clone()))
     }
 
     pub fn face_halfedge(&self, face_id: &FaceID) -> Option<HalfEdgeID>
