@@ -45,8 +45,8 @@ impl Renderable for DynamicMesh
     fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
     {
         Ok(match name {
-            "position" => self.position_at(vertex_id),
-            "normal" => self.normal_at(vertex_id),
+            "position" => self.position(vertex_id),
+            "normal" => self.normal(vertex_id),
             _ => panic!("Half edge meshes does not contain {}, only positions and normals", name)
         })
     }
@@ -113,22 +113,22 @@ impl DynamicMesh
         submesh
     }
 
-    fn position_at(&self, vertex_id: &VertexID) -> &Vec3
+    pub fn position(&self, vertex_id: &VertexID) -> &Vec3
     {
         self.positions.get(vertex_id).unwrap()
     }
 
-    fn set_position_at(&mut self, vertex_id: &VertexID, value: &Vec3)
+    pub fn set_position(&mut self, vertex_id: VertexID, value: Vec3)
     {
-        self.positions.insert(vertex_id.clone(), value.clone());
+        self.positions.insert(vertex_id, value);
     }
 
-    pub fn normal_at(&self, vertex_id: &VertexID) -> &Vec3
+    pub fn normal(&self, vertex_id: &VertexID) -> &Vec3
     {
         self.normals.get(vertex_id).unwrap()
     }
 
-    pub fn set_normal_at(&mut self, vertex_id: VertexID, value: Vec3)
+    pub fn set_normal(&mut self, vertex_id: VertexID, value: Vec3)
     {
         self.normals.insert(vertex_id, value);
     }
@@ -273,11 +273,11 @@ impl DynamicMesh
     pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
-        let p0 = *self.position_at(&walker.vertex_id().unwrap());
+        let p0 = *self.position(&walker.vertex_id().unwrap());
         walker.next();
-        let p1 = *self.position_at(&walker.vertex_id().unwrap());
+        let p1 = *self.position(&walker.vertex_id().unwrap());
         walker.next();
-        let p2 = *self.position_at(&walker.vertex_id().unwrap());
+        let p2 = *self.position(&walker.vertex_id().unwrap());
 
         normalize(cross(p1 - p0, p2 - p0))
     }
@@ -541,11 +541,11 @@ mod tests {
 
         for vertex_id in mesh.vertex_iterator() {
             let normal = mesh.compute_vertex_normal(&vertex_id);
-            mesh.set_normal_at(vertex_id, normal);
+            mesh.set_normal(vertex_id, normal);
         }
 
         for vertex_id in mesh.vertex_iterator() {
-            let normal = mesh.normal_at(&vertex_id);
+            let normal = mesh.normal(&vertex_id);
             assert_eq!(0.0, normal.x);
             assert_eq!(1.0, normal.y);
             assert_eq!(0.0, normal.z);
