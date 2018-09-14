@@ -5,7 +5,21 @@ use ids::*;
 pub enum Error {
     FailedToFindCustomAttribute {message: String},
     FailedToFindEntryForVertexID {message: String},
-    WrongSizeOfAttribute {message: String}
+    WrongSizeOfAttribute {message: String},
+    NeedPositionAttributeToCreateMesh {message: String}
+}
+
+pub struct Attribute {
+    pub name: String,
+    pub no_components: usize,
+    pub data: Vec<f32>
+}
+
+impl Attribute {
+    pub fn new(name: &str, no_components: usize, data: Vec<f32>) -> Attribute
+    {
+        Attribute {name: name.to_string(), no_components, data}
+    }
 }
 
 pub trait Renderable
@@ -14,8 +28,7 @@ pub trait Renderable
 
     fn vertex_iterator(&self) -> VertexIterator;
 
-    fn get_vec2_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec2, Error>;
-    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>;
+    fn get_attribute(&self, name: &str) -> Option<&Attribute>;
 
     fn no_vertices(&self) -> usize;
 }

@@ -37,18 +37,9 @@ impl Renderable for DynamicMesh
         self.connectivity_info.vertex_iterator()
     }
 
-    fn get_vec2_attribute_at(&self, name: &str, _vertex_id: &VertexID) -> Result<&Vec2, Error>
+    fn get_attribute(&self, name: &str) -> Option<&mesh::Attribute>
     {
-        panic!("Half edge meshes does not contain {}, only positions and normals", name);
-    }
-
-    fn get_vec3_attribute_at(&self, name: &str, vertex_id: &VertexID) -> Result<&Vec3, Error>
-    {
-        Ok(match name {
-            "position" => self.position(vertex_id),
-            "normal" => self.normal(vertex_id),
-            _ => panic!("Half edge meshes does not contain {}, only positions and normals", name)
-        })
+        None
     }
 
     fn no_vertices(&self) -> usize

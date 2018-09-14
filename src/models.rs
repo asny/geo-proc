@@ -1,6 +1,6 @@
 
 use static_mesh::StaticMesh;
-use mesh::Error;
+use mesh::{Attribute, Error};
 
 pub fn create_connected_cube() -> Result<StaticMesh, Error>
 {
@@ -30,7 +30,7 @@ pub fn create_connected_cube() -> Result<StaticMesh, Error>
         5, 4, 8
     ];
 
-    let mesh = StaticMesh::create(indices, positions)?;
+    let mesh = StaticMesh::create(indices, vec![Attribute::new("position", 3, positions)])?;
     Ok(mesh)
 }
 
@@ -167,8 +167,8 @@ pub fn create_cube() -> Result<StaticMesh, Error>
         0.0, 0.0
     ];
 
-    let mut mesh = StaticMesh::create((0..positions.len() as u32/3).collect(), positions)?;
-    mesh.add_vec3_attribute("normal", normals)?;
-    mesh.add_vec2_attribute("uv_coordinate", uvs)?;
+    let indices = (0..positions.len() as u32/3).collect();
+    let mesh = StaticMesh::create(indices, vec![Attribute::new("position", 3, positions),
+        Attribute::new("normal", 3, normals), Attribute::new("uv_coordinate", 2, uvs)])?;
     Ok(mesh)
 }
