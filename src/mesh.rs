@@ -1,5 +1,3 @@
-use ids::*;
-
 #[derive(Debug)]
 pub enum Error {
     FailedToFindCustomAttribute {message: String},
@@ -8,6 +6,7 @@ pub enum Error {
     NeedPositionAttributeToCreateMesh {message: String}
 }
 
+#[derive(Clone)]
 pub struct Attribute {
     pub name: String,
     pub no_components: usize,
@@ -25,7 +24,7 @@ pub trait Renderable
 {
     fn indices(&self) -> Vec<u32>;
 
-    fn get_attribute(&self, name: &str) -> Option<&Attribute>;
+    fn get_attribute(&self, name: &str) -> Option<Attribute>;
 
     fn no_vertices(&self) -> usize;
 }

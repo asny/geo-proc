@@ -33,9 +33,25 @@ impl Renderable for DynamicMesh
         indices
     }
 
-    fn get_attribute(&self, name: &str) -> Option<&mesh::Attribute>
+    fn get_attribute(&self, name: &str) -> Option<mesh::Attribute>
     {
-        None
+        match name {
+            "position" => {
+                let mut pos = Vec::with_capacity(self.no_vertices() * 3);
+                for v3 in self.vertex_iterator().map(|ref vertex_id| self.positions.get(vertex_id).unwrap()) {
+                    pos.push(v3.x); pos.push(v3.y); pos.push(v3.z);
+                }
+                Some(mesh::Attribute::new("position", 3, pos))
+            },
+            "normal" => {
+                let mut nor = Vec::with_capacity(self.no_vertices() * 3);
+                for v3 in self.vertex_iterator().map(|ref vertex_id| self.normals.get(vertex_id).unwrap()) {
+                    nor.push(v3.x); nor.push(v3.y); nor.push(v3.z);
+                }
+                Some(mesh::Attribute::new("normal", 3, nor))
+            },
+            _ => None
+        }
     }
 
     fn no_vertices(&self) -> usize

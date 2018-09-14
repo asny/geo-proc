@@ -1,5 +1,4 @@
-use ids::*;
-use mesh::{self, Attribute, Error, Renderable};
+use mesh::{Attribute, Error, Renderable};
 
 pub struct StaticMesh
 {
@@ -36,9 +35,9 @@ impl Renderable for StaticMesh
         self.indices.clone()
     }
 
-    fn get_attribute(&self, name: &str) -> Option<&Attribute>
+    fn get_attribute(&self, name: &str) -> Option<Attribute>
     {
-        self.attributes.iter().find(|att| att.name == name)
+        self.attributes.iter().find(|att| att.name == name).and_then(|att| Some(att.clone()))
     }
 
     fn no_vertices(&self) -> usize
