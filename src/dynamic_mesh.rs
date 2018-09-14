@@ -190,23 +190,21 @@ impl DynamicMesh
 
         for halfedge_id1 in edges.iter()
         {
-            if walker.jump_to_edge(halfedge_id1).twin().halfedge_id().is_none()
+            if walker.jump_to_edge(halfedge_id1).twin_id().is_none()
             {
-                walker.jump_to_edge(halfedge_id1);
                 let vertex_id1 = walker.vertex_id().unwrap();
                 let vertex_id2 = walker.previous().vertex_id().unwrap();
 
                 let mut halfedge2 = None;
                 for halfedge_id2 in edges.iter()
                 {
-                    if walker.jump_to_edge(halfedge_id2).twin().halfedge_id().is_none()
+                    if walker.jump_to_edge(halfedge_id2).twin_id().is_none()
                     {
-                        walker.jump_to_edge(halfedge_id2);
                         if walker.vertex_id().unwrap() == vertex_id2 && walker.previous().vertex_id().unwrap() == vertex_id1
-                            {
-                                halfedge2 = Some(halfedge_id2.clone());
-                                break;
-                            }
+                        {
+                            halfedge2 = Some(halfedge_id2.clone());
+                            break;
+                        }
                     }
                 }
                 let halfedge_id2 = halfedge2.unwrap_or_else(|| {
