@@ -205,22 +205,22 @@ impl ConnectivityInfo {
         RefCell::borrow(&self.halfedges).get(halfedge_id).and_then(|halfedge| Some(halfedge.clone()))
     }
 
-    pub fn halfedge_vertex(&self, halfedge_id: &HalfEdgeID) -> Option<VertexID>
+    fn halfedge_vertex(&self, halfedge_id: &HalfEdgeID) -> Option<VertexID>
     {
         RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().vertex.clone()
     }
 
-    pub fn halfedge_twin(&self, halfedge_id: &HalfEdgeID) -> Option<HalfEdgeID>
+    fn halfedge_twin(&self, halfedge_id: &HalfEdgeID) -> Option<HalfEdgeID>
     {
         RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().twin.clone()
     }
 
-    pub fn halfedge_next(&self, halfedge_id: &HalfEdgeID) -> Option<HalfEdgeID>
+    fn halfedge_next(&self, halfedge_id: &HalfEdgeID) -> Option<HalfEdgeID>
     {
         RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().next.clone()
     }
 
-    pub fn halfedge_face(&self, halfedge_id: &HalfEdgeID) -> Option<FaceID>
+    fn halfedge_face(&self, halfedge_id: &HalfEdgeID) -> Option<FaceID>
     {
         RefCell::borrow(&self.halfedges).get(halfedge_id).unwrap().face.clone()
     }

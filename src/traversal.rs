@@ -67,8 +67,8 @@ impl Walker
 
     pub fn twin(&mut self) -> &mut Walker
     {
-        let halfedge_id = match self.current {
-            Some(ref current) => {self.connectivity_info.halfedge_twin(current)},
+        let halfedge_id = match self.current_info {
+            Some(ref current_info) => { current_info.twin.clone() },
             None => None
         };
         self.set_current(halfedge_id);
@@ -83,17 +83,29 @@ impl Walker
 
     pub fn next(&mut self) -> &mut Walker
     {
-        let halfedge_id = match self.current {
-            Some(ref current) => {self.connectivity_info.halfedge_next(current)},
+        let halfedge_id = match self.current_info {
+            Some(ref current_info) => { current_info.next.clone() },
             None => None
         };
         self.set_current(halfedge_id);
         self
     }
 
+    pub fn next_id(&self) -> Option<HalfEdgeID>
+    {
+        if let Some(ref halfedge) = self.current_info { halfedge.next.clone() }
+        else { None }
+    }
+
     pub fn previous(&mut self) -> &mut Walker
     {
         self.next().next()
+    }
+
+    pub fn previous_id(&self) -> Option<HalfEdgeID>
+    {
+        if let Some(ref next_id) = self.next_id() { Walker::create_from_halfedge(next_id, &self.connectivity_info.clone()).next_id() }
+        else { None }
     }
 
     pub fn vertex_id(&self) -> Option<VertexID>
