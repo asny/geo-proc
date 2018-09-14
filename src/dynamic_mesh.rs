@@ -386,13 +386,13 @@ mod tests {
         let t4 = mesh.walker_from_face(&f1.clone()).twin().face_id();
         assert!(t4.is_none());
 
-        let t5 = mesh.walker_from_face(&f1.clone()).twin().next().halfedge_id();
+        let t5 = mesh.walker_from_face(&f1.clone()).twin().next_id();
         assert!(t5.is_none());
 
         let t6 = mesh.walker_from_face(&f1.clone()).previous().previous().twin().twin().face_id();
         assert_eq!(t6, Some(f1.clone()));
 
-        let t7 = mesh.walker_from_vertex(&v2.clone()).next().next().next().halfedge_id();
+        let t7 = mesh.walker_from_vertex(&v2.clone()).next().next().next_id();
         assert_eq!(t7, mesh.walker_from_vertex(&v2).halfedge_id());
 
         let t8 = mesh.walker_from_vertex(&v3).face_id();
@@ -412,7 +412,7 @@ mod tests {
         }
         let mut walker = mesh.walker_from_vertex(&id.unwrap());
         let start_edge = walker.halfedge_id().unwrap();
-        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id().unwrap();
+        let one_round_edge = walker.previous().twin().previous().twin().previous().twin_id().unwrap();
         assert_eq!(start_edge, one_round_edge);
     }
 
