@@ -64,6 +64,20 @@ mod tests {
         assert_eq!(cc.len(), 1);
     }
 
+    #[test]
+    fn test_connected_components()
+    {
+        let mesh = create_unconnected_test_object();
+        let cc = connected_components(&mesh);
+
+        assert_eq!(cc.len(), 3);
+
+        assert_eq!(cc[0].len() + cc[1].len() + cc[2].len(), 15);
+        assert!(cc.iter().find(|vec| vec.len() == 12).is_some());
+        assert!(cc.iter().find(|vec| vec.len() == 2).is_some());
+        assert!(cc.iter().find(|vec| vec.len() == 1).is_some());
+    }
+
     fn create_connected_test_object() -> DynamicMesh
     {
         let positions: Vec<f32> = vec![
