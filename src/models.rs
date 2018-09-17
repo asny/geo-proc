@@ -1,17 +1,40 @@
-use mesh;
 
-#[derive(Debug)]
-pub enum Error {
-    Mesh(mesh::Error)
+use static_mesh::StaticMesh;
+use mesh::{Attribute, Error};
+
+pub fn create_connected_cube() -> Result<StaticMesh, Error>
+{
+    let positions: Vec<f32> = vec![
+        1.0, -1.0, -1.0,
+        1.0, -1.0, 1.0,
+        -1.0, -1.0, 1.0,
+        -1.0, -1.0, -1.0,
+        1.0, 1.0, -1.0,
+        1.0, 1.0, 1.0,
+        -1.0, 1.0, 1.0,
+        -1.0, 1.0, -1.0
+    ];
+
+    let indices: Vec<u32> = vec![
+        1, 2, 3,
+        1, 3, 4,
+        5, 8, 7,
+        5, 7, 6,
+        1, 5, 6,
+        1, 6, 2,
+        2, 6, 7,
+        2, 7, 3,
+        3, 7, 8,
+        3, 8, 4,
+        5, 1, 4,
+        5, 4, 8
+    ];
+
+    let mesh = StaticMesh::create(indices, vec![Attribute::new("position", 3, positions)])?;
+    Ok(mesh)
 }
 
-impl From<mesh::Error> for Error {
-    fn from(other: mesh::Error) -> Self {
-        Error::Mesh(other)
-    }
-}
-
-pub fn create_cube() -> Result<mesh::Mesh, Error>
+pub fn create_cube() -> Result<StaticMesh, Error>
 {
     let positions: Vec<f32> = vec![
         1.0, 1.0, -1.0,
@@ -144,8 +167,8 @@ pub fn create_cube() -> Result<mesh::Mesh, Error>
         0.0, 0.0
     ];
 
-    let mut mesh = mesh::Mesh::create(positions)?;
-    mesh.add_custom_vec3_attribute("normal", normals)?;
-    mesh.add_custom_vec2_attribute("uv_coordinate", uvs)?;
+    let indices = (0..positions.len() as u32/3).collect();
+    let mesh = StaticMesh::create(indices, vec![Attribute::new("position", 3, positions),
+        Attribute::new("normal", 3, normals), Attribute::new("uv_coordinate", 2, uvs)])?;
     Ok(mesh)
 }

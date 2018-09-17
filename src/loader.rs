@@ -2,6 +2,8 @@ use std::path::Path;
 use std::path::PathBuf;
 use tobj;
 use mesh;
+use static_mesh::StaticMesh;
+use dynamic_mesh::DynamicMesh;
 
 #[derive(Debug)]
 pub enum Error {
@@ -22,26 +24,36 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn load_obj(name: &str) -> Result<mesh::Mesh, Error>
+pub fn load_obj_as_static_mesh(name: &str) -> Result<StaticMesh, Error>
+{
+    let m = load_obj(name)?;
+
+    let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
+    let mut attributes = vec![mesh::Attribute::new("position", 3, m.positions.clone())];
+    if m.normals.len() > 0
+    {
+        attributes.push(mesh::Attribute::new("normal", 3, m.normals.clone()));
+    }
+    let mesh = StaticMesh::create(indices, attributes)?;
+    Ok(mesh)
+}
+
+pub fn load_obj_as_dynamic_mesh(name: &str) -> Result<DynamicMesh, Error>
+{
+    let m = load_obj(name)?;
+
+    let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
+    let normals = match m.normals.len() > 0 { true => Some(m.normals.clone()), false => None };
+
+    Ok(DynamicMesh::create(indices, m.positions.clone(), normals))
+}
+
+fn load_obj(name: &str) -> Result<tobj::Mesh, Error>
 {
     let root_path: PathBuf = PathBuf::from("");
     let (models, _materials) = tobj::load_obj(&resource_name_to_path(&root_path,name))?;
-    let m = &models.first().ok_or(Error::FileDoesntContainModel {message: format!("The file {} doesn't contain a model", name)})?.mesh;
-
-    let no_vertices = m.positions.len()/3;
-
-    // Create mesh
-    let mut mesh = match m.indices.len() > 0 {
-        true => mesh::Mesh::create_indexed(m.indices.clone(), m.positions.clone())?,
-        false => mesh::Mesh::create(m.positions.clone())?
-    };
-
-    if m.normals.len() > 0
-    {
-        mesh.add_custom_vec3_attribute("normal", m.normals.clone())?;
-    }
-
-    Ok(mesh)
+    let m = models.first().ok_or(Error::FileDoesntContainModel {message: format!("The file {} doesn't contain a model", name)})?.mesh.clone();
+    Ok(m)
 }
 
 fn resource_name_to_path(root_dir: &Path, location: &str) -> PathBuf {
