@@ -6,6 +6,15 @@ pub enum Error {
     NeedPositionAttributeToCreateMesh {message: String}
 }
 
+#[macro_export]
+macro_rules! att {
+    ($( $name: expr => ($data: expr, $no_components: expr)),*) => {{
+         let mut vec = Vec::new();
+         $( vec.push(mesh::Attribute::new($name, $no_components, $data)); )*
+         vec
+    }}
+}
+
 #[derive(Clone, Debug)]
 pub struct Attribute {
     pub name: String,

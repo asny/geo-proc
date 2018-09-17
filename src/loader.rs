@@ -29,10 +29,13 @@ pub fn load_obj_as_static_mesh(name: &str) -> Result<StaticMesh, Error>
     let m = load_obj(name)?;
 
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
-    let mut attributes = vec![mesh::Attribute::new("position", 3, m.positions.clone())];
+    let attributes;
     if m.normals.len() > 0
     {
-        attributes.push(mesh::Attribute::new("normal", 3, m.normals.clone()));
+        attributes = att!["position" => (m.positions.clone(), 3), "normal" => (m.normals.clone(), 3)];
+    }
+    else {
+        attributes = att!["position" => (m.positions.clone(), 3)];
     }
     let mesh = StaticMesh::create(indices, attributes)?;
     Ok(mesh)
