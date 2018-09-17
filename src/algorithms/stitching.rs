@@ -1,6 +1,5 @@
 use ids::*;
 use dynamic_mesh::DynamicMesh;
-use mesh::Renderable;
 
 pub fn stitch(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> DynamicMesh
 {
@@ -29,6 +28,7 @@ fn intersection_test(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh
 #[cfg(test)]
 mod tests {
     use super::*;
+    use mesh::Renderable;
 
     #[test]
     fn test_one_connected_component()

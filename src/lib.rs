@@ -18,4 +18,4 @@ pub mod algorithms;
 mod connectivity_info;
 
 pub use types::*;
-pub use ids::*;
+pub use algorithms::*;
