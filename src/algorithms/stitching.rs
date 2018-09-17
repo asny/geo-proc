@@ -22,7 +22,7 @@ fn stitch_faces(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, fac
 
 fn intersection_test(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID) -> bool
 {
-    
+    false
 }
 
 
