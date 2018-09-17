@@ -1,8 +1,8 @@
 
 use static_mesh::StaticMesh;
-use mesh::{self, Attribute, Error};
+use mesh;
 
-pub fn create_connected_cube() -> Result<StaticMesh, Error>
+pub fn create_connected_cube() -> Result<StaticMesh, mesh::Error>
 {
     let positions: Vec<f32> = vec![
         1.0, -1.0, -1.0,
@@ -34,7 +34,7 @@ pub fn create_connected_cube() -> Result<StaticMesh, Error>
     Ok(mesh)
 }
 
-pub fn create_cube() -> Result<StaticMesh, Error>
+pub fn create_cube() -> Result<StaticMesh, mesh::Error>
 {
     let positions: Vec<f32> = vec![
         1.0, 1.0, -1.0,
