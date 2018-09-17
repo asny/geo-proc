@@ -289,11 +289,13 @@ impl DynamicMesh
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
         walker.next();
-        let p1 = *self.position(&walker.vertex_id().unwrap());
+        let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
         walker.next();
-        let p2 = *self.position(&walker.vertex_id().unwrap());
+        let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
 
-        (p1 - p0).cross(&(p2 - p0)).normalize()
+        let mut dir = v0.cross(&v1);
+        dir.normalize_mut();
+        dir
     }
 
     pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
