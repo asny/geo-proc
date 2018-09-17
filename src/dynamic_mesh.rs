@@ -10,6 +10,7 @@ pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
 
+#[derive(Clone, Debug)]
 pub struct DynamicMesh {
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,

@@ -1,5 +1,6 @@
 use mesh::{Attribute, Error, Renderable};
 
+#[derive(Clone, Debug)]
 pub struct StaticMesh
 {
     indices: Vec<u32>,

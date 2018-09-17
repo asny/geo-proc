@@ -6,7 +6,7 @@ pub enum Error {
     NeedPositionAttributeToCreateMesh {message: String}
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Attribute {
     pub name: String,
     pub no_components: usize,
