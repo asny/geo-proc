@@ -4,7 +4,7 @@ use traversal::*;
 use std::rc::Rc;
 use std::collections::{HashSet, HashMap};
 use ids::*;
-use glm::*;
+use vector::*;
 
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
@@ -128,7 +128,7 @@ impl DynamicMesh
             let n = self.normal(&vertex_id).clone();
             normals.insert(vertex_id, n);
         }
-        
+
         DynamicMesh {positions, normals, connectivity_info: Rc::new(info)}
     }
 
@@ -293,7 +293,7 @@ impl DynamicMesh
         walker.next();
         let p2 = *self.position(&walker.vertex_id().unwrap());
 
-        normalize(cross(p1 - p0, p2 - p0))
+        (p1 - p0).cross(&(p2 - p0)).normalize()
     }
 
     pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
@@ -304,7 +304,8 @@ impl DynamicMesh
                 normal = normal + self.compute_face_normal(&face_id)
             }
         }
-        normalize(normal)
+        normal.normalize_mut();
+        normal
     }
 
     pub fn update_vertex_normals(&mut self)

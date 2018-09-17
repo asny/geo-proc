@@ -1,6 +1,7 @@
 extern crate tobj;
 
-pub extern crate glm;
+pub extern crate nalgebra as na;
+pub mod vector;
 
 pub mod ids;
 pub mod traversal;
