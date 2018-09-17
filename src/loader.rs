@@ -2,8 +2,6 @@ use std::path::Path;
 use std::path::PathBuf;
 use tobj;
 use mesh;
-use static_mesh::StaticMesh;
-use dynamic_mesh::DynamicMesh;
 
 #[derive(Debug)]
 pub enum Error {
@@ -24,7 +22,7 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn load_obj_as_static_mesh(name: &str) -> Result<StaticMesh, Error>
+pub fn load_obj_as_static_mesh(name: &str) -> Result<mesh::StaticMesh, Error>
 {
     let m = load_obj(name)?;
 
@@ -37,18 +35,18 @@ pub fn load_obj_as_static_mesh(name: &str) -> Result<StaticMesh, Error>
     else {
         attributes = att!["position" => (m.positions.clone(), 3)];
     }
-    let mesh = StaticMesh::create(indices, attributes)?;
+    let mesh = mesh::StaticMesh::create(indices, attributes)?;
     Ok(mesh)
 }
 
-pub fn load_obj_as_dynamic_mesh(name: &str) -> Result<DynamicMesh, Error>
+pub fn load_obj_as_dynamic_mesh(name: &str) -> Result<mesh::DynamicMesh, Error>
 {
     let m = load_obj(name)?;
 
     let indices = match m.indices.len() > 0 { true => m.indices.clone(), false => (0..m.positions.len() as u32/3).collect() };
     let normals = match m.normals.len() > 0 { true => Some(m.normals.clone()), false => None };
 
-    Ok(DynamicMesh::create(indices, m.positions.clone(), normals))
+    Ok(mesh::DynamicMesh::create(indices, m.positions.clone(), normals))
 }
 
 fn load_obj(name: &str) -> Result<tobj::Mesh, Error>

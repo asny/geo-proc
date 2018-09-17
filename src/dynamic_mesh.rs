@@ -4,7 +4,7 @@ use traversal::*;
 use std::rc::Rc;
 use std::collections::{HashSet, HashMap};
 use ids::*;
-use vector::*;
+use types::*;
 
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
