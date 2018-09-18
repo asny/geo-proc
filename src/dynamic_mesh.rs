@@ -71,10 +71,8 @@ impl DynamicMesh
             positions: HashMap::new(), normals: HashMap::new()};
 
         for i in 0..no_vertices {
-            let vertex_id = mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]));
-            if let Some(ref data) = normals {
-                mesh.normals.insert(vertex_id, vec3(data[i*3], data[i*3+1], data[i*3+2]));
-            }
+            let nor = match normals { Some(ref data) => Some(vec3(data[i*3], data[i*3+1], data[i*3+2])), None => None };
+            let vertex_id = mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]), nor);
         }
 
         for face in 0..no_faces {
@@ -132,6 +130,78 @@ impl DynamicMesh
         DynamicMesh {positions, normals, connectivity_info: Rc::new(info)}
     }
 
+    ////////////////////////////////
+    // *** Walkers and iterators ***
+    ////////////////////////////////
+
+    pub fn walker(&self) -> Walker
+    {
+        Walker::create(&self.connectivity_info)
+    }
+
+    pub fn walker_from_vertex(&self, vertex_id: &VertexID) -> Walker
+    {
+        Walker::create_from_vertex(vertex_id, &self.connectivity_info)
+    }
+
+    pub fn walker_from_halfedge(&self, halfedge_id: &HalfEdgeID) -> Walker
+    {
+        Walker::create_from_halfedge(halfedge_id, &self.connectivity_info)
+    }
+
+    pub fn walker_from_face(&self, face_id: &FaceID) -> Walker
+    {
+        Walker::create_from_face(&face_id, &self.connectivity_info)
+    }
+
+    pub fn vertex_halfedge_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
+    {
+        VertexHalfedgeIterator::new(vertex_id, &self.connectivity_info)
+    }
+
+    pub fn face_halfedge_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator
+    {
+        FaceHalfedgeIterator::new(face_id, &self.connectivity_info)
+    }
+
+    pub fn vertex_iterator(&self) -> VertexIterator
+    {
+        self.connectivity_info.vertex_iterator()
+    }
+
+    pub fn halfedge_iterator(&self) -> HalfEdgeIterator
+    {
+        self.connectivity_info.halfedge_iterator()
+    }
+
+    pub fn face_iterator(&self) -> FaceIterator
+    {
+        self.connectivity_info.face_iterator()
+    }
+
+    //////////////////////////////////////////
+    // *** Connectivity changing functions ***
+    //////////////////////////////////////////
+
+    pub fn split_edge(&mut self, halfedge_id: &HalfEdgeID, position: &Vec3)
+    {
+        unimplemented!();
+    }
+
+    pub fn split_face(&mut self, face_id: &FaceID, position: &Vec3)
+    {
+        unimplemented!();
+    }
+
+    pub fn remove_face(&mut self, face_id: &FaceID)
+    {
+        self.connectivity_info.remove_face(face_id);
+    }
+
+    ////////////////////////////////////////////
+    // *** Functions related to the position ***
+    ////////////////////////////////////////////
+
     pub fn position(&self, vertex_id: &VertexID) -> &Vec3
     {
         self.positions.get(vertex_id).unwrap()
@@ -141,6 +211,10 @@ impl DynamicMesh
     {
         self.positions.insert(vertex_id, value);
     }
+
+    //////////////////////////////////////////
+    // *** Functions related to the normal ***
+    //////////////////////////////////////////
 
     pub fn normal(&self, vertex_id: &VertexID) -> &Vec3
     {
@@ -152,34 +226,50 @@ impl DynamicMesh
         self.normals.insert(vertex_id, value);
     }
 
-    fn create_vertex(&mut self, position: Vec3) -> VertexID
+    pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
+    {
+        let mut walker = self.walker_from_face(face_id);
+        let p0 = *self.position(&walker.vertex_id().unwrap());
+        walker.next();
+        let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
+        walker.next();
+        let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
+
+        let mut dir = v0.cross(&v1);
+        dir.normalize_mut();
+        dir
+    }
+
+    pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
+    {
+        let mut normal = vec3(0.0, 0.0, 0.0);
+        for walker in self.vertex_halfedge_iterator(&vertex_id) {
+            if let Some(face_id) = walker.face_id() {
+                normal = normal + self.compute_face_normal(&face_id)
+            }
+        }
+        normal.normalize_mut();
+        normal
+    }
+
+    pub fn update_vertex_normals(&mut self)
+    {
+        for vertex_id in self.vertex_iterator() {
+            let normal = self.compute_vertex_normal(&vertex_id);
+            self.set_normal(vertex_id, normal);
+        }
+    }
+
+    ///////////////////////////////////////////////////
+    // *** Internal connectivity changing functions ***
+    ///////////////////////////////////////////////////
+
+    fn create_vertex(&mut self, position: Vec3, normal: Option<Vec3>) -> VertexID
     {
         let id = self.connectivity_info.create_vertex();
         self.positions.insert(id.clone(), position);
+        if let Some(nor) = normal {self.normals.insert(id.clone(), nor);}
         id
-    }
-
-    fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
-    {
-        for mut halfedge in self.vertex_halfedge_iterator(vertex_id1) {
-            if &halfedge.vertex_id().unwrap() == vertex_id2 {
-                return halfedge.halfedge_id()
-            }
-        }
-        None
-    }
-
-    fn find_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
-    {
-        let mut walker = Walker::create(&self.connectivity_info);
-        for halfedge_id in self.halfedge_iterator() {
-            walker.jump_to_edge(&halfedge_id);
-            if &walker.vertex_id().unwrap() == vertex_id2 && &walker.twin().vertex_id().unwrap() == vertex_id1
-            {
-                return Some(halfedge_id)
-            }
-        }
-        None
     }
 
     fn create_face(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
@@ -236,85 +326,6 @@ impl DynamicMesh
                 self.connectivity_info.set_halfedge_twin(&halfedge_id2, halfedge_id1);
 
             }
-        }
-    }
-
-    pub fn remove_face(&mut self, face_id: &FaceID)
-    {
-        self.connectivity_info.remove_face(face_id);
-    }
-
-    pub fn walker_from_vertex(&self, vertex_id: &VertexID) -> Walker
-    {
-        Walker::create_from_vertex(vertex_id, &self.connectivity_info)
-    }
-
-    pub fn walker_from_halfedge(&self, halfedge_id: &HalfEdgeID) -> Walker
-    {
-        Walker::create_from_halfedge(halfedge_id, &self.connectivity_info)
-    }
-
-    pub fn walker_from_face(&self, face_id: &FaceID) -> Walker
-    {
-        Walker::create_from_face(&face_id, &self.connectivity_info)
-    }
-
-    pub fn vertex_halfedge_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
-    {
-        VertexHalfedgeIterator::new(vertex_id, &self.connectivity_info)
-    }
-
-    pub fn face_halfedge_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator
-    {
-        FaceHalfedgeIterator::new(face_id, &self.connectivity_info)
-    }
-
-    fn vertex_iterator(&self) -> VertexIterator
-    {
-        self.connectivity_info.vertex_iterator()
-    }
-
-    pub fn halfedge_iterator(&self) -> HalfEdgeIterator
-    {
-        self.connectivity_info.halfedge_iterator()
-    }
-
-    pub fn face_iterator(&self) -> FaceIterator
-    {
-        self.connectivity_info.face_iterator()
-    }
-
-    pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
-    {
-        let mut walker = self.walker_from_face(face_id);
-        let p0 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
-        let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
-        walker.next();
-        let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
-
-        let mut dir = v0.cross(&v1);
-        dir.normalize_mut();
-        dir
-    }
-
-    pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
-    {
-        let mut normal = vec3(0.0, 0.0, 0.0);
-        for walker in self.vertex_halfedge_iterator(&vertex_id) {
-            if let Some(face_id) = walker.face_id() {
-                normal = normal + self.compute_face_normal(&face_id)
-            }
-        }
-        normal.normalize_mut();
-        normal
-    }
-
-    pub fn update_vertex_normals(&mut self)
-    {
-        for vertex_id in self.vertex_iterator() {
-            let normal = self.compute_vertex_normal(&vertex_id);
-            self.set_normal(vertex_id, normal);
         }
     }
 }
@@ -397,9 +408,9 @@ mod tests {
     fn test_one_face_connectivity() {
         let mut mesh = DynamicMesh::create(vec![], vec![], None);
 
-        let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0));
-        let v2 = mesh.create_vertex(vec3(0.0, 0.0, 0.0));
-        let v3 = mesh.create_vertex(vec3(0.0, 0.0, 0.0));
+        let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
+        let v2 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
+        let v3 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
         let f1 = mesh.create_face(&v1, &v2, &v3);
         mesh.create_twin_connectivity();
 
