@@ -183,9 +183,76 @@ impl DynamicMesh
     // *** Connectivity changing functions ***
     //////////////////////////////////////////
 
-    pub fn split_edge(&mut self, halfedge_id: &HalfEdgeID, position: &Vec3)
+    fn replace_vertex_in_face(&mut self, face_id: &FaceID, old_vertex_id: &VertexID, new_vertex_id: &VertexID)
     {
-        unimplemented!();
+        for walker in self.face_halfedge_iterator(face_id) {
+            if &walker.vertex_id().unwrap() == old_vertex_id {
+                self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), new_vertex_id);
+                break;
+            }
+        }
+    }
+
+    fn split_one_face(&mut self, halfedge_id: &HalfEdgeID, new_vertex_id: &VertexID) -> HalfEdgeID
+    {
+        let mut walker = self.walker_from_halfedge(halfedge_id);
+        let face_id = walker.face_id().unwrap();
+        let vertex_id1 = walker.vertex_id().unwrap();
+
+        walker.next();
+        let vertex_id2 = walker.vertex_id().unwrap();
+        let halfedge_to_update1 = walker.twin_id().unwrap();
+
+        walker.next();
+        let halfedge_to_update2 = walker.twin_id().unwrap();
+
+        self.replace_vertex_in_face(&face_id, &vertex_id1, &new_vertex_id);
+        let new_face_id = self.create_face(&vertex_id1, &vertex_id2, &new_vertex_id);
+
+        // Update twin information
+        let mut new_halfedge_id = HalfEdgeID::new(0);
+        for walker in self.face_halfedge_iterator(&new_face_id) {
+            match walker.vertex_id().unwrap() {
+                vertex_id1 => {
+                    new_halfedge_id = walker.halfedge_id().unwrap().clone();
+                },
+                vertex_id2 => {
+                    self.connectivity_info.set_halfedge_twin(&halfedge_to_update1, &walker.halfedge_id().unwrap());
+                    self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update1);
+                },
+                new_vertex_id => {
+                    self.connectivity_info.set_halfedge_twin(&halfedge_to_update2, &walker.halfedge_id().unwrap());
+                    self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update2);
+                }
+
+            }
+        }
+        new_halfedge_id
+    }
+
+    pub fn split_edge(&mut self, halfedge_id: &HalfEdgeID, position: Vec3) -> VertexID
+    {
+        let new_vertex_id = self.create_vertex(position, None);
+
+        let mut walker = self.walker_from_halfedge(halfedge_id);
+        walker.twin();
+        let twin_halfedge_id = walker.halfedge_id().unwrap();
+        let is_boundary = walker.face_id().is_none();
+
+        let new_halfedge_id1 = self.split_one_face(halfedge_id, &new_vertex_id);
+        let new_halfedge_id2 = match is_boundary {
+            false => {
+                self.split_one_face(&twin_halfedge_id, &new_vertex_id)
+            },
+            true => {
+                let vertex_id = self.walker_from_halfedge(&new_halfedge_id1).previous().vertex_id();
+                self.connectivity_info.create_halfedge(vertex_id, None, None)
+            }
+        };
+
+        self.connectivity_info.set_halfedge_twin(&new_halfedge_id2, &new_halfedge_id1);
+        self.connectivity_info.set_halfedge_twin(&new_halfedge_id1, &new_halfedge_id2);
+        new_vertex_id
     }
 
     pub fn split_face(&mut self, face_id: &FaceID, position: &Vec3)
@@ -621,10 +688,39 @@ mod tests {
         assert_eq!(0, mesh.no_faces());
     }
 
+    #[test]
+    fn test_split_edge()
+    {
+        let mut mesh = create_two_connected_faces();
+        for halfedge_id in mesh.halfedge_iterator() {
+            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+            if walker.face_id().is_some() && walker.twin().face_id().is_some()
+            {
+                let vertex_id = mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
+                assert_eq!(mesh.no_vertices(), 5);
+                assert_eq!(mesh.no_halfedges(), 4 * 3 + 4);
+                assert_eq!(mesh.no_faces(), 4);
+
+                let mut w = mesh.walker_from_vertex(&vertex_id);
+                let start_halfedge_id = w.halfedge_id();
+                let end_halfedge_id = w.twin().next().twin().next().twin().next().twin().next().halfedge_id();
+                assert_eq!(start_halfedge_id, end_halfedge_id);
+                break;
+            }
+        }
+    }
+
     fn create_single_face() -> DynamicMesh
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
         DynamicMesh::create((0..3).collect(), positions, None)
+    }
+
+    fn create_two_connected_faces() -> DynamicMesh
+    {
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
+        DynamicMesh::create(indices, positions, None)
     }
 
     fn create_three_connected_faces() -> DynamicMesh
