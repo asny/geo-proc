@@ -2,7 +2,6 @@
 extern crate ncollide3d;
 
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 
 use ids::*;
 use connectivity::*;
@@ -26,9 +25,6 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
         for face_id2 in mesh2.face_iterator()
         {
             let face2 = face_id_to_face(mesh2, &face_id2);
-            //println!("{} and {}", face_id1, face_id2);
-            //println!("{:?}", face1);
-            //println!("{:?}", face2);
             if is_intersecting(&face1, &face2)
             {
                 add_intersections(&mut intersections_for_mesh1,&face1, &face2);
@@ -61,13 +57,6 @@ struct Face
     pub face_id: FaceID,
     pub vertex_ids: [VertexID; 3],
     pub points: [Point; 3]
-}
-
-#[derive(Debug)]
-struct Intersection
-{
-    pub point: Point,
-    pub edge: (VertexID, VertexID)
 }
 
 #[derive(Debug, Hash, Eq, PartialEq)]

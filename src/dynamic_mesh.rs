@@ -72,7 +72,7 @@ impl DynamicMesh
 
         for i in 0..no_vertices {
             let nor = match normals { Some(ref data) => Some(vec3(data[i*3], data[i*3+1], data[i*3+2])), None => None };
-            let vertex_id = mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]), nor);
+            mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]), nor);
         }
 
         for face in 0..no_faces {
@@ -356,7 +356,6 @@ impl DynamicMesh
     fn split_one_face(&mut self, halfedge_id: &HalfEdgeID, twin_halfedge_id: &HalfEdgeID, new_vertex_id: &VertexID)
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
-        let face_id = walker.face_id().unwrap();
         let vertex_id1 = walker.vertex_id().unwrap();
 
         walker.next();
@@ -691,7 +690,7 @@ mod tests {
                 let mut w = mesh.walker_from_vertex(&vertex_id);
                 let start_halfedge_id = w.halfedge_id();
                 let mut end_halfedge_id = w.twin_id();
-                for i in 0..4 {
+                for _ in 0..4 {
                     assert!(w.halfedge_id().is_some());
                     assert!(w.twin_id().is_some());
                     assert!(w.vertex_id().is_some());
