@@ -31,8 +31,8 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
             //println!("{:?}", face2);
             if is_intersecting(&face1, &face2)
             {
-                find_intersections(&face1, &face2).iter().for_each(|i| {intersections_for_mesh1.insert(i.edge,i.point);} );
-                find_intersections(&face2, &face1).iter().for_each(|i| {intersections_for_mesh2.insert(i.edge,i.point);} );
+                add_intersections(&mut intersections_for_mesh1,&face1, &face2);
+                add_intersections(&mut intersections_for_mesh2,&face2, &face1);
             }
         }
     }
@@ -40,14 +40,14 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     println!("Intersections 1: {:?}", intersections_for_mesh1);
     for intersection in intersections_for_mesh1.iter() {
         println!("Splitting on: {:?}", intersection);
-        let halfedge_id = connecting_edge(mesh1, &(intersection.0).0, &(intersection.0).1).unwrap();
+        let halfedge_id = connecting_edge(mesh1, &(intersection.0).v0, &(intersection.0).v1).unwrap();
         mesh1.split_edge(&halfedge_id, intersection.1.coords);
     }
 
     println!("Intersections 2: {:?}", intersections_for_mesh2);
     for intersection in intersections_for_mesh2.iter() {
         println!("Splitting on: {:?}", intersection);
-        let halfedge_id = connecting_edge(mesh2, &(intersection.0).0, &(intersection.0).1).unwrap();
+        let halfedge_id = connecting_edge(mesh2, &(intersection.0).v0, &(intersection.0).v1).unwrap();
         mesh2.split_edge(&halfedge_id, intersection.1.coords);
     }
 
@@ -70,24 +70,34 @@ struct Intersection
     pub edge: (VertexID, VertexID)
 }
 
+#[derive(Debug, Hash, Eq, PartialEq)]
+struct Edge
+{
+    pub v0: VertexID,
+    pub v1: VertexID
+}
+
+impl Edge {
+    fn new(v0: VertexID, v1: VertexID) -> Edge
+    {
+        if v0 < v1 {Edge{v0, v1}} else {Edge{v0: v1, v1: v0}}
+    }
+}
+
 fn stitch_faces(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID)
 {
 
 }
 
-fn find_intersections(face: &Face, other_face: &Face) -> Vec<Intersection>
+fn add_intersections(intersections: &mut HashMap<Edge, Point>, face: &Face, other_face: &Face)
 {
-    let mut intersection_points = Vec::new();
     for i in 0..3 {
         let triangle = Triangle::from_array(&other_face.points);
         if let Some(point) = find_intersection_point(triangle, &face.points[i], &face.points[(i+1)%3]) {
-            let v1 = face.vertex_ids[i].clone();
-            let v2 = face.vertex_ids[(i+1)%3].clone();
-            let edge = if v1 < v2 {(v1, v2)} else {(v2, v1)};
-            intersection_points.push(Intersection {point, edge});
+            let edge = Edge::new(face.vertex_ids[i].clone(), face.vertex_ids[(i+1)%3].clone());
+            intersections.insert(edge, point);
         };
     }
-    intersection_points
 }
 
 fn find_intersection_point(triangle: &Triangle, p0: &Point, p1: &Point) -> Option<Point>
