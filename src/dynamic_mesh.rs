@@ -212,19 +212,20 @@ impl DynamicMesh
         // Update twin information
         let mut new_halfedge_id = HalfEdgeID::new(0);
         for walker in self.face_halfedge_iterator(&new_face_id) {
-            match walker.vertex_id().unwrap() {
-                vertex_id1 => {
-                    new_halfedge_id = walker.halfedge_id().unwrap().clone();
-                },
-                vertex_id2 => {
-                    self.connectivity_info.set_halfedge_twin(&halfedge_to_update1, &walker.halfedge_id().unwrap());
-                    self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update1);
-                },
-                new_vertex_id => {
-                    self.connectivity_info.set_halfedge_twin(&halfedge_to_update2, &walker.halfedge_id().unwrap());
-                    self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update2);
-                }
-
+            let vid = walker.vertex_id().unwrap();
+            if vid == vertex_id1 {
+                new_halfedge_id = walker.halfedge_id().unwrap().clone();
+            }
+            else if vid == vertex_id2 {
+                self.connectivity_info.set_halfedge_twin(&halfedge_to_update1, &walker.halfedge_id().unwrap());
+                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update1);
+            }
+            else if &vid == new_vertex_id {
+                self.connectivity_info.set_halfedge_twin(&halfedge_to_update2, &walker.halfedge_id().unwrap());
+                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update2);
+            }
+            else {
+                panic!("Split one face failed")
             }
         }
         new_halfedge_id
@@ -232,23 +233,22 @@ impl DynamicMesh
 
     pub fn split_edge(&mut self, halfedge_id: &HalfEdgeID, position: Vec3) -> VertexID
     {
-        let new_vertex_id = self.create_vertex(position, None);
-
         let mut walker = self.walker_from_halfedge(halfedge_id);
         walker.twin();
         let twin_halfedge_id = walker.halfedge_id().unwrap();
         let is_boundary = walker.face_id().is_none();
 
+        let new_vertex_id = self.create_vertex(position, None);
         let new_halfedge_id1 = self.split_one_face(halfedge_id, &new_vertex_id);
-        let new_halfedge_id2 = match is_boundary {
-            false => {
+        let new_halfedge_id2 =
+            if !is_boundary {
                 self.split_one_face(&twin_halfedge_id, &new_vertex_id)
-            },
-            true => {
+            }
+            else {
                 let vertex_id = self.walker_from_halfedge(&new_halfedge_id1).previous().vertex_id();
                 self.connectivity_info.create_halfedge(vertex_id, None, None)
-            }
-        };
+            };
+
 
         self.connectivity_info.set_halfedge_twin(&new_halfedge_id2, &new_halfedge_id1);
         self.connectivity_info.set_halfedge_twin(&new_halfedge_id1, &new_halfedge_id2);
@@ -703,8 +703,16 @@ mod tests {
 
                 let mut w = mesh.walker_from_vertex(&vertex_id);
                 let start_halfedge_id = w.halfedge_id();
-                let end_halfedge_id = w.twin().next().twin().next().twin().next().twin().next().halfedge_id();
-                assert_eq!(start_halfedge_id, end_halfedge_id);
+                let mut end_halfedge_id = w.twin_id();
+                for i in 0..4 {
+                    assert!(w.halfedge_id().is_some());
+                    assert!(w.face_id().is_some());
+                    assert!(w.twin_id().is_some());
+                    assert!(w.vertex_id().is_some());
+                    w.previous().twin();
+                    end_halfedge_id = w.halfedge_id();
+                }
+                assert_eq!(start_halfedge_id, end_halfedge_id, "Did not go the full round");
                 break;
             }
         }
