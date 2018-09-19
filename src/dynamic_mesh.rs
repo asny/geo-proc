@@ -368,7 +368,7 @@ impl DynamicMesh
         let is_boundary = walker.face_id().is_none();
 
         let new_vertex_id = self.create_vertex(position, None);
-        let new_halfedge_id1 = self.split_one_face(halfedge_id, &twin_halfedge_id, &new_vertex_id);
+        self.split_one_face(halfedge_id, &twin_halfedge_id, &new_vertex_id);
 
         if !is_boundary {
             self.split_one_face(&twin_halfedge_id, halfedge_id, &new_vertex_id);
@@ -395,7 +395,7 @@ mod tests {
         {
             if mesh.walker_from_halfedge(&halfedge_id).face_id().is_some()
             {
-                let vertex_id = mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
+                mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
 
                 assert_eq!(mesh.no_vertices(), 4);
                 assert_eq!(mesh.no_halfedges(), 2 * 3 + 4);
