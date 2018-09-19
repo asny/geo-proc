@@ -2,6 +2,76 @@ use std::rc::{Rc};
 use ids::*;
 use connectivity_info::{HalfEdge, ConnectivityInfo};
 
+pub struct VertexHalfedgeIterator
+{
+    current: Walker,
+    start: HalfEdgeID,
+    is_done: bool
+}
+
+impl VertexHalfedgeIterator {
+    pub fn new(vertex_id: &VertexID, connectivity_info: &Rc<ConnectivityInfo>) -> VertexHalfedgeIterator
+    {
+        let current = Walker::create_from_vertex(vertex_id, connectivity_info);
+        let start = current.halfedge_id().unwrap();
+        VertexHalfedgeIterator { current, start, is_done: false }
+    }
+}
+
+impl Iterator for VertexHalfedgeIterator {
+    type Item = Walker;
+
+    fn next(&mut self) -> Option<Walker>
+    {
+        if self.is_done { return None; }
+        let curr = self.current.clone();
+
+        match self.current.face_id() {
+            Some(_) => {
+                self.current.previous().twin();
+            },
+            None => { // In the case there are holes in the one-ring
+                self.current.twin();
+                while let Some(_) = self.current.face_id() {
+                    self.current.next().twin();
+                }
+                self.current.twin();
+            }
+        }
+        self.is_done = self.current.halfedge_id().unwrap() == self.start;
+        Some(curr)
+    }
+}
+
+pub struct FaceHalfedgeIterator
+{
+    current: Walker,
+    start: HalfEdgeID,
+    is_done: bool
+}
+
+impl FaceHalfedgeIterator {
+    pub fn new(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
+    {
+        let current = Walker::create_from_face(face_id, connectivity_info);
+        let start = current.halfedge_id().unwrap().clone();
+        FaceHalfedgeIterator { current, start, is_done: false }
+    }
+}
+
+impl Iterator for FaceHalfedgeIterator {
+    type Item = Walker;
+
+    fn next(&mut self) -> Option<Walker>
+    {
+        if self.is_done { return None; }
+        let curr = self.current.clone();
+        self.current.next();
+        self.is_done = self.current.halfedge_id().unwrap() == self.start;
+        Some(curr)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Walker
 {
