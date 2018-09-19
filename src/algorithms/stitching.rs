@@ -15,20 +15,23 @@ pub fn stitch(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> DynamicMesh
     let m = mesh1.clone();
     for face_id1 in mesh1.face_iterator()
     {
-        let triangle1 = face_to_triangle(mesh1, &face_id1);
+        let face1 = face_to_triangle(mesh1, &face_id1);
         for face_id2 in mesh2.face_iterator()
         {
-            let triangle2 = face_to_triangle(mesh2, &face_id2);
-            if intersecting(&triangle1, &triangle2)
+            let face2 = face_to_triangle(mesh2, &face_id2);
+            //println!("{} and {}", face_id1, face_id2);
+            //println!("{:?}", face1);
+            //println!("{:?}", face2);
+            if intersecting(&face1, &face2)
             {
-                println!("{} and {}", face_id1, face_id2);
-                let p0 = intersection_point(&triangle1, triangle2.a(), triangle2.b());
-                println!("{:?}", p0);
-                let p1 = intersection_point(&triangle1, triangle2.b(), triangle2.c());
-                println!("{:?}", p1);
-                let p2 = intersection_point(&triangle1, triangle2.c(), triangle2.a());
-                println!("{:?}", p2);
+                let points1 = intersections(&face1, &face2);
+                println!("Intersections 1: {:?}", points1);
+                if points1.len() == 2 {
 
+                }
+
+                let points2 = intersections(&face2, &face1);
+                println!("Intersections 2: {:?}", points2);
             }
         }
     }
@@ -37,33 +40,64 @@ pub fn stitch(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> DynamicMesh
     m
 }
 
+#[derive(Debug)]
+struct Face
+{
+    pub face_id: FaceID,
+    pub vertex_ids: [VertexID; 3],
+    pub points: [Point; 3]
+}
+
+#[derive(Debug)]
+struct Intersection
+{
+    pub point: Point,
+    pub edge: (VertexID, VertexID)
+}
+
 fn stitch_faces(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID)
 {
 
+}
+
+fn intersections(face: &Face, test_face: &Face) -> Vec<Intersection>
+{
+    let mut intersection_points = Vec::new();
+    for i in 0..3 {
+        let triangle = Triangle::from_array(&test_face.points);
+        if let Some(point) = intersection_point(triangle, &face.points[i], &face.points[(i+1)%3]) {
+            let edge = (face.vertex_ids[i].clone(), face.vertex_ids[(i+1)%3].clone());
+            intersection_points.push(Intersection {point, edge});
+        };
+    }
+    intersection_points
 }
 
 fn intersection_point(triangle: &Triangle, p0: &Point, p1: &Point) -> Option<Point>
 {
     let ray = Ray::new(p0.clone(), p1 - p0);
     triangle.toi_with_ray(&Isometry3::identity(), &ray, false).and_then(|toi| Some(ray.origin + ray.dir * toi))
-
 }
 
-fn intersecting(triangle1: &Triangle, triangle2: &Triangle) -> bool
+fn intersecting(face1: &Face, face2: &Face) -> bool
 {
-    let prox = proximity(&Isometry3::identity(), triangle1, &Isometry3::identity(), triangle2, 0.1);
+    let prox = proximity(&Isometry3::identity(), Triangle::from_array(&face1.points),
+                         &Isometry3::identity(), Triangle::from_array(&face2.points), 0.1);
     prox == Proximity::Intersecting
 }
 
-
-fn face_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> Triangle
+fn face_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> Face
 {
-    let mut pos = Vec::with_capacity(3);
+    let mut points: [Point; 3] = [Point::new(0.0, 0.0, 0.0); 3];
+    let mut vertex_ids = [VertexID::new(0); 3];
+    let mut i = 0;
     for walker in mesh.face_halfedge_iterator(face_id) {
         let vec3 = mesh.position(&walker.vertex_id().unwrap());
-        pos.push(Point3::from_coordinates(*vec3));
+        points[i] = Point::from_coordinates(*vec3);
+        vertex_ids[i] = walker.vertex_id().unwrap().clone();
+        i = i+1;
     }
-    Triangle::new(pos[0], pos[1], pos[2])
+    Face {face_id: face_id.clone(), points, vertex_ids}
 }
 
 #[cfg(test)]
