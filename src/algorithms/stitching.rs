@@ -28,6 +28,7 @@ pub fn stitch(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> DynamicMesh
                 println!("{:?}", p1);
                 let p2 = intersection_point(&triangle1, triangle2.c(), triangle2.a());
                 println!("{:?}", p2);
+
             }
         }
     }
