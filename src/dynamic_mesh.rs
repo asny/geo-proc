@@ -366,10 +366,12 @@ impl DynamicMesh
         walker.twin();
         let twin_halfedge_id = walker.halfedge_id().unwrap();
         let is_boundary = walker.face_id().is_none();
-        println!("is_boundary: {}", is_boundary);
 
         let new_vertex_id = self.create_vertex(position, None);
         let new_halfedge_id1 = self.split_one_face(halfedge_id, &new_vertex_id);
+        self.connectivity_info.set_halfedge_twin(&twin_halfedge_id, &new_halfedge_id1);
+        self.connectivity_info.set_halfedge_twin(&new_halfedge_id1, &twin_halfedge_id);
+
         let new_halfedge_id2 =
             if !is_boundary {
                 self.split_one_face(&twin_halfedge_id, &new_vertex_id)
@@ -378,13 +380,9 @@ impl DynamicMesh
                 let vertex_id = self.walker_from_halfedge(&new_halfedge_id1).previous().vertex_id();
                 self.connectivity_info.create_halfedge(vertex_id, None, None)
             };
+        self.connectivity_info.set_halfedge_twin(&halfedge_id, &new_halfedge_id2);
+        self.connectivity_info.set_halfedge_twin(&new_halfedge_id2, &halfedge_id);
 
-        println!("{}", new_vertex_id);
-        println!("{}", new_halfedge_id1);
-        println!("{}", new_halfedge_id2);
-
-        self.connectivity_info.set_halfedge_twin(&new_halfedge_id2, &new_halfedge_id1);
-        self.connectivity_info.set_halfedge_twin(&new_halfedge_id1, &new_halfedge_id2);
         new_vertex_id
     }
 }
@@ -475,11 +473,6 @@ mod tests {
                 let start_halfedge_id = w.halfedge_id();
                 let mut end_halfedge_id = w.twin_id();
                 for i in 0..4 {
-                    println!("{}", i);
-                    println!("{:?}", w.halfedge_id());
-                    println!("{:?}", w.vertex_id());
-                    println!("{:?}", w.twin_id());
-                    println!("{:?}", w.clone().twin().vertex_id());
                     assert!(w.halfedge_id().is_some());
                     assert!(w.twin_id().is_some());
                     assert!(w.vertex_id().is_some());
