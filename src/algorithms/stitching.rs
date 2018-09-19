@@ -20,20 +20,8 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 
     find_intersections(mesh1, &mut intersections_for_mesh1, mesh2, &mut intersections_for_mesh2);
 
-    println!("Intersections 1: {:?}", intersections_for_mesh1);
-    for intersection in intersections_for_mesh1.iter() {
-        println!("Splitting on: {:?}", intersection);
-        let halfedge_id = connecting_edge(mesh1, &(intersection.0).v0, &(intersection.0).v1).unwrap();
-        mesh1.split_edge(&halfedge_id, intersection.1.coords);
-    }
-
-    println!("Intersections 2: {:?}", intersections_for_mesh2);
-    for intersection in intersections_for_mesh2.iter() {
-        println!("Splitting on: {:?}", intersection);
-        let halfedge_id = connecting_edge(mesh2, &(intersection.0).v0, &(intersection.0).v1).unwrap();
-        mesh2.split_edge(&halfedge_id, intersection.1.coords);
-    }
-
+    split_edges(mesh1, &intersections_for_mesh1);
+    split_edges(mesh2, &intersections_for_mesh2);
 
     mesh1.clone()
 }
@@ -63,6 +51,14 @@ impl Edge {
 fn stitch_faces(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID)
 {
 
+}
+
+fn split_edges(mesh: &mut DynamicMesh, intersections_for_mesh: &HashMap<Edge, Point>)
+{
+    for intersection in intersections_for_mesh.iter() {
+        let halfedge_id = connecting_edge(mesh, &(intersection.0).v0, &(intersection.0).v1).unwrap();
+        mesh.split_edge(&halfedge_id, intersection.1.coords);
+    }
 }
 
 fn find_intersections(mesh1: &DynamicMesh, intersections_for_mesh1: &mut HashMap<Edge, Point>, mesh2: &DynamicMesh, intersections_for_mesh2: &mut HashMap<Edge, Point>)
@@ -149,7 +145,28 @@ mod tests {
         assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.25)));
         assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.75)));
         assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 2.25)));
+    }
 
+    #[test]
+    fn test_split_edges()
+    {
+        let mut mesh1 = create_simple_mesh_x_z();
+        let mut mesh2 = create_simple_mesh_y_z();
+        let mut intersections_for_mesh1 = HashMap::new();
+        let mut intersections_for_mesh2 = HashMap::new();
+
+        find_intersections(&mesh1, &mut intersections_for_mesh1, &mesh2, &mut intersections_for_mesh2);
+
+        split_edges(&mut mesh1, &intersections_for_mesh1);
+        split_edges(&mut mesh2, &intersections_for_mesh2);
+
+        assert_eq!(mesh1.no_vertices(), 11);
+        assert_eq!(mesh1.no_halfedges(), 12 * 3 + 8);
+        assert_eq!(mesh1.no_faces(), 12);
+
+        assert_eq!(mesh2.no_vertices(), 11);
+        assert_eq!(mesh2.no_halfedges(), 12 * 3 + 8);
+        assert_eq!(mesh2.no_faces(), 12);
     }
 
     #[test]
