@@ -324,16 +324,6 @@ impl DynamicMesh
         }
     }
 
-    fn replace_vertex_in_face(&mut self, face_id: &FaceID, old_vertex_id: &VertexID, new_vertex_id: &VertexID)
-    {
-        for walker in self.face_halfedge_iterator(face_id) {
-            if &walker.vertex_id().unwrap() == old_vertex_id {
-                self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), new_vertex_id);
-                break;
-            }
-        }
-    }
-
     fn split_one_face(&mut self, halfedge_id: &HalfEdgeID, new_vertex_id: &VertexID) -> HalfEdgeID
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
@@ -343,11 +333,9 @@ impl DynamicMesh
         walker.next();
         let vertex_id2 = walker.vertex_id().unwrap();
         let halfedge_to_update1 = walker.twin_id().unwrap();
+        let halfedge_to_update2 = walker.halfedge_id().unwrap();
 
-        walker.next();
-        let halfedge_to_update2 = walker.twin_id().unwrap();
-
-        self.replace_vertex_in_face(&face_id, &vertex_id1, &new_vertex_id);
+        self.connectivity_info.set_halfedge_vertex(halfedge_id, new_vertex_id);
         let new_face_id = self.create_face(&vertex_id1, &vertex_id2, &new_vertex_id);
 
         // Update twin information
@@ -378,6 +366,7 @@ impl DynamicMesh
         walker.twin();
         let twin_halfedge_id = walker.halfedge_id().unwrap();
         let is_boundary = walker.face_id().is_none();
+        println!("is_boundary: {}", is_boundary);
 
         let new_vertex_id = self.create_vertex(position, None);
         let new_halfedge_id1 = self.split_one_face(halfedge_id, &new_vertex_id);
@@ -390,6 +379,7 @@ impl DynamicMesh
                 self.connectivity_info.create_halfedge(vertex_id, None, None)
             };
 
+        println!("{}", new_vertex_id);
         println!("{}", new_halfedge_id1);
         println!("{}", new_halfedge_id2);
 
@@ -404,6 +394,59 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_split_edge_on_boundary()
+    {
+        let mut mesh = create_single_face();
+        for halfedge_id in mesh.halfedge_iterator()
+        {
+            if mesh.walker_from_halfedge(&halfedge_id).face_id().is_some()
+            {
+                let vertex_id = mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
+
+                assert_eq!(mesh.no_vertices(), 4);
+                assert_eq!(mesh.no_halfedges(), 2 * 3 + 4);
+                assert_eq!(mesh.no_faces(), 2);
+
+                for vertex_id in mesh.vertex_iterator() {
+                    assert!(mesh.walker_from_vertex(&vertex_id).halfedge_id().is_some());
+                }
+                for he_id in mesh.halfedge_iterator() {
+                    assert!(mesh.walker_from_halfedge(&he_id).twin_id().is_some());
+                    assert!(mesh.walker_from_halfedge(&he_id).vertex_id().is_some());
+                    assert_eq!(mesh.walker_from_halfedge(&he_id).face_id().is_some(), mesh.walker_from_halfedge(&he_id).next_id().is_some());
+                }
+                for face_id in mesh.face_iterator() {
+                    assert!(mesh.walker_from_face(&face_id).halfedge_id().is_some());
+                }
+
+                let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+                assert!(walker.halfedge_id().is_some());
+                assert!(walker.face_id().is_some());
+                assert!(walker.vertex_id().is_some());
+
+                walker.twin();
+                assert!(walker.halfedge_id().is_some());
+                assert!(walker.face_id().is_none());
+                assert!(walker.vertex_id().is_some());
+
+                walker.twin().next().twin();
+                assert!(walker.halfedge_id().is_some());
+                assert!(walker.face_id().is_some());
+                assert!(walker.vertex_id().is_some());
+
+                walker.next().next().twin();
+                assert!(walker.halfedge_id().is_some());
+                assert!(walker.face_id().is_none());
+                assert!(walker.vertex_id().is_some());
+
+                break;
+            }
+        }
+
+
+    }
+
+    #[test]
     fn test_split_edge()
     {
         let mut mesh = create_two_connected_faces();
@@ -416,15 +459,31 @@ mod tests {
                 assert_eq!(mesh.no_halfedges(), 4 * 3 + 4);
                 assert_eq!(mesh.no_faces(), 4);
 
+                for vertex_id in mesh.vertex_iterator() {
+                    assert!(mesh.walker_from_vertex(&vertex_id).halfedge_id().is_some());
+                }
+                for he_id in mesh.halfedge_iterator() {
+                    assert!(mesh.walker_from_halfedge(&he_id).twin_id().is_some());
+                    assert!(mesh.walker_from_halfedge(&he_id).vertex_id().is_some());
+                    assert_eq!(mesh.walker_from_halfedge(&he_id).face_id().is_some(), mesh.walker_from_halfedge(&he_id).next_id().is_some());
+                }
+                for face_id in mesh.face_iterator() {
+                    assert!(mesh.walker_from_face(&face_id).halfedge_id().is_some());
+                }
+
                 let mut w = mesh.walker_from_vertex(&vertex_id);
                 let start_halfedge_id = w.halfedge_id();
                 let mut end_halfedge_id = w.twin_id();
                 for i in 0..4 {
                     println!("{}", i);
+                    println!("{:?}", w.halfedge_id());
+                    println!("{:?}", w.vertex_id());
+                    println!("{:?}", w.twin_id());
+                    println!("{:?}", w.clone().twin().vertex_id());
                     assert!(w.halfedge_id().is_some());
-                    assert!(w.face_id().is_some());
                     assert!(w.twin_id().is_some());
                     assert!(w.vertex_id().is_some());
+                    assert!(w.face_id().is_some());
                     w.previous().twin();
                     end_halfedge_id = w.halfedge_id();
                 }
