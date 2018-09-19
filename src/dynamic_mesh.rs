@@ -186,21 +186,27 @@ impl DynamicMesh
     pub fn split_edge(&mut self, halfedge_id: &HalfEdgeID, position: Vec3) -> VertexID
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
+        if walker.face_id().is_none()
+        {
+            walker.twin();
+        }
+        let split_halfedge_id = walker.halfedge_id().unwrap();
+
         walker.twin();
         let twin_halfedge_id = walker.halfedge_id().unwrap();
         let twin_vertex_id = walker.vertex_id();
         let is_boundary = walker.face_id().is_none();
 
         let new_vertex_id = self.create_vertex(position, None);
-        self.split_one_face(halfedge_id, &twin_halfedge_id, &new_vertex_id);
+        self.split_one_face(&split_halfedge_id, &twin_halfedge_id, &new_vertex_id);
 
         if !is_boundary {
-            self.split_one_face(&twin_halfedge_id, halfedge_id, &new_vertex_id);
+            self.split_one_face(&twin_halfedge_id, &split_halfedge_id, &new_vertex_id);
         }
         else {
             let new_halfedge_id = self.connectivity_info.create_halfedge(twin_vertex_id, None, None);
-            self.connectivity_info.set_halfedge_twin(halfedge_id, &new_halfedge_id);
-            self.connectivity_info.set_halfedge_twin(&new_halfedge_id, halfedge_id);
+            self.connectivity_info.set_halfedge_twin(&split_halfedge_id, &new_halfedge_id);
+            self.connectivity_info.set_halfedge_twin(&new_halfedge_id, &split_halfedge_id);
         };
 
         new_vertex_id
