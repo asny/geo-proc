@@ -18,20 +18,7 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     let mut intersections_for_mesh1 = HashMap::new();
     let mut intersections_for_mesh2 = HashMap::new();
 
-    let m = mesh1.clone();
-    for face_id1 in mesh1.face_iterator()
-    {
-        let face1 = face_id_to_face(mesh1, &face_id1);
-        for face_id2 in mesh2.face_iterator()
-        {
-            let face2 = face_id_to_face(mesh2, &face_id2);
-            if is_intersecting(&face1, &face2)
-            {
-                add_intersections(&mut intersections_for_mesh1,&face1, &face2);
-                add_intersections(&mut intersections_for_mesh2,&face2, &face1);
-            }
-        }
-    }
+    find_intersections(mesh1, &mut intersections_for_mesh1, mesh2, &mut intersections_for_mesh2);
 
     println!("Intersections 1: {:?}", intersections_for_mesh1);
     for intersection in intersections_for_mesh1.iter() {
@@ -48,7 +35,7 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     }
 
 
-    m
+    mesh1.clone()
 }
 
 #[derive(Debug)]
@@ -76,6 +63,23 @@ impl Edge {
 fn stitch_faces(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID)
 {
 
+}
+
+fn find_intersections(mesh1: &DynamicMesh, intersections_for_mesh1: &mut HashMap<Edge, Point>, mesh2: &DynamicMesh, intersections_for_mesh2: &mut HashMap<Edge, Point>)
+{
+    for face_id1 in mesh1.face_iterator()
+    {
+        let face1 = face_id_to_face(mesh1, &face_id1);
+        for face_id2 in mesh2.face_iterator()
+        {
+            let face2 = face_id_to_face(mesh2, &face_id2);
+            if is_intersecting(&face1, &face2)
+            {
+                add_intersections(intersections_for_mesh1,&face1, &face2);
+                add_intersections(intersections_for_mesh2,&face2, &face1);
+            }
+        }
+    }
 }
 
 fn add_intersections(intersections: &mut HashMap<Edge, Point>, face: &Face, other_face: &Face)
@@ -120,6 +124,33 @@ fn face_id_to_face(mesh: &DynamicMesh, face_id: &FaceID) -> Face
 mod tests {
     use super::*;
     use mesh::Renderable;
+    use types::*;
+
+    #[test]
+    fn test_finding_intersections()
+    {
+        let mesh1 = create_simple_mesh_x_z();
+        let mesh2 = create_simple_mesh_y_z();
+        let mut intersections_for_mesh1 = HashMap::new();
+        let mut intersections_for_mesh2 = HashMap::new();
+
+        find_intersections(&mesh1, &mut intersections_for_mesh1, &mesh2, &mut intersections_for_mesh2);
+        assert_eq!(intersections_for_mesh1.len(), 5);
+        assert_eq!(intersections_for_mesh2.len(), 5);
+
+        assert!(intersections_for_mesh1.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.25)));
+        assert!(intersections_for_mesh1.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.75)));
+        assert!(intersections_for_mesh1.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.25)));
+        assert!(intersections_for_mesh1.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.75)));
+        assert!(intersections_for_mesh1.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 2.25)));
+
+        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.25)));
+        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.75)));
+        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.25)));
+        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.75)));
+        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 2.25)));
+
+    }
 
     #[test]
     fn test_simple_stitching()
