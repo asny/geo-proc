@@ -162,14 +162,14 @@ impl ConnectivityInfo {
         }
     }
 
-    pub fn set_vertex_halfedge(&self, id: &VertexID, val: &HalfEdgeID)
+    pub fn set_vertex_halfedge(&self, id: &VertexID, val: HalfEdgeID)
     {
-        RefCell::borrow_mut(&self.vertices).get_mut(id).unwrap().halfedge = Some(val.clone());
+        RefCell::borrow_mut(&self.vertices).get_mut(id).unwrap().halfedge = Some(val);
     }
 
-    pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: &HalfEdgeID)
+    pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: HalfEdgeID)
     {
-        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().next = Some(val.clone());
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().next = Some(val);
     }
 
     pub fn set_halfedge_twin(&self, id1: HalfEdgeID, id2: HalfEdgeID)
@@ -179,14 +179,14 @@ impl ConnectivityInfo {
         halfedges.get_mut(&id2).unwrap().twin = Some(id1);
     }
 
-    pub fn set_halfedge_vertex(&self, id: &HalfEdgeID, val: &VertexID)
+    pub fn set_halfedge_vertex(&self, id: &HalfEdgeID, val: VertexID)
     {
-        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().vertex = Some(val.clone());
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().vertex = Some(val);
     }
 
-    pub fn set_face_halfedge(&self, id: &FaceID, val: &HalfEdgeID)
+    pub fn set_face_halfedge(&self, id: &FaceID, val: HalfEdgeID)
     {
-        RefCell::borrow_mut(&self.faces).get_mut(id).unwrap().halfedge = Some(val.clone());
+        RefCell::borrow_mut(&self.faces).get_mut(id).unwrap().halfedge = Some(val);
     }
 
     pub fn vertex_iterator(&self) -> Box<Iterator<Item = VertexID>>
