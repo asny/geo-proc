@@ -206,7 +206,6 @@ impl DynamicMesh
         else {
             let new_halfedge_id = self.connectivity_info.create_halfedge(twin_vertex_id, None, None);
             self.connectivity_info.set_halfedge_twin(&split_halfedge_id, &new_halfedge_id);
-            self.connectivity_info.set_halfedge_twin(&new_halfedge_id, &split_halfedge_id);
         };
 
         new_vertex_id
@@ -240,13 +239,12 @@ impl DynamicMesh
         let mut new_halfedge_id = HalfEdgeID::new(0);
         for walker in self.face_halfedge_iterator(&face_id1) {
             let vid = walker.vertex_id().unwrap();
+            let hid = walker.halfedge_id().unwrap();
             if vid == vertex_id1 {
-                self.connectivity_info.set_halfedge_twin(&halfedge_id2, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_id2);
+                self.connectivity_info.set_halfedge_twin(&halfedge_id2, &hid);
             }
             else if vid == vertex_id2 {
-                self.connectivity_info.set_halfedge_twin(&twin_id2, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &twin_id2);
+                self.connectivity_info.set_halfedge_twin(&twin_id2, &hid);
             }
             else if vid == new_vertex_id {
                 new_halfedge_id = walker.halfedge_id().unwrap();
@@ -257,17 +255,15 @@ impl DynamicMesh
         }
         for walker in self.face_halfedge_iterator(&face_id2) {
             let vid = walker.vertex_id().unwrap();
+            let hid = walker.halfedge_id().unwrap();
             if vid == vertex_id2 {
-                self.connectivity_info.set_halfedge_twin(&new_halfedge_id, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &new_halfedge_id);
+                self.connectivity_info.set_halfedge_twin(&new_halfedge_id, &hid);
             }
             else if vid == vertex_id3 {
-                self.connectivity_info.set_halfedge_twin(&twin_id3, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &twin_id3);
+                self.connectivity_info.set_halfedge_twin(&twin_id3, &hid);
             }
             else if vid == new_vertex_id {
-                self.connectivity_info.set_halfedge_twin(&halfedge_id3, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_id3);
+                self.connectivity_info.set_halfedge_twin(&halfedge_id3, &hid);
             }
             else {
                 panic!("Split face failed")
@@ -402,11 +398,9 @@ impl DynamicMesh
                     }
                 }
                 let halfedge_id2 = halfedge2.unwrap_or_else(|| {
-                    self.connectivity_info.create_halfedge(Some(vertex_id2), None,None)
-                }
-                );
+                        self.connectivity_info.create_halfedge(Some(vertex_id2), None,None)
+                    });
                 self.connectivity_info.set_halfedge_twin(halfedge_id1, &halfedge_id2);
-                self.connectivity_info.set_halfedge_twin(&halfedge_id2, halfedge_id1);
 
             }
         }
@@ -428,17 +422,15 @@ impl DynamicMesh
         // Update twin information
         for walker in self.face_halfedge_iterator(&new_face_id) {
             let vid = walker.vertex_id().unwrap();
+            let hid = walker.halfedge_id().unwrap();
             if vid == vertex_id1 {
-                self.connectivity_info.set_halfedge_twin(&twin_halfedge_id, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &twin_halfedge_id);
+                self.connectivity_info.set_halfedge_twin(&twin_halfedge_id, &hid);
             }
             else if vid == vertex_id2 {
-                self.connectivity_info.set_halfedge_twin(&halfedge_to_update1, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update1);
+                self.connectivity_info.set_halfedge_twin(&halfedge_to_update1, &hid);
             }
             else if &vid == new_vertex_id {
-                self.connectivity_info.set_halfedge_twin(&halfedge_to_update2, &walker.halfedge_id().unwrap());
-                self.connectivity_info.set_halfedge_twin(&walker.halfedge_id().unwrap(), &halfedge_to_update2);
+                self.connectivity_info.set_halfedge_twin(&halfedge_to_update2, &hid);
             }
             else {
                 panic!("Split one face failed")
