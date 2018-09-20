@@ -212,11 +212,6 @@ impl DynamicMesh
         new_vertex_id
     }
 
-    pub fn split_face(&mut self, face_id: &FaceID, position: &Vec3)
-    {
-        unimplemented!();
-    }
-
     pub fn remove_face(&mut self, face_id: &FaceID)
     {
         self.connectivity_info.remove_face(face_id);
@@ -386,11 +381,61 @@ impl DynamicMesh
             }
         }
     }
+
+    pub fn split_face(&mut self, face_id: &FaceID, position: &Vec3)
+    {
+
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_split_face()
+    {
+        let mut mesh = create_single_face();
+        let face_id = mesh.face_iterator().next().unwrap();
+
+        mesh.split_face(&face_id, &vec3(-1.0, -1.0, -1.0));
+
+        assert_eq!(mesh.no_vertices(), 4);
+        assert_eq!(mesh.no_halfedges(), 3 * 3 + 3);
+        assert_eq!(mesh.no_faces(), 3);
+
+        for vertex_id in mesh.vertex_iterator() {
+            assert!(mesh.walker_from_vertex(&vertex_id).halfedge_id().is_some());
+        }
+        for he_id in mesh.halfedge_iterator() {
+            assert!(mesh.walker_from_halfedge(&he_id).twin_id().is_some());
+            assert!(mesh.walker_from_halfedge(&he_id).vertex_id().is_some());
+            assert_eq!(mesh.walker_from_halfedge(&he_id).face_id().is_some(), mesh.walker_from_halfedge(&he_id).next_id().is_some());
+        }
+        for face_id in mesh.face_iterator() {
+            assert!(mesh.walker_from_face(&face_id).halfedge_id().is_some());
+        }
+
+        /*let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+        assert!(walker.halfedge_id().is_some());
+        assert!(walker.face_id().is_some());
+        assert!(walker.vertex_id().is_some());
+
+        walker.twin();
+        assert!(walker.halfedge_id().is_some());
+        assert!(walker.face_id().is_none());
+        assert!(walker.vertex_id().is_some());
+
+        walker.twin().next().twin();
+        assert!(walker.halfedge_id().is_some());
+        assert!(walker.face_id().is_some());
+        assert!(walker.vertex_id().is_some());
+
+        walker.next().next().twin();
+        assert!(walker.halfedge_id().is_some());
+        assert!(walker.face_id().is_none());
+        assert!(walker.vertex_id().is_some());*/
+    }
 
     #[test]
     fn test_one_face_connectivity() {
@@ -658,8 +703,6 @@ mod tests {
                 break;
             }
         }
-
-
     }
 
     #[test]
