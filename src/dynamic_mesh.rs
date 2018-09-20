@@ -479,17 +479,17 @@ mod tests {
 
         let mut walker = mesh.walker_from_vertex(&vertex_id);
         let start_edge = walker.halfedge_id().unwrap();
-        let one_round_edge = walker.previous().twin().previous().twin().previous().twin_id().unwrap();
+        let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id().unwrap();
         assert_eq!(start_edge, one_round_edge);
 
         assert!(walker.face_id().is_some());
         walker.next().twin();
         assert!(walker.face_id().is_none());
 
-        walker.twin().next().twin().next();
+        walker.twin().next().twin().next().twin();
         assert!(walker.face_id().is_none());
 
-        walker.twin().next().twin().next();
+        walker.twin().next().twin().next().twin();
         assert!(walker.face_id().is_none());
     }
 
