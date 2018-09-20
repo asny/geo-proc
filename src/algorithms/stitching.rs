@@ -121,10 +121,17 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
             if is_intersecting(triangle1, triangle2)
             {
                 for i in 0..3 {
+                    if let Some(point) = find_intersection_point(triangle1, &face2.points[i], &face2.points[(i+1)%3])
+                    {
+                        let edge = Edge::new(face2.vertex_ids[i].clone(), face2.vertex_ids[(i+1)%3].clone());
+                        intersections.face_edge_intersections.insert((face1.face_id, edge), point);
+                        // TODO: close to edge/vertex
+                    };
                     if let Some(point) = find_intersection_point(triangle2, &face1.points[i], &face1.points[(i+1)%3])
                     {
                         let edge = Edge::new(face1.vertex_ids[i].clone(), face1.vertex_ids[(i+1)%3].clone());
-                        intersections.edge_face_intersections.insert((edge, face1.face_id), point);
+                        intersections.edge_face_intersections.insert((edge, face2.face_id), point);
+                        // TODO: close to edge/vertex
                     };
                 }
             }
@@ -173,6 +180,8 @@ mod tests {
 
         find_intersections(&mut intersections, &mesh1, &mesh2);
         assert_eq!(intersections.face_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 10);
 
         /*assert!(intersections.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.25)));
         assert!(intersections.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.75)));
