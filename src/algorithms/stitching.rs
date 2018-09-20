@@ -15,6 +15,7 @@ type Point = Point3<f32>;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
+    let mut intersections = Intersections::new();
     let mut intersections_for_mesh1 = HashMap::new();
     let mut intersections_for_mesh2 = HashMap::new();
 
@@ -26,69 +27,37 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     mesh1.clone()
 }
 
-// TODO: VertexFace and FaceVertex intersections
 #[derive(Debug)]
-struct FaceEdgeIntersection
+struct Intersections
 {
-    pub face_id: FaceID,
-    pub edge: Edge,
-    pub point: Point
+    pub face_edge_intersections: HashMap<(FaceID, Edge), Point>,
+    pub edge_face_intersections: HashMap<(Edge, FaceID), Point>,
+
+    pub vertex_edge_intersections: HashMap<(VertexID, Edge), Point>,
+    pub edge_vertex_intersections: HashMap<(Edge, VertexID), Point>
 }
 
-impl FaceEdgeIntersection
+impl Intersections
 {
-    pub fn split(&self, mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> EdgeVertexIntersection
+    pub fn new() -> Intersections
     {
-        unimplemented!();
+        Intersections {face_edge_intersections: HashMap::new(), edge_face_intersections: HashMap::new(),
+            vertex_edge_intersections: HashMap::new(), edge_vertex_intersections: HashMap::new()}
     }
 }
 
-#[derive(Debug)]
-struct EdgeFaceIntersection
+fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh)
 {
-    pub face_id: FaceID,
-    pub edge: Edge,
-    pub point: Point
-}
-
-impl FaceEdgeIntersection
-{
-    pub fn resolve(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> EdgeVertexIntersection
-    {
-        unimplemented!();
+    for ((face_id, edge), point) in intersections.face_edge_intersections.drain() {
+        let vertex_id = mesh1.split_face(&face_id, point.coords);
+        intersections.vertex_edge_intersections.insert((vertex_id, edge), point);
     }
-}
 
-#[derive(Debug)]
-struct EdgeEdgeIntersection
-{
-    pub edge1: Edge,
-    pub edge2: Edge,
-    pub point: Point
-}
+    for ((edge, face_id), point) in intersections.edge_face_intersections.drain() {
+        let vertex_id = mesh2.split_face(&face_id, point.coords);
+        intersections.edge_vertex_intersections.insert((edge, vertex_id), point);
+    }
 
-#[derive(Debug)]
-struct EdgeVertexIntersection
-{
-    pub edge: Edge,
-    pub vertex_id: VertexID,
-    pub point: Point
-}
-
-#[derive(Debug)]
-struct VertexEdgeIntersection
-{
-    pub edge: Edge,
-    pub vertex_id: VertexID,
-    pub point: Point
-}
-
-#[derive(Debug)]
-struct VertexVertexIntersection
-{
-    pub vertex_id1: VertexID,
-    pub vertex_id2: VertexID,
-    pub point: Point
 }
 
 #[derive(Debug)]
