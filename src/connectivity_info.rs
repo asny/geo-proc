@@ -172,11 +172,11 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().next = Some(val.clone());
     }
 
-    pub fn set_halfedge_twin(&self, id1: &HalfEdgeID, id2: &HalfEdgeID)
+    pub fn set_halfedge_twin(&self, id1: HalfEdgeID, id2: HalfEdgeID)
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
-        halfedges.get_mut(id1).unwrap().twin = Some(id2.clone());
-        halfedges.get_mut(id2).unwrap().twin = Some(id1.clone());
+        halfedges.get_mut(&id1).unwrap().twin = Some(id2);
+        halfedges.get_mut(&id2).unwrap().twin = Some(id1);
     }
 
     pub fn set_halfedge_vertex(&self, id: &HalfEdgeID, val: &VertexID)

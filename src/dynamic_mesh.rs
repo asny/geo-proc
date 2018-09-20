@@ -198,14 +198,14 @@ impl DynamicMesh
         let is_boundary = walker.face_id().is_none();
 
         let new_vertex_id = self.create_vertex(position, None);
-        self.split_one_face(&split_halfedge_id, &twin_halfedge_id, &new_vertex_id);
+        self.split_one_face(&split_halfedge_id, twin_halfedge_id.clone(), &new_vertex_id);
 
         if !is_boundary {
-            self.split_one_face(&twin_halfedge_id, &split_halfedge_id, &new_vertex_id);
+            self.split_one_face(&twin_halfedge_id, split_halfedge_id, &new_vertex_id);
         }
         else {
             let new_halfedge_id = self.connectivity_info.create_halfedge(twin_vertex_id, None, None);
-            self.connectivity_info.set_halfedge_twin(&split_halfedge_id, &new_halfedge_id);
+            self.connectivity_info.set_halfedge_twin(split_halfedge_id, new_halfedge_id);
         };
 
         new_vertex_id
@@ -241,10 +241,10 @@ impl DynamicMesh
             let vid = walker.vertex_id().unwrap();
             let hid = walker.halfedge_id().unwrap();
             if vid == vertex_id1 {
-                self.connectivity_info.set_halfedge_twin(&halfedge_id2, &hid);
+                self.connectivity_info.set_halfedge_twin(halfedge_id2, hid);
             }
             else if vid == vertex_id2 {
-                self.connectivity_info.set_halfedge_twin(&twin_id2, &hid);
+                self.connectivity_info.set_halfedge_twin(twin_id2, hid);
             }
             else if vid == new_vertex_id {
                 new_halfedge_id = walker.halfedge_id().unwrap();
@@ -257,13 +257,13 @@ impl DynamicMesh
             let vid = walker.vertex_id().unwrap();
             let hid = walker.halfedge_id().unwrap();
             if vid == vertex_id2 {
-                self.connectivity_info.set_halfedge_twin(&new_halfedge_id, &hid);
+                self.connectivity_info.set_halfedge_twin(new_halfedge_id, hid);
             }
             else if vid == vertex_id3 {
-                self.connectivity_info.set_halfedge_twin(&twin_id3, &hid);
+                self.connectivity_info.set_halfedge_twin(twin_id3, hid);
             }
             else if vid == new_vertex_id {
-                self.connectivity_info.set_halfedge_twin(&halfedge_id3, &hid);
+                self.connectivity_info.set_halfedge_twin(halfedge_id3, hid);
             }
             else {
                 panic!("Split face failed")
@@ -378,8 +378,8 @@ impl DynamicMesh
 
         for i1 in 0..edges.len()
         {
-            let halfedge_id1 = &edges[i1];
-            if walker.jump_to_edge(halfedge_id1).twin_id().is_none()
+            let halfedge_id1 = edges[i1];
+            if walker.jump_to_edge(&halfedge_id1).twin_id().is_none()
             {
                 let vertex_id1 = walker.vertex_id().unwrap();
                 let vertex_id2 = walker.previous().vertex_id().unwrap();
@@ -400,13 +400,13 @@ impl DynamicMesh
                 let halfedge_id2 = halfedge2.unwrap_or_else(|| {
                         self.connectivity_info.create_halfedge(Some(vertex_id2), None,None)
                     });
-                self.connectivity_info.set_halfedge_twin(halfedge_id1, &halfedge_id2);
+                self.connectivity_info.set_halfedge_twin(halfedge_id1, halfedge_id2);
 
             }
         }
     }
 
-    fn split_one_face(&mut self, halfedge_id: &HalfEdgeID, twin_halfedge_id: &HalfEdgeID, new_vertex_id: &VertexID)
+    fn split_one_face(&mut self, halfedge_id: &HalfEdgeID, twin_halfedge_id: HalfEdgeID, new_vertex_id: &VertexID)
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
         let vertex_id1 = walker.vertex_id().unwrap();
@@ -424,13 +424,13 @@ impl DynamicMesh
             let vid = walker.vertex_id().unwrap();
             let hid = walker.halfedge_id().unwrap();
             if vid == vertex_id1 {
-                self.connectivity_info.set_halfedge_twin(&twin_halfedge_id, &hid);
+                self.connectivity_info.set_halfedge_twin(twin_halfedge_id, hid);
             }
             else if vid == vertex_id2 {
-                self.connectivity_info.set_halfedge_twin(&halfedge_to_update1, &hid);
+                self.connectivity_info.set_halfedge_twin(halfedge_to_update1, hid);
             }
             else if &vid == new_vertex_id {
-                self.connectivity_info.set_halfedge_twin(&halfedge_to_update2, &hid);
+                self.connectivity_info.set_halfedge_twin(halfedge_to_update2, hid);
             }
             else {
                 panic!("Split one face failed")
