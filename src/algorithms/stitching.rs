@@ -8,7 +8,7 @@ use connectivity::*;
 use dynamic_mesh::DynamicMesh;
 
 use algorithms::stitching::ncollide3d::query::{proximity, Proximity, Ray, RayCast};
-use na::{Isometry3, Point3};
+use na::{self, Isometry3, Point3};
 
 type Triangle = ncollide3d::shape::Triangle<f32>;
 type Point = Point3<f32>;
@@ -121,12 +121,26 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
             if is_intersecting(triangle1, triangle2)
             {
                 for i in 0..3 {
-                    if let Some(point) = find_intersection_point(triangle1, &face2.points[i], &face2.points[(i+1)%3])
+                    let p0 = &face2.points[i];
+                    let p1 = &face2.points[(i+1)%3];
+                    if let Some(point) = find_intersection_point(triangle1, p0, p1)
                     {
+
+
+                        if na::distance(&point, p0) < 0.1 {
+
+                        }
+
                         let edge = Edge::new(face2.vertex_ids[i].clone(), face2.vertex_ids[(i+1)%3].clone());
+
+
                         intersections.face_edge_intersections.insert((face1.face_id, edge), point);
                         // TODO: close to edge/vertex
                     };
+
+
+
+
                     if let Some(point) = find_intersection_point(triangle2, &face1.points[i], &face1.points[(i+1)%3])
                     {
                         let edge = Edge::new(face1.vertex_ids[i].clone(), face1.vertex_ids[(i+1)%3].clone());
@@ -137,6 +151,45 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
             }
         }
     }
+}
+
+fn find_close_edge(face: &Face, point: &Point) -> Option<Edge>
+{
+    for i in 0..3 {
+        let p0 = &face.points[i];
+        let p1 = &face.points[(i + 1) % 3];
+        if point_linesegment_distance(point, p0, p1) < 0.1 {
+            return Some(Edge::new(face.vertex_ids[i], face.vertex_ids[(i + 1) % 3]))
+        }
+    }
+    None
+}
+
+fn point_linesegment_distance( point: &Point, p0: &Point, p1: &Point ) -> f32
+{
+    let v  = p1 - p0;
+    let w  = point - p0;
+
+    let c1 = w.dot(&v);
+    if c1 <= 0.0 { return w.norm(); }
+
+    let c2 = v.dot(&v);
+    if (c2 <= c1) { return na::distance(point, p1); }
+
+    let b = c1 / c2;
+    let pb = p0 + b * v;
+    na::distance(point, &pb)
+}
+
+fn find_close_vertex(face: &Face, point: &Point) -> Option<VertexID>
+{
+    for i in 0..3 {
+        let p = &face.points[i];
+        if na::distance(p, point) < 0.1 {
+            return Some(face.vertex_ids[i])
+        }
+    }
+    None
 }
 
 fn find_intersection_point(triangle: &Triangle, p0: &Point, p1: &Point) -> Option<Point>
