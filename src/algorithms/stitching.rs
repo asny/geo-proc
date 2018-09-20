@@ -26,6 +26,71 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     mesh1.clone()
 }
 
+// TODO: VertexFace and FaceVertex intersections
+#[derive(Debug)]
+struct FaceEdgeIntersection
+{
+    pub face_id: FaceID,
+    pub edge: Edge,
+    pub point: Point
+}
+
+impl FaceEdgeIntersection
+{
+    pub fn split(&self, mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> EdgeVertexIntersection
+    {
+        unimplemented!();
+    }
+}
+
+#[derive(Debug)]
+struct EdgeFaceIntersection
+{
+    pub face_id: FaceID,
+    pub edge: Edge,
+    pub point: Point
+}
+
+impl FaceEdgeIntersection
+{
+    pub fn resolve(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> EdgeVertexIntersection
+    {
+        unimplemented!();
+    }
+}
+
+#[derive(Debug)]
+struct EdgeEdgeIntersection
+{
+    pub edge1: Edge,
+    pub edge2: Edge,
+    pub point: Point
+}
+
+#[derive(Debug)]
+struct EdgeVertexIntersection
+{
+    pub edge: Edge,
+    pub vertex_id: VertexID,
+    pub point: Point
+}
+
+#[derive(Debug)]
+struct VertexEdgeIntersection
+{
+    pub edge: Edge,
+    pub vertex_id: VertexID,
+    pub point: Point
+}
+
+#[derive(Debug)]
+struct VertexVertexIntersection
+{
+    pub vertex_id1: VertexID,
+    pub vertex_id2: VertexID,
+    pub point: Point
+}
+
 #[derive(Debug)]
 struct Face
 {
