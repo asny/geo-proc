@@ -30,6 +30,9 @@ struct Intersections
     pub face_edge_intersections: HashMap<(FaceID, Edge), Point>,
     pub edge_face_intersections: HashMap<(Edge, FaceID), Point>,
 
+    pub face_vertex_intersections: HashMap<(FaceID, VertexID), Point>,
+    pub vertex_face_intersections: HashMap<(VertexID, FaceID), Point>,
+
     pub edge_edge_intersections: HashMap<(Edge, Edge), Point>,
 
     pub vertex_edge_intersections: HashMap<(VertexID, Edge), Point>,
@@ -42,7 +45,8 @@ impl Intersections
 {
     pub fn new() -> Intersections
     {
-        Intersections {face_edge_intersections: HashMap::new(), edge_face_intersections: HashMap::new(), edge_edge_intersections: HashMap::new(),
+        Intersections {face_edge_intersections: HashMap::new(), edge_face_intersections: HashMap::new(), face_vertex_intersections: HashMap::new(),
+            vertex_face_intersections: HashMap::new(), edge_edge_intersections: HashMap::new(),
             vertex_edge_intersections: HashMap::new(), edge_vertex_intersections: HashMap::new(), vertex_vertex_intersections: HashMap::new()}
     }
 }
@@ -58,6 +62,8 @@ fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut
         let vertex_id = mesh2.split_face(&face_id, point.coords);
         intersections.edge_vertex_intersections.insert((edge, vertex_id), point);
     }
+
+    // Todo: Face vertex and vertex face
 
     for ((edge1, edge2), point) in intersections.edge_edge_intersections.drain() {
         let halfedge_id1 = connecting_edge(mesh1, &edge1.v0, &edge1.v1).unwrap();
@@ -125,28 +131,53 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
                     let p1 = &face2.points[(i+1)%3];
                     if let Some(point) = find_intersection_point(triangle1, p0, p1)
                     {
-
-
-                        if na::distance(&point, p0) < 0.1 {
-
+                        if na::distance(&point, p0) < 0.1
+                        {
+                            let vertex_id2 = face2.vertex_ids[i].clone();
+                            if let Some(vertex_id1) = find_close_vertex(&face1, &point)
+                            {
+                                intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+                            }
+                            else if let Some(edge1) = find_close_edge(&face1, &point)
+                            {
+                                intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
+                            }
+                            else {
+                                intersections.face_vertex_intersections.insert((face1.face_id, vertex_id2), point);
+                            }
                         }
-
-                        let edge = Edge::new(face2.vertex_ids[i].clone(), face2.vertex_ids[(i+1)%3].clone());
-
-
-                        intersections.face_edge_intersections.insert((face1.face_id, edge), point);
-                        // TODO: close to edge/vertex
+                        else if na::distance(&point, p1) < 0.1
+                        {
+                            let vertex_id2 = face2.vertex_ids[(i+1)%3].clone();
+                            if let Some(vertex_id1) = find_close_vertex(&face1, &point)
+                            {
+                                intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+                            }
+                            else if let Some(edge1) = find_close_edge(&face1, &point)
+                            {
+                                intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
+                            }
+                            else {
+                                intersections.face_vertex_intersections.insert((face1.face_id, vertex_id2), point);
+                            }
+                        }
+                        else {
+                            let edge2 = Edge::new(face2.vertex_ids[i].clone(), face2.vertex_ids[(i+1)%3].clone());
+                            if let Some(vertex_id1) = find_close_vertex(&face1, &point)
+                            {
+                                intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
+                            }
+                            else if let Some(edge1) = find_close_edge(&face1, &point)
+                            {
+                                intersections.edge_edge_intersections.insert((edge1, edge2), point);
+                            }
+                            else {
+                                intersections.face_edge_intersections.insert((face1.face_id, edge2), point);
+                            }
+                        }
                     };
 
-
-
-
-                    if let Some(point) = find_intersection_point(triangle2, &face1.points[i], &face1.points[(i+1)%3])
-                    {
-                        let edge = Edge::new(face1.vertex_ids[i].clone(), face1.vertex_ids[(i+1)%3].clone());
-                        intersections.edge_face_intersections.insert((edge, face2.face_id), point);
-                        // TODO: close to edge/vertex
-                    };
+                    // Todo: mesh 2 triangle vs mesh 1 edges
                 }
             }
         }
