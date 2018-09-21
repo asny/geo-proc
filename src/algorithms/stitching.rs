@@ -18,23 +18,23 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
 {
     let mut intersections = find_intersections(mesh1, mesh2);
 
-    for ((face_id, edge), point) in intersections.face_edge_intersections.drain() {
-        let vertex_id = mesh1.split_face(&face_id, point);
-        intersections.vertex_edge_intersections.insert((vertex_id, edge), point);
+    for ((face_id1, edge2), point) in intersections.face_edge_intersections.drain() {
+        let vertex_id1 = mesh1.split_face(&face_id1, point);
+        intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
     }
 
-    for ((edge, face_id), point) in intersections.edge_face_intersections.drain() {
-        let vertex_id = mesh2.split_face(&face_id, point);
-        intersections.edge_vertex_intersections.insert((edge, vertex_id), point);
+    for ((edge1, face_id2), point) in intersections.edge_face_intersections.drain() {
+        let vertex_id2 = mesh2.split_face(&face_id2, point);
+        intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
     }
 
-    for ((face_id, vertex_id2), point) in intersections.face_vertex_intersections.drain() {
-        let vertex_id1 = mesh1.split_face(&face_id, point);
+    for ((face_id1, vertex_id2), point) in intersections.face_vertex_intersections.drain() {
+        let vertex_id1 = mesh1.split_face(&face_id1, point);
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
-    for ((vertex_id1, face_id), point) in intersections.vertex_face_intersections.drain() {
-        let vertex_id2 = mesh2.split_face(&face_id, point);
+    for ((vertex_id1, face_id2), point) in intersections.vertex_face_intersections.drain() {
+        let vertex_id2 = mesh2.split_face(&face_id2, point);
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
@@ -46,15 +46,15 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
-    for ((edge, vertex_id2), point) in intersections.edge_vertex_intersections.drain() {
-        let halfedge_id = connecting_edge(mesh1, &edge.v0, &edge.v1).unwrap();
-        let vertex_id1 = mesh1.split_edge(&halfedge_id, point);
+    for ((edge1, vertex_id2), point) in intersections.edge_vertex_intersections.drain() {
+        let halfedge_id1 = connecting_edge(mesh1, &edge1.v0, &edge1.v1).unwrap();
+        let vertex_id1 = mesh1.split_edge(&halfedge_id1, point);
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
-    for ((vertex_id1, edge), point) in intersections.vertex_edge_intersections.drain() {
-        let halfedge_id = connecting_edge(mesh2, &edge.v0, &edge.v1).unwrap();
-        let vertex_id2 = mesh2.split_edge(&halfedge_id, point);
+    for ((vertex_id1, edge2), point) in intersections.vertex_edge_intersections.drain() {
+        let halfedge_id2 = connecting_edge(mesh2, &edge2.v0, &edge2.v1).unwrap();
+        let vertex_id2 = mesh2.split_edge(&halfedge_id2, point);
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
