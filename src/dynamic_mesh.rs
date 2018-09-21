@@ -289,6 +289,15 @@ impl DynamicMesh
         self.positions.insert(vertex_id, value);
     }
 
+    pub fn move_vertex(&mut self, vertex_id: VertexID, value: Vec3)
+    {
+        let mut p = value;
+        {
+            p = p + *self.positions.get(&vertex_id).unwrap();
+        }
+        self.positions.insert(vertex_id, p);
+    }
+
     //////////////////////////////////////////
     // *** Functions related to the normal ***
     //////////////////////////////////////////
