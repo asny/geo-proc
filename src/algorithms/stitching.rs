@@ -135,7 +135,7 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
                         let edge2 = Edge::new(v0, v1);
                         if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
                         {
-                            if let Some(vertex_id1) = find_close_vertex(mesh1,&face_id1, &point)
+                            if let Some(vertex_id1) = find_close_vertex_on_face(mesh1, &face_id1, &point)
                             {
                                 intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
                             }
@@ -148,7 +148,7 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
                             }
                         }
                         else {
-                            if let Some(vertex_id1) = find_close_vertex(mesh1,&face_id1, &point)
+                            if let Some(vertex_id1) = find_close_vertex_on_face(mesh1, &face_id1, &point)
                             {
                                 intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
                             }
@@ -161,9 +161,8 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
                             }
                         }
                     };
-
-                    // Todo: mesh 2 triangle vs mesh 1 edges
                 }
+                // Todo: mesh 2 triangle vs mesh 1 edges
             }
         }
     }
@@ -192,23 +191,7 @@ fn find_close_edge(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option
     None
 }
 
-fn point_linesegment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
-{
-    let v  = p1 - p0;
-    let w  = point - p0;
-
-    let c1 = w.dot(&v);
-    if c1 <= 0.0 { return w.norm(); }
-
-    let c2 = v.dot(&v);
-    if (c2 <= c1) { return (point - p1).norm(); }
-
-    let b = c1 / c2;
-    let pb = p0 + b * v;
-    (point - &pb).norm()
-}
-
-fn find_close_vertex(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<VertexID>
+fn find_close_vertex_on_face(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<VertexID>
 {
     for walker in mesh.face_halfedge_iterator(face_id) {
         let vertex_id = walker.vertex_id().unwrap();
@@ -230,6 +213,22 @@ fn find_close_vertex_on_edge(mesh: &DynamicMesh, edge: &Edge, point: &Vec3) -> O
         return Some(edge.v1)
     }
     None
+}
+
+fn point_linesegment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
+{
+    let v  = p1 - p0;
+    let w  = point - p0;
+
+    let c1 = w.dot(&v);
+    if c1 <= 0.0 { return w.norm(); }
+
+    let c2 = v.dot(&v);
+    if (c2 <= c1) { return (point - p1).norm(); }
+
+    let b = c1 / c2;
+    let pb = p0 + b * v;
+    (point - &pb).norm()
 }
 
 fn find_intersection_point(triangle: &Triangle, p0: &Vec3, p1: &Vec3) -> Option<Vec3>
