@@ -381,7 +381,7 @@ mod tests {
     }
 
     #[test]
-    fn test_split_edges2()
+    fn test_split_faces()
     {
         let mut mesh1 = create_simple_mesh_x_z();
         let mut mesh2 = create_shifted_simple_mesh_y_z();
@@ -411,13 +411,44 @@ mod tests {
     }
 
     #[test]
+    fn test_split_face()
+    {
+        let mut mesh1 = create_simple_mesh_x_z();
+        let indices: Vec<u32> = vec![0, 1, 2];
+        let positions: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mut mesh2 = DynamicMesh::create(indices, positions, None);
+
+        let intersections = find_intersections(&mesh1, &mesh2);
+
+        assert_eq!(intersections.face_edge_intersections.len(), 2);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 0);
+
+        let stitches = split_at_intersections(&mut mesh1, &mut mesh2);
+
+        assert_eq!(mesh1.no_vertices(), 8);
+        assert_eq!(mesh1.no_faces(), 8);
+        assert_eq!(mesh1.no_halfedges(), 8 * 3 + 6);
+
+        assert_eq!(mesh2.no_vertices(), 5);
+        assert_eq!(mesh2.no_faces(), 3);
+        assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
+
+        assert_eq!(stitches.len(), 2);
+    }
+
+    #[test]
     fn test_simple_stitching()
     {
         let mut mesh1 = create_simple_mesh_x_z();
         let mut mesh2 = create_simple_mesh_y_z();
         let stitched = stitch(&mut mesh1, &mut mesh2);
-        println!("{:?}", stitched.indices());
-        //assert_eq!(stitched.no_vertices(), 1);
+        
     }
 
     fn create_simple_mesh_x_z() -> DynamicMesh
