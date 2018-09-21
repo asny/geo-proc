@@ -137,6 +137,40 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
                         }
                     };
                 }
+                for walker in mesh1.face_halfedge_iterator(&face_id1)
+                {
+                    if let Some(point) = find_intersection_point(mesh2, &face_id2, mesh1,&walker.halfedge_id().unwrap())
+                    {
+                        let edge1 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
+                        if let Some(vertex_id1) = find_close_vertex_on_edge(mesh1,&edge1, &point)
+                        {
+                            if let Some(vertex_id2) = find_close_vertex_on_face(mesh2, &face_id2, &point)
+                            {
+                                intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+                            }
+                            else if let Some(edge2) = find_close_edge(mesh2,&face_id2, &point)
+                            {
+                                intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
+                            }
+                            else {
+                                intersections.vertex_face_intersections.insert((vertex_id1, face_id2), point);
+                            }
+                        }
+                        else {
+                            if let Some(vertex_id2) = find_close_vertex_on_face(mesh2, &face_id2, &point)
+                            {
+                                intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
+                            }
+                            else if let Some(edge2) = find_close_edge(mesh2,&face_id2, &point)
+                            {
+                                intersections.edge_edge_intersections.insert((edge1, edge2), point);
+                            }
+                            else {
+                                intersections.edge_face_intersections.insert((edge1, face_id2), point);
+                            }
+                        }
+                    };
+                }
             }
         }
     }
