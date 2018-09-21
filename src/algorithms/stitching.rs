@@ -105,12 +105,9 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
             {
                 for walker in mesh2.face_halfedge_iterator(&face_id2)
                 {
-                    let v0 = walker.vertex_id().unwrap();
-                    let v1 = walker.clone().twin().vertex_id().unwrap();
-
                     if let Some(point) = find_intersection_point(mesh1, &face_id1, mesh2,&walker.halfedge_id().unwrap())
                     {
-                        let edge2 = Edge::new(v0, v1);
+                        let edge2 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
                         if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
                         {
                             if let Some(vertex_id1) = find_close_vertex_on_face(mesh1, &face_id1, &point)
