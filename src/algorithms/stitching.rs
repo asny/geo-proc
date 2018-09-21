@@ -176,6 +176,8 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
     }
 }
 
+const MARGIN: f32 = 0.01;
+
 fn find_close_edge(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<Edge>
 {
     let mut walker = mesh.walker_from_face(face_id);
@@ -183,17 +185,17 @@ fn find_close_edge(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option
     walker.next();
     let vertex_id2 = walker.vertex_id().unwrap();
 
-    if point_linesegment_distance(point, mesh.position(&vertex_id1), mesh.position(&vertex_id2)) < 0.1 {
+    if point_linesegment_distance(point, mesh.position(&vertex_id1), mesh.position(&vertex_id2)) < MARGIN {
         return Some(Edge::new(vertex_id1, vertex_id2))
     }
 
     walker.next();
     let vertex_id3 = walker.vertex_id().unwrap();
 
-    if point_linesegment_distance(point, mesh.position(&vertex_id2), mesh.position(&vertex_id3)) < 0.1 {
+    if point_linesegment_distance(point, mesh.position(&vertex_id2), mesh.position(&vertex_id3)) < MARGIN {
         return Some(Edge::new(vertex_id2, vertex_id3))
     }
-    if point_linesegment_distance(point, mesh.position(&vertex_id3), mesh.position(&vertex_id1)) < 0.1 {
+    if point_linesegment_distance(point, mesh.position(&vertex_id3), mesh.position(&vertex_id1)) < MARGIN {
         return Some(Edge::new(vertex_id3, vertex_id1))
     }
     None
@@ -203,7 +205,7 @@ fn find_close_vertex_on_face(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3)
 {
     for walker in mesh.face_halfedge_iterator(face_id) {
         let vertex_id = walker.vertex_id().unwrap();
-        if (mesh.position(&vertex_id) - point).norm() < 0.1 {
+        if (mesh.position(&vertex_id) - point).norm() < MARGIN {
             return Some(vertex_id)
         }
     }
@@ -212,11 +214,11 @@ fn find_close_vertex_on_face(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3)
 
 fn find_close_vertex_on_edge(mesh: &DynamicMesh, edge: &Edge, point: &Vec3) -> Option<VertexID>
 {
-    if(point - mesh.position(&edge.v0)).norm() < 0.1
+    if(point - mesh.position(&edge.v0)).norm() < MARGIN
     {
         return Some(edge.v0)
     }
-    if (point - mesh.position(&edge.v1)).norm() < 0.1
+    if (point - mesh.position(&edge.v1)).norm() < MARGIN
     {
         return Some(edge.v1)
     }
@@ -247,7 +249,7 @@ mod tests {
     use mesh::Renderable;
 
     #[test]
-    fn test_finding_intersections()
+    fn test_finding_edge_edge_intersections()
     {
         let mesh1 = create_simple_mesh_x_z();
         let mesh2 = create_simple_mesh_y_z();
@@ -273,6 +275,86 @@ mod tests {
             |pair| pair.1.x == 0.5 && pair.1.y == 0.0 && pair.1.z == 1.75));
         assert!(intersections.edge_edge_intersections.iter().any(
             |pair| pair.1.x == 0.5 && pair.1.y == 0.0 && pair.1.z == 2.25));
+    }
+
+    #[test]
+    fn test_finding_face_edge_intersections()
+    {
+        let mesh1 = create_simple_mesh_x_z();
+        let indices: Vec<u32> = vec![0, 1, 2];
+        let positions: Vec<f32> = vec![0.5, -0.5, 0.0,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mesh2 = DynamicMesh::create(indices, positions, None);
+
+        let mut intersections = Intersections::new();
+        find_intersections(&mut intersections, &mesh1, &mesh2);
+        assert_eq!(intersections.face_edge_intersections.len(), 1);
+        assert_eq!(intersections.edge_face_intersections.len(), 1);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 0);
+    }
+
+    #[test]
+    fn test_finding_face_vertex_intersections()
+    {
+        let mesh1 = create_simple_mesh_x_z();
+        let indices: Vec<u32> = vec![0, 1, 2];
+        let positions: Vec<f32> = vec![0.5, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mesh2 = DynamicMesh::create(indices, positions, None);
+
+        let mut intersections = Intersections::new();
+        find_intersections(&mut intersections, &mesh1, &mesh2);
+        assert_eq!(intersections.face_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.face_vertex_intersections.len(), 1);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 0);
+    }
+
+    #[test]
+    fn test_finding_edge_vertex_intersections()
+    {
+        let mesh1 = create_simple_mesh_x_z();
+        let indices: Vec<u32> = vec![0, 1, 2];
+        let positions: Vec<f32> = vec![0.5, 0.0, 0.25,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mesh2 = DynamicMesh::create(indices, positions, None);
+
+        let mut intersections = Intersections::new();
+        find_intersections(&mut intersections, &mesh1, &mesh2);
+        assert_eq!(intersections.face_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 1);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 0);
+    }
+
+    #[test]
+    fn test_finding_vertex_vertex_intersections()
+    {
+        let mesh1 = create_simple_mesh_x_z();
+        let indices: Vec<u32> = vec![0, 1, 2];
+        let positions: Vec<f32> = vec![1.0, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mesh2 = DynamicMesh::create(indices, positions, None);
+
+        let mut intersections = Intersections::new();
+        find_intersections(&mut intersections, &mesh1, &mesh2);
+        assert_eq!(intersections.face_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 1);
     }
 
     #[test]
