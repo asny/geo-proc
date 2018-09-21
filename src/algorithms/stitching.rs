@@ -57,7 +57,15 @@ fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut
         intersections.edge_vertex_intersections.insert((edge, vertex_id), point);
     }
 
-    // Todo: Face vertex and vertex face
+    for ((face_id, vertex_id2), point) in intersections.face_vertex_intersections.drain() {
+        let vertex_id1 = mesh1.split_face(&face_id, point);
+        intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+    }
+
+    for ((vertex_id1, face_id), point) in intersections.vertex_face_intersections.drain() {
+        let vertex_id2 = mesh2.split_face(&face_id, point);
+        intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+    }
 
     for ((edge1, edge2), point) in intersections.edge_edge_intersections.drain() {
         let halfedge_id1 = connecting_edge(mesh1, &edge1.v0, &edge1.v1).unwrap();
@@ -375,6 +383,53 @@ mod tests {
         assert_eq!(mesh2.no_vertices(), 11);
         assert_eq!(mesh2.no_halfedges(), 12 * 3 + 8);
         assert_eq!(mesh2.no_faces(), 12);
+
+        assert_eq!(intersections.face_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 5);
+    }
+
+    #[test]
+    fn test_split_edges2()
+    {
+        let mut mesh1 = create_simple_mesh_x_z();
+        let mut mesh2 = create_shifted_simple_mesh_y_z();
+        let mut intersections = Intersections::new();
+
+        find_intersections(&mut intersections, &mesh1, &mesh2);
+
+        assert_eq!(intersections.face_edge_intersections.len(), 4);
+        assert_eq!(intersections.edge_face_intersections.len(), 4);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 0);
+
+        split(&mut intersections, &mut mesh1, &mut mesh2);
+
+        assert_eq!(mesh1.no_vertices(), 14);
+        assert_eq!(mesh1.no_faces(), 19);
+        assert_eq!(mesh1.no_halfedges(), 19 * 3 + 7);
+
+        assert_eq!(mesh2.no_vertices(), 14);
+        assert_eq!(mesh2.no_faces(), 19);
+        assert_eq!(mesh2.no_halfedges(), 19 * 3 + 7);
+
+        assert_eq!(intersections.face_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 8);
     }
 
     #[test]
@@ -398,6 +453,13 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.5, -0.5, 0.0,  0.5, -0.5, 1.0,  0.5, 0.5, 0.5,  0.5, 0.5, 1.5,  0.5, -0.5, 2.0,  0.5, 0.5, 2.5];
+        DynamicMesh::create(indices, positions, None)
+    }
+
+    fn create_shifted_simple_mesh_y_z() -> DynamicMesh
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
+        let positions: Vec<f32> = vec![0.5, -0.5, -0.2,  0.5, -0.5, 0.8,  0.5, 0.5, 0.3,  0.5, 0.5, 1.3,  0.5, -0.5, 1.8,  0.5, 0.5, 2.3];
         DynamicMesh::create(indices, positions, None)
     }
 }
