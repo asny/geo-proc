@@ -88,14 +88,6 @@ fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut
 
 }
 
-#[derive(Debug)]
-struct Face
-{
-    pub face_id: FaceID,
-    pub vertex_ids: [VertexID; 3],
-    pub points: [Point; 3]
-}
-
 #[derive(Debug, Hash, Eq, PartialEq)]
 struct Edge
 {
@@ -119,18 +111,16 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
 {
     for face_id1 in mesh1.face_iterator()
     {
-        let triangle1 = face_id_to_triangle(&mesh1,&face_id1);
         for face_id2 in mesh2.face_iterator()
         {
-            let triangle2 = face_id_to_triangle(&mesh2,&face_id2);
-            if is_intersecting(&triangle1, &triangle2)
+            if is_intersecting(mesh1, &face_id1, mesh2, &face_id2)
             {
                 for walker in mesh2.face_halfedge_iterator(&face_id2)
                 {
                     let v0 = walker.vertex_id().unwrap();
                     let v1 = walker.clone().twin().vertex_id().unwrap();
 
-                    if let Some(point) = find_intersection_point(&triangle1,mesh2.position(&v0), mesh2.position(&v1))
+                    if let Some(point) = find_intersection_point(mesh1, &face_id1,mesh2.position(&v0), mesh2.position(&v1))
                     {
                         let edge2 = Edge::new(v0, v1);
                         if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
@@ -162,7 +152,6 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
                         }
                     };
                 }
-                // Todo: mesh 2 triangle vs mesh 1 edges
             }
         }
     }
@@ -231,17 +220,21 @@ fn point_linesegment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
     (point - &pb).norm()
 }
 
-fn find_intersection_point(triangle: &Triangle, p0: &Vec3, p1: &Vec3) -> Option<Vec3>
+fn find_intersection_point(mesh: &DynamicMesh, face_id: &FaceID, p0: &Vec3, p1: &Vec3) -> Option<Vec3>
 {
+    let triangle = face_id_to_triangle(mesh, face_id);
     let p0_ = Point::from_coordinates(*p0);
     let p1_ = Point::from_coordinates(*p1);
     let ray = Ray::new(p0_.clone(), p1_ - p0_);
     triangle.toi_with_ray(&Isometry3::identity(), &ray, false).and_then(|toi| Some(ray.origin.coords + ray.dir * toi))
 }
 
-fn is_intersecting(triangle1: &Triangle, triangle2: &Triangle) -> bool
+fn is_intersecting(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID) -> bool
 {
-    let prox = proximity(&Isometry3::identity(), triangle1,&Isometry3::identity(), triangle2, 0.1);
+    let triangle1 = face_id_to_triangle(mesh1, face_id1);
+    let triangle2 = face_id_to_triangle(mesh2, face_id2);
+
+    let prox = proximity(&Isometry3::identity(), &triangle1,&Isometry3::identity(), &triangle2, 0.1);
     prox == Proximity::Intersecting
 }
 
