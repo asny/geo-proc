@@ -385,7 +385,6 @@ mod tests {
     {
         let mut mesh1 = create_simple_mesh_x_z();
         let mut mesh2 = create_shifted_simple_mesh_y_z();
-        let mut intersections = Intersections::new();
 
         let intersections = find_intersections(&mesh1, &mesh2);
 

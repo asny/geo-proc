@@ -216,8 +216,6 @@ impl DynamicMesh
         let new_vertex_id = self.create_vertex(position, None);
 
         let mut walker = self.walker_from_face(face_id);
-        let halfedge_id1 = walker.halfedge_id().unwrap();
-        let twin_id1 = walker.twin_id().unwrap();
         let vertex_id1 = walker.vertex_id().unwrap();
 
         walker.next();
