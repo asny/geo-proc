@@ -3,6 +3,7 @@ extern crate ncollide3d;
 
 use std::collections::HashMap;
 
+use types::*;
 use ids::*;
 use connectivity::*;
 use dynamic_mesh::DynamicMesh;
@@ -27,18 +28,18 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 #[derive(Debug)]
 struct Intersections
 {
-    pub face_edge_intersections: HashMap<(FaceID, Edge), Point>,
-    pub edge_face_intersections: HashMap<(Edge, FaceID), Point>,
+    pub face_edge_intersections: HashMap<(FaceID, Edge), Vec3>,
+    pub edge_face_intersections: HashMap<(Edge, FaceID), Vec3>,
 
-    pub face_vertex_intersections: HashMap<(FaceID, VertexID), Point>,
-    pub vertex_face_intersections: HashMap<(VertexID, FaceID), Point>,
+    pub face_vertex_intersections: HashMap<(FaceID, VertexID), Vec3>,
+    pub vertex_face_intersections: HashMap<(VertexID, FaceID), Vec3>,
 
-    pub edge_edge_intersections: HashMap<(Edge, Edge), Point>,
+    pub edge_edge_intersections: HashMap<(Edge, Edge), Vec3>,
 
-    pub vertex_edge_intersections: HashMap<(VertexID, Edge), Point>,
-    pub edge_vertex_intersections: HashMap<(Edge, VertexID), Point>,
+    pub vertex_edge_intersections: HashMap<(VertexID, Edge), Vec3>,
+    pub edge_vertex_intersections: HashMap<(Edge, VertexID), Vec3>,
 
-    pub vertex_vertex_intersections: HashMap<(VertexID, VertexID), Point>
+    pub vertex_vertex_intersections: HashMap<(VertexID, VertexID), Vec3>
 }
 
 impl Intersections
@@ -54,12 +55,12 @@ impl Intersections
 fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh)
 {
     for ((face_id, edge), point) in intersections.face_edge_intersections.drain() {
-        let vertex_id = mesh1.split_face(&face_id, point.coords);
+        let vertex_id = mesh1.split_face(&face_id, point);
         intersections.vertex_edge_intersections.insert((vertex_id, edge), point);
     }
 
     for ((edge, face_id), point) in intersections.edge_face_intersections.drain() {
-        let vertex_id = mesh2.split_face(&face_id, point.coords);
+        let vertex_id = mesh2.split_face(&face_id, point);
         intersections.edge_vertex_intersections.insert((edge, vertex_id), point);
     }
 
@@ -67,21 +68,21 @@ fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut
 
     for ((edge1, edge2), point) in intersections.edge_edge_intersections.drain() {
         let halfedge_id1 = connecting_edge(mesh1, &edge1.v0, &edge1.v1).unwrap();
-        let vertex_id1 = mesh1.split_edge(&halfedge_id1, point.coords);
+        let vertex_id1 = mesh1.split_edge(&halfedge_id1, point);
         let halfedge_id2 = connecting_edge(mesh2, &edge2.v0, &edge2.v1).unwrap();
-        let vertex_id2 = mesh2.split_edge(&halfedge_id2, point.coords);
+        let vertex_id2 = mesh2.split_edge(&halfedge_id2, point);
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
     for ((edge, vertex_id2), point) in intersections.edge_vertex_intersections.drain() {
         let halfedge_id = connecting_edge(mesh1, &edge.v0, &edge.v1).unwrap();
-        let vertex_id1 = mesh1.split_edge(&halfedge_id, point.coords);
+        let vertex_id1 = mesh1.split_edge(&halfedge_id, point);
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
     for ((vertex_id1, edge), point) in intersections.vertex_edge_intersections.drain() {
         let halfedge_id = connecting_edge(mesh2, &edge.v0, &edge.v1).unwrap();
-        let vertex_id2 = mesh2.split_edge(&halfedge_id, point.coords);
+        let vertex_id2 = mesh2.split_edge(&halfedge_id, point);
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
@@ -118,61 +119,45 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
 {
     for face_id1 in mesh1.face_iterator()
     {
-        let face1 = face_id_to_face(mesh1, &face_id1);
-        let triangle1 = Triangle::from_array(&face1.points);
+        let triangle1 = face_id_to_triangle(&mesh1,&face_id1);
         for face_id2 in mesh2.face_iterator()
         {
-            let face2 = face_id_to_face(mesh2, &face_id2);
-            let triangle2 = Triangle::from_array(&face1.points);
-            if is_intersecting(triangle1, triangle2)
+            let triangle2 = face_id_to_triangle(&mesh2,&face_id2);
+            if is_intersecting(&triangle1, &triangle2)
             {
-                for i in 0..3 {
-                    let p0 = &face2.points[i];
-                    let p1 = &face2.points[(i+1)%3];
-                    if let Some(point) = find_intersection_point(triangle1, p0, p1)
+                for walker in mesh2.face_halfedge_iterator(&face_id2)
+                {
+                    let v0 = walker.vertex_id().unwrap();
+                    let v1 = walker.clone().twin().vertex_id().unwrap();
+
+                    if let Some(point) = find_intersection_point(&triangle1,mesh2.position(&v0), mesh2.position(&v1))
                     {
-                        if na::distance(&point, p0) < 0.1
+                        let edge2 = Edge::new(v0, v1);
+                        if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
                         {
-                            let vertex_id2 = face2.vertex_ids[i].clone();
-                            if let Some(vertex_id1) = find_close_vertex(&face1, &point)
+                            if let Some(vertex_id1) = find_close_vertex(mesh1,&face_id1, &point)
                             {
                                 intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
                             }
-                            else if let Some(edge1) = find_close_edge(&face1, &point)
+                            else if let Some(edge1) = find_close_edge(mesh1,&face_id1, &point)
                             {
                                 intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
                             }
                             else {
-                                intersections.face_vertex_intersections.insert((face1.face_id, vertex_id2), point);
-                            }
-                        }
-                        else if na::distance(&point, p1) < 0.1
-                        {
-                            let vertex_id2 = face2.vertex_ids[(i+1)%3].clone();
-                            if let Some(vertex_id1) = find_close_vertex(&face1, &point)
-                            {
-                                intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
-                            }
-                            else if let Some(edge1) = find_close_edge(&face1, &point)
-                            {
-                                intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
-                            }
-                            else {
-                                intersections.face_vertex_intersections.insert((face1.face_id, vertex_id2), point);
+                                intersections.face_vertex_intersections.insert((face_id1, vertex_id2), point);
                             }
                         }
                         else {
-                            let edge2 = Edge::new(face2.vertex_ids[i].clone(), face2.vertex_ids[(i+1)%3].clone());
-                            if let Some(vertex_id1) = find_close_vertex(&face1, &point)
+                            if let Some(vertex_id1) = find_close_vertex(mesh1,&face_id1, &point)
                             {
                                 intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
                             }
-                            else if let Some(edge1) = find_close_edge(&face1, &point)
+                            else if let Some(edge1) = find_close_edge(&mesh1,&face_id1, &point)
                             {
                                 intersections.edge_edge_intersections.insert((edge1, edge2), point);
                             }
                             else {
-                                intersections.face_edge_intersections.insert((face1.face_id, edge2), point);
+                                intersections.face_edge_intersections.insert((face_id1, edge2), point);
                             }
                         }
                     };
@@ -184,19 +169,30 @@ fn find_intersections(intersections: &mut Intersections, mesh1: &DynamicMesh, me
     }
 }
 
-fn find_close_edge(face: &Face, point: &Point) -> Option<Edge>
+fn find_close_edge(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<Edge>
 {
-    for i in 0..3 {
-        let p0 = &face.points[i];
-        let p1 = &face.points[(i + 1) % 3];
-        if point_linesegment_distance(point, p0, p1) < 0.1 {
-            return Some(Edge::new(face.vertex_ids[i], face.vertex_ids[(i + 1) % 3]))
-        }
+    let mut walker = mesh.walker_from_face(face_id);
+    let vertex_id1 = walker.vertex_id().unwrap();
+    walker.next();
+    let vertex_id2 = walker.vertex_id().unwrap();
+
+    if point_linesegment_distance(point, mesh.position(&vertex_id1), mesh.position(&vertex_id2)) < 0.1 {
+        return Some(Edge::new(vertex_id1, vertex_id2))
+    }
+
+    walker.next();
+    let vertex_id3 = walker.vertex_id().unwrap();
+
+    if point_linesegment_distance(point, mesh.position(&vertex_id2), mesh.position(&vertex_id3)) < 0.1 {
+        return Some(Edge::new(vertex_id2, vertex_id3))
+    }
+    if point_linesegment_distance(point, mesh.position(&vertex_id3), mesh.position(&vertex_id1)) < 0.1 {
+        return Some(Edge::new(vertex_id3, vertex_id1))
     }
     None
 }
 
-fn point_linesegment_distance( point: &Point, p0: &Point, p1: &Point ) -> f32
+fn point_linesegment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
 {
     let v  = p1 - p0;
     let w  = point - p0;
@@ -205,28 +201,43 @@ fn point_linesegment_distance( point: &Point, p0: &Point, p1: &Point ) -> f32
     if c1 <= 0.0 { return w.norm(); }
 
     let c2 = v.dot(&v);
-    if (c2 <= c1) { return na::distance(point, p1); }
+    if (c2 <= c1) { return (point - p1).norm(); }
 
     let b = c1 / c2;
     let pb = p0 + b * v;
-    na::distance(point, &pb)
+    (point - &pb).norm()
 }
 
-fn find_close_vertex(face: &Face, point: &Point) -> Option<VertexID>
+fn find_close_vertex(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<VertexID>
 {
-    for i in 0..3 {
-        let p = &face.points[i];
-        if na::distance(p, point) < 0.1 {
-            return Some(face.vertex_ids[i])
+    for walker in mesh.face_halfedge_iterator(face_id) {
+        let vertex_id = walker.vertex_id().unwrap();
+        if (mesh.position(&vertex_id) - point).norm() < 0.1 {
+            return Some(vertex_id)
         }
     }
     None
 }
 
-fn find_intersection_point(triangle: &Triangle, p0: &Point, p1: &Point) -> Option<Point>
+fn find_close_vertex_on_edge(mesh: &DynamicMesh, edge: &Edge, point: &Vec3) -> Option<VertexID>
 {
-    let ray = Ray::new(p0.clone(), p1 - p0);
-    triangle.toi_with_ray(&Isometry3::identity(), &ray, false).and_then(|toi| Some(ray.origin + ray.dir * toi))
+    if(point - mesh.position(&edge.v0)).norm() < 0.1
+    {
+        return Some(edge.v0)
+    }
+    if (point - mesh.position(&edge.v1)).norm() < 0.1
+    {
+        return Some(edge.v1)
+    }
+    None
+}
+
+fn find_intersection_point(triangle: &Triangle, p0: &Vec3, p1: &Vec3) -> Option<Vec3>
+{
+    let p0_ = Point::from_coordinates(*p0);
+    let p1_ = Point::from_coordinates(*p1);
+    let ray = Ray::new(p0_.clone(), p1_ - p0_);
+    triangle.toi_with_ray(&Isometry3::identity(), &ray, false).and_then(|toi| Some(ray.origin.coords + ray.dir * toi))
 }
 
 fn is_intersecting(triangle1: &Triangle, triangle2: &Triangle) -> bool
@@ -235,18 +246,15 @@ fn is_intersecting(triangle1: &Triangle, triangle2: &Triangle) -> bool
     prox == Proximity::Intersecting
 }
 
-fn face_id_to_face(mesh: &DynamicMesh, face_id: &FaceID) -> Face
+fn face_id_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> Triangle
 {
-    let mut points: [Point; 3] = [Point::new(0.0, 0.0, 0.0); 3];
-    let mut vertex_ids = [VertexID::new(0); 3];
-    let mut i = 0;
-    for walker in mesh.face_halfedge_iterator(face_id) {
-        let vec3 = mesh.position(&walker.vertex_id().unwrap());
-        points[i] = Point::from_coordinates(*vec3);
-        vertex_ids[i] = walker.vertex_id().unwrap().clone();
-        i = i+1;
-    }
-    Face {face_id: face_id.clone(), points, vertex_ids}
+    let mut walker = mesh.walker_from_face(face_id);
+    let p1 = Point::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
+    walker.next();
+    let p2 = Point::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
+    walker.next();
+    let p3 = Point::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
+    Triangle::new(p1, p2, p3)
 }
 
 #[cfg(test)]
