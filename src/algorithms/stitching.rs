@@ -256,19 +256,23 @@ mod tests {
         find_intersections(&mut intersections, &mesh1, &mesh2);
         assert_eq!(intersections.face_edge_intersections.len(), 0);
         assert_eq!(intersections.edge_face_intersections.len(), 0);
-        assert_eq!(intersections.edge_edge_intersections.len(), 10);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 5);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 0);
 
-        /*assert!(intersections.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.25)));
-        assert!(intersections.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.75)));
-        assert!(intersections.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.25)));
-        assert!(intersections.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.75)));
-        assert!(intersections.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 2.25)));
-
-        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.25)));
-        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 0.75)));
-        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.25)));
-        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 1.75)));
-        assert!(intersections_for_mesh2.iter().any(|pair| pair.1.coords == vec3(0.5, 0.0, 2.25)));*/
+        assert!(intersections.edge_edge_intersections.iter().any(
+            |pair| pair.1.x == 0.5 && pair.1.y == 0.0 && pair.1.z == 0.25));
+        assert!(intersections.edge_edge_intersections.iter().any(
+            |pair| pair.1.x == 0.5 && pair.1.y == 0.0 && pair.1.z == 0.75));
+        assert!(intersections.edge_edge_intersections.iter().any(
+            |pair| pair.1.x == 0.5 && pair.1.y == 0.0 && pair.1.z == 1.25));
+        assert!(intersections.edge_edge_intersections.iter().any(
+            |pair| pair.1.x == 0.5 && pair.1.y == 0.0 && pair.1.z == 1.75));
+        assert!(intersections.edge_edge_intersections.iter().any(
+            |pair| pair.1.x == 0.5 && pair.1.y == 0.0 && pair.1.z == 2.25));
     }
 
     #[test]
