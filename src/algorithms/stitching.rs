@@ -13,7 +13,7 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 
     find_intersections(&mut intersections, mesh1, mesh2);
 
-    split(&mut intersections, mesh1, mesh2);
+    let stitches = split(&mut intersections, mesh1, mesh2);
 
     mesh1.clone()
 }
@@ -45,7 +45,7 @@ impl Intersections
     }
 }
 
-fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh)
+fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
 {
     for ((face_id, edge), point) in intersections.face_edge_intersections.drain() {
         let vertex_id = mesh1.split_face(&face_id, point);
@@ -87,6 +87,7 @@ fn split(intersections: &mut Intersections, mesh1: &mut DynamicMesh, mesh2: &mut
         intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
     }
 
+    intersections.vertex_vertex_intersections.iter().map(|pair| pair.0.clone()).collect()
 }
 
 #[derive(Debug, Hash, Eq, PartialEq)]
