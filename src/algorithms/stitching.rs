@@ -14,51 +14,29 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     mesh1.clone()
 }
 
-fn find_close_type(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<IdType>
-{
-    if let Some(vertex_id) = find_close_vertex_on_face(mesh, face_id, &point)
-    {
-        return Some(IdType::Vertex(vertex_id))
-    }
-    else if let Some(edge) = find_close_edge(mesh, face_id, &point)
-    {
-        return Some(IdType::Edge(edge))
-    }
-    else if mesh.is_inside(face_id, point) {
-        return Some(IdType::Face(face_id.clone()))
-    }
-    None
-}
-
-enum IdType {
-    Vertex(VertexID),
-    Edge(Edge),
-    Face(FaceID)
-}
-
 fn find_type_to_split(face_splits: &HashMap<FaceID, (FaceID, FaceID, FaceID)>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
 {
     if let Some(f) = face_splits.get(&face_id)
     {
-        if let Some(id) = find_close_type(mesh, &f.0, &point)
+        if mesh.is_inside(&f.0, &point)
         {
-            match id {
+            match find_close_type(mesh, f.0, &point) {
                 IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
                 IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
                 IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
             }
         }
-        else if let Some(id) = find_close_type(mesh, &f.1, &point)
+        else if mesh.is_inside(&f.1, &point)
         {
-            match id {
+            match find_close_type(mesh, f.1, &point) {
                 IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
-                IdType::Edge(edge) => { return IdType::Edge(edge) },
+                IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
                 IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
             }
         }
-        else if let Some(id) = find_close_type(mesh, &f.2, &point)
+        else if mesh.is_inside(&f.2, &point)
         {
-            match id {
+            match find_close_type(mesh, f.2, &point) {
                 IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
                 IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
                 IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
@@ -190,16 +168,10 @@ fn find_intersections(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> Intersections
                         let edge2 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
                         if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
                         {
-                            if let Some(vertex_id1) = find_close_vertex_on_face(mesh1, &face_id1, &point)
-                            {
-                                intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
-                            }
-                            else if let Some(edge1) = find_close_edge(mesh1,&face_id1, &point)
-                            {
-                                intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
-                            }
-                            else {
-                                intersections.face_vertex_intersections.insert((face_id1, vertex_id2), point);
+                            match find_close_type(mesh1, face_id1, &point) {
+                                IdType::Vertex(vertex_id1) => { intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point); },
+                                IdType::Edge(edge1) => { intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point); },
+                                IdType::Face(face_id1) => { intersections.face_vertex_intersections.insert((face_id1, vertex_id2), point); }
                             }
                         }
                         else {
@@ -255,6 +227,25 @@ fn find_intersections(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> Intersections
         }
     }
     intersections
+}
+
+enum IdType {
+    Vertex(VertexID),
+    Edge(Edge),
+    Face(FaceID)
+}
+
+fn find_close_type(mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
+{
+    if let Some(vertex_id) = find_close_vertex_on_face(mesh, &face_id, &point)
+    {
+        return IdType::Vertex(vertex_id)
+    }
+    else if let Some(edge) = find_close_edge(mesh, &face_id, &point)
+    {
+        return IdType::Edge(edge)
+    }
+    IdType::Face(face_id)
 }
 
 const MARGIN: f32 = 0.01;
