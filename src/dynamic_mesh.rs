@@ -346,6 +346,18 @@ impl DynamicMesh
         }
     }
 
+    pub fn area(&self, face_id: &FaceID) -> f32
+    {
+        let mut walker = self.walker_from_face(face_id);
+        let p0 = *self.position(&walker.vertex_id().unwrap());
+        walker.next();
+        let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
+        walker.next();
+        let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
+
+        v0.cross(&v1).norm()
+    }
+
     ///////////////////////////////////////////////////
     // *** Internal connectivity changing functions ***
     ///////////////////////////////////////////////////
