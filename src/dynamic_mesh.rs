@@ -358,6 +358,21 @@ impl DynamicMesh
         v0.cross(&v1).norm()
     }
 
+    pub fn is_inside(&self, face_id: &FaceID, point: &Vec3) -> bool
+    {
+        let mut walker = self.walker_from_face(face_id);
+        let p0 = *self.position(&walker.vertex_id().unwrap());
+        walker.next();
+        let p1 = *self.position(&walker.vertex_id().unwrap());
+        walker.next();
+        let p2 = *self.position(&walker.vertex_id().unwrap());
+
+        let a = |p0: &Vec3, p1: &Vec3, p2: &Vec3| -> f32 {(p1 - p0).cross(&(p2 - p0)).norm()};
+
+        let f = a(&p0, &p1, &p2) - (a(&p0, &p1, point) + a(&p1, &p2, point) + a(&p2, &p0, point));
+        f.abs() < 0.001
+    }
+
     ///////////////////////////////////////////////////
     // *** Internal connectivity changing functions ***
     ///////////////////////////////////////////////////
