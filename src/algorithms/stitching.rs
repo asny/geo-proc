@@ -14,13 +14,85 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     mesh1.clone()
 }
 
+fn find_close_type(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<IdType>
+{
+    if let Some(vertex_id) = find_close_vertex_on_face(mesh, face_id, &point)
+    {
+        return Some(IdType::Vertex(vertex_id))
+    }
+    else if let Some(edge) = find_close_edge(mesh, face_id, &point)
+    {
+        return Some(IdType::Edge(edge))
+    }
+    else if mesh.is_inside(face_id, point) {
+        return Some(IdType::Face(face_id.clone()))
+    }
+    None
+}
+
+enum IdType {
+    Vertex(VertexID),
+    Edge(Edge),
+    Face(FaceID)
+}
+
+fn find_type_to_split(face_splits: &HashMap<FaceID, (FaceID, FaceID, FaceID)>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
+{
+    if let Some(f) = face_splits.get(&face_id)
+    {
+        if let Some(id) = find_close_type(mesh, &f.0, &point)
+        {
+            match id {
+                IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
+                IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
+                IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
+            }
+        }
+        else if let Some(id) = find_close_type(mesh, &f.1, &point)
+        {
+            match id {
+                IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
+                IdType::Edge(edge) => { return IdType::Edge(edge) },
+                IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
+            }
+        }
+        else if let Some(id) = find_close_type(mesh, &f.2, &point)
+        {
+            match id {
+                IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
+                IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
+                IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
+            }
+        }
+        else {
+            panic!("ARGH")
+        }
+    }
+    IdType::Face(face_id)
+}
+
 fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
+    let mut face_splits1 = HashMap::new();
 
-    for ((face_id1, edge2), point) in intersections.face_edge_intersections.drain() {
-        let vertex_id1 = mesh1.split_face(&face_id1, point);
-        intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
+    for ((face_id1, edge2), point) in intersections.face_edge_intersections.drain()
+    {
+        match find_type_to_split(&face_splits1, mesh1, face_id1, &point) {
+            IdType::Vertex(vertex_id1) => { intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point); },
+            IdType::Edge(edge1) => { intersections.edge_edge_intersections.insert((edge1, edge2), point); },
+            IdType::Face(face_id) => {
+                let vertex_id1 = mesh1.split_face(&face_id, point);
+
+                let mut iter = mesh1.vertex_halfedge_iterator(&vertex_id1);
+                let f1 = iter.next().unwrap().face_id().unwrap();
+                let f2 = iter.next().unwrap().face_id().unwrap();
+                let f3 = iter.next().unwrap().face_id().unwrap();
+                face_splits1.insert(face_id, (f1, f2, f3));
+
+                intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
+            }
+        }
     }
 
     for ((edge1, face_id2), point) in intersections.edge_face_intersections.drain() {
@@ -411,7 +483,7 @@ mod tests {
     }
 
     #[test]
-    fn test_split_face()
+    fn test_split_face_two_times()
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
@@ -443,7 +515,7 @@ mod tests {
         for face_id in mesh1.face_iterator() {
             area_test1 = area_test1 + mesh1.area(&face_id);
         }
-        assert_eq!(area1, area_test1);
+        assert!((area1 - area_test1).abs() < 0.001);
 
         assert_eq!(mesh2.no_vertices(), 5);
         assert_eq!(mesh2.no_faces(), 3);
