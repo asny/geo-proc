@@ -34,6 +34,35 @@ fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Dyn
     IdType::Face(face_id)
 }
 
+fn find_type_to_split_edge(edge_splits: &HashMap<Edge, HashSet<Edge>>, mesh: &DynamicMesh, edge: Edge, point: &Vec3) -> IdType
+{
+    if let Some(new_edges) = edge_splits.get(&edge)
+    {
+        for new_edge in new_edges
+        {
+            let v1 = point - mesh.position(&new_edge.v0);
+            let v2 = point - mesh.position(&new_edge.v1);
+            if v1.dot(&v2) < 0.0
+            {
+                if let Some(vertex_id) = find_close_vertex_on_edge(mesh, &edge, &point) {
+                    return IdType::Vertex(vertex_id)
+                }
+                return IdType::Edge(new_edge.clone())
+            }
+        }
+        panic!("ARGH")
+    }
+    IdType::Edge(edge)
+}
+
+fn insert_edges(edge_list: &mut HashMap<Edge, HashSet<Edge>>, mesh: &DynamicMesh, edge: Edge, split_edge: &Edge, vertex_id: &VertexID)
+{
+    if !edge_list.contains_key(&edge) { edge_list.insert(edge.clone(), HashSet::new()); }
+    let list = edge_list.get_mut(&edge).unwrap();
+    list.insert(Edge::new(edge.v0, vertex_id.clone()));
+    list.insert(Edge::new(edge.v1, vertex_id.clone()));
+}
+
 fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, vertex_id: &VertexID)
 {
     if !face_list.contains_key(&face_id) { face_list.insert(face_id, HashSet::new()); }
@@ -48,9 +77,8 @@ fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Dynamic
 fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
-    let mut face_splits1 = HashMap::new();
-    let mut face_splits2 = HashMap::new();
 
+    let mut face_splits1 = HashMap::new();
     for ((face_id1, edge2), point) in intersections.face_edge_intersections.drain()
     {
         match find_type_to_split(&face_splits1, mesh1, face_id1, &point) {
@@ -64,6 +92,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
         }
     }
 
+    let mut face_splits2 = HashMap::new();
     for ((edge1, face_id2), point) in intersections.edge_face_intersections.drain()
     {
         match find_type_to_split(&face_splits2, mesh2, face_id2, &point) {
@@ -104,24 +133,48 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
         }
     }
 
-    for ((edge1, edge2), point) in intersections.edge_edge_intersections.drain() {
-        let halfedge_id1 = connecting_edge(mesh1, &edge1.v0, &edge1.v1).unwrap();
-        let vertex_id1 = mesh1.split_edge(&halfedge_id1, point);
-        let halfedge_id2 = connecting_edge(mesh2, &edge2.v0, &edge2.v1).unwrap();
-        let vertex_id2 = mesh2.split_edge(&halfedge_id2, point);
-        intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+    let mut edge_splits1 = HashMap::new();
+    for ((edge1, edge2), point) in intersections.edge_edge_intersections.drain()
+    {
+        match find_type_to_split_edge(&edge_splits1, mesh1, edge1.clone(), &point) {
+            IdType::Vertex(vertex_id1) => { intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point); },
+            IdType::Edge(edge) => {
+                let halfedge_id1 = connecting_edge(mesh1, &edge.v0, &edge.v1).unwrap();
+                let vertex_id1 = mesh1.split_edge(&halfedge_id1, point);
+                insert_edges(&mut edge_splits1, mesh1, edge1, &edge,&vertex_id1);
+                intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
+            },
+            IdType::Face(face_id) => {}
+        }
     }
 
-    for ((edge1, vertex_id2), point) in intersections.edge_vertex_intersections.drain() {
-        let halfedge_id1 = connecting_edge(mesh1, &edge1.v0, &edge1.v1).unwrap();
-        let vertex_id1 = mesh1.split_edge(&halfedge_id1, point);
-        intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+    for ((edge1, vertex_id2), point) in intersections.edge_vertex_intersections.drain()
+    {
+        match find_type_to_split_edge(&edge_splits1, mesh1, edge1.clone(), &point) {
+            IdType::Vertex(vertex_id1) => { intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point); },
+            IdType::Edge(edge) => {
+                let halfedge_id1 = connecting_edge(mesh1, &edge.v0, &edge.v1).unwrap();
+                let vertex_id1 = mesh1.split_edge(&halfedge_id1, point);
+                insert_edges(&mut edge_splits1, mesh1, edge1, &edge, &vertex_id1);
+                intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+            },
+            IdType::Face(face_id) => {}
+        }
     }
 
-    for ((vertex_id1, edge2), point) in intersections.vertex_edge_intersections.drain() {
-        let halfedge_id2 = connecting_edge(mesh2, &edge2.v0, &edge2.v1).unwrap();
-        let vertex_id2 = mesh2.split_edge(&halfedge_id2, point);
-        intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+    let mut edge_splits2 = HashMap::new();
+    for ((vertex_id1, edge2), point) in intersections.vertex_edge_intersections.drain()
+    {
+        match find_type_to_split_edge(&edge_splits2, mesh2, edge2.clone(), &point) {
+            IdType::Vertex(vertex_id2) => { intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point); },
+            IdType::Edge(edge) => {
+                let halfedge_id2 = connecting_edge(mesh2, &edge.v0, &edge.v1).unwrap();
+                let vertex_id2 = mesh2.split_edge(&halfedge_id2, point);
+                insert_edges(&mut edge_splits2, mesh2, edge2, &edge,&vertex_id2);
+                intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
+            },
+            IdType::Face(face_id) => {}
+        }
     }
 
     intersections.vertex_vertex_intersections.iter().map(|pair| pair.0.clone()).collect()
@@ -154,7 +207,7 @@ impl Intersections
     }
 }
 
-#[derive(Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
 struct Edge
 {
     pub v0: VertexID,
@@ -505,6 +558,41 @@ mod tests {
             area_test1 = area_test1 + mesh1.area(&face_id);
         }
         assert!((area1 - area_test1).abs() < 0.001);
+
+        assert_eq!(mesh2.no_vertices(), 5);
+        assert_eq!(mesh2.no_faces(), 3);
+        assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
+
+        assert_eq!(stitches.len(), 2);
+    }
+
+    #[test]
+    fn test_split_edge_two_times()
+    {
+        let indices1: Vec<u32> = vec![0, 1, 2];
+        let positions1: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 2.0,  2.0, 0.0, 0.0];
+        let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
+
+        let indices2: Vec<u32> = vec![0, 1, 2];
+        let positions2: Vec<f32> = vec![0.0, -0.2, 0.5,  0.0, -0.2, 1.5,  0.0, 1.5, 0.0];
+        let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
+
+        let intersections = find_intersections(&mesh1, &mesh2);
+
+        assert_eq!(intersections.face_edge_intersections.len(), 0);
+        assert_eq!(intersections.edge_face_intersections.len(), 0);
+        assert_eq!(intersections.face_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_face_intersections.len(), 0);
+        assert_eq!(intersections.edge_edge_intersections.len(), 2);
+        assert_eq!(intersections.edge_vertex_intersections.len(), 0);
+        assert_eq!(intersections.vertex_edge_intersections.len(), 0);
+        assert_eq!(intersections.vertex_vertex_intersections.len(), 0);
+
+        let stitches = split_at_intersections(&mut mesh1, &mut mesh2);
+
+        assert_eq!(mesh1.no_vertices(), 5);
+        assert_eq!(mesh1.no_faces(), 3);
+        assert_eq!(mesh1.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(mesh2.no_vertices(), 5);
         assert_eq!(mesh2.no_faces(), 3);
