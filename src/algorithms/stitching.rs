@@ -413,10 +413,14 @@ mod tests {
     #[test]
     fn test_split_face()
     {
-        let mut mesh1 = create_simple_mesh_x_z();
-        let indices: Vec<u32> = vec![0, 1, 2];
-        let positions: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mut mesh2 = DynamicMesh::create(indices, positions, None);
+        let indices1: Vec<u32> = vec![0, 1, 2];
+        let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
+        let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
+        let area1 = mesh1.area(&mesh1.face_iterator().next().unwrap());
+
+        let indices2: Vec<u32> = vec![0, 1, 2];
+        let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
 
         let intersections = find_intersections(&mesh1, &mesh2);
 
@@ -431,9 +435,15 @@ mod tests {
 
         let stitches = split_at_intersections(&mut mesh1, &mut mesh2);
 
-        assert_eq!(mesh1.no_vertices(), 8);
-        assert_eq!(mesh1.no_faces(), 8);
-        assert_eq!(mesh1.no_halfedges(), 8 * 3 + 6);
+        assert_eq!(mesh1.no_vertices(), 5);
+        assert_eq!(mesh1.no_faces(), 5);
+        assert_eq!(mesh1.no_halfedges(), 5 * 3 + 3);
+
+        let mut area_test1 = 0.0;
+        for face_id in mesh1.face_iterator() {
+            area_test1 = area_test1 + mesh1.area(&face_id);
+        }
+        assert_eq!(area1, area_test1);
 
         assert_eq!(mesh2.no_vertices(), 5);
         assert_eq!(mesh2.no_faces(), 3);
