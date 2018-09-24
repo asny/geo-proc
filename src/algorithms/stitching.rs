@@ -1,5 +1,5 @@
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use types::*;
 use ids::*;
@@ -14,39 +14,35 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     mesh1.clone()
 }
 
-fn find_type_to_split(face_splits: &HashMap<FaceID, (FaceID, FaceID, FaceID)>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
+fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
 {
-    if let Some(f) = face_splits.get(&face_id)
+    if let Some(new_faces) = face_splits.get(&face_id)
     {
-        if mesh.is_inside(&f.0, &point)
+        for new_face_id in new_faces.iter()
         {
-            match find_close_type(mesh, f.0, &point) {
-                IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
-                IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
-                IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
+            if mesh.is_inside(new_face_id, &point)
+            {
+                match find_close_type(mesh, new_face_id.clone(), &point) {
+                    IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
+                    IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
+                    IdType::Face(fid) => { return IdType::Face(fid) }
+                }
             }
         }
-        else if mesh.is_inside(&f.1, &point)
-        {
-            match find_close_type(mesh, f.1, &point) {
-                IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
-                IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
-                IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
-            }
-        }
-        else if mesh.is_inside(&f.2, &point)
-        {
-            match find_close_type(mesh, f.2, &point) {
-                IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
-                IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
-                IdType::Face(fid) => { return find_type_to_split(face_splits, mesh, fid, point) }
-            }
-        }
-        else {
-            panic!("ARGH")
-        }
+        panic!("ARGH")
     }
     IdType::Face(face_id)
+}
+
+fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, vertex_id: &VertexID)
+{
+    if !face_list.contains_key(&face_id) { face_list.insert(face_id, HashSet::new()); }
+    let list = face_list.get_mut(&face_id).unwrap();
+
+    let mut iter = mesh.vertex_halfedge_iterator(vertex_id);
+    list.insert(iter.next().unwrap().face_id().unwrap());
+    list.insert(iter.next().unwrap().face_id().unwrap());
+    list.insert(iter.next().unwrap().face_id().unwrap());
 }
 
 fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
@@ -62,13 +58,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
             IdType::Edge(edge1) => { intersections.edge_edge_intersections.insert((edge1, edge2), point); },
             IdType::Face(face_id) => {
                 let vertex_id1 = mesh1.split_face(&face_id, point);
-
-                let mut iter = mesh1.vertex_halfedge_iterator(&vertex_id1);
-                let f1 = iter.next().unwrap().face_id().unwrap();
-                let f2 = iter.next().unwrap().face_id().unwrap();
-                let f3 = iter.next().unwrap().face_id().unwrap();
-                face_splits1.insert(face_id, (f1, f2, f3));
-
+                insert_faces(&mut face_splits1, mesh1, face_id1, &vertex_id1);
                 intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point);
             }
         }
@@ -81,13 +71,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
             IdType::Edge(edge2) => { intersections.edge_edge_intersections.insert((edge1, edge2), point); },
             IdType::Face(face_id) => {
                 let vertex_id2 = mesh2.split_face(&face_id, point);
-
-                let mut iter = mesh2.vertex_halfedge_iterator(&vertex_id2);
-                let f1 = iter.next().unwrap().face_id().unwrap();
-                let f2 = iter.next().unwrap().face_id().unwrap();
-                let f3 = iter.next().unwrap().face_id().unwrap();
-                face_splits2.insert(face_id, (f1, f2, f3));
-
+                insert_faces(&mut face_splits2, mesh2, face_id2, &vertex_id2);
                 intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point);
             }
         }
@@ -100,12 +84,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
             IdType::Edge(edge1) => { intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point); },
             IdType::Face(face_id) => {
                 let vertex_id1 = mesh1.split_face(&face_id, point);
-
-                let mut iter = mesh1.vertex_halfedge_iterator(&vertex_id1);
-                let f1 = iter.next().unwrap().face_id().unwrap();
-                let f2 = iter.next().unwrap().face_id().unwrap();
-                let f3 = iter.next().unwrap().face_id().unwrap();
-                face_splits1.insert(face_id, (f1, f2, f3));
+                insert_faces(&mut face_splits1, mesh1, face_id1, &vertex_id1);
 
                 intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
             }
@@ -119,13 +98,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
             IdType::Edge(edge2) => { intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point); },
             IdType::Face(face_id) => {
                 let vertex_id2 = mesh2.split_face(&face_id, point);
-
-                let mut iter = mesh2.vertex_halfedge_iterator(&vertex_id2);
-                let f1 = iter.next().unwrap().face_id().unwrap();
-                let f2 = iter.next().unwrap().face_id().unwrap();
-                let f3 = iter.next().unwrap().face_id().unwrap();
-                face_splits2.insert(face_id, (f1, f2, f3));
-
+                insert_faces(&mut face_splits2, mesh2, face_id2, &vertex_id2);
                 intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point);
             }
         }
