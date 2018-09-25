@@ -476,6 +476,7 @@ impl DynamicMesh
 #[cfg(test)]
 mod tests {
     use super::*;
+    use connectivity::*;
 
     #[test]
     fn test_one_face_connectivity() {
@@ -702,7 +703,7 @@ mod tests {
         {
             if mesh.walker_from_halfedge(&halfedge_id).face_id().is_some()
             {
-                mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
+                let new_vertex_id = mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
 
                 assert_eq!(mesh.no_vertices(), 4);
                 assert_eq!(mesh.no_halfedges(), 2 * 3 + 4);
@@ -739,6 +740,14 @@ mod tests {
                 assert!(walker.halfedge_id().is_some());
                 assert!(walker.face_id().is_none());
                 assert!(walker.vertex_id().is_some());
+
+                for vertex_id1 in mesh.vertex_iterator()
+                {
+                    for vertex_id2 in mesh.vertex_iterator()
+                    {
+                        assert_eq!(connecting_edge(&mesh, &vertex_id1, &vertex_id2).is_some(), connecting_edge(&mesh, &vertex_id2, &vertex_id1).is_some());
+                    }
+                }
 
                 break;
             }
