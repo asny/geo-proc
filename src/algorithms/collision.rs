@@ -7,7 +7,7 @@ use types::*;
 use ids::*;
 use dynamic_mesh::DynamicMesh;
 
-use algorithms::collision::ncollide3d::query::{proximity, Proximity, Ray, RayCast};
+use algorithms::collision::ncollide3d::query::{proximity, Proximity, Ray};
 use na::{Isometry3, Point3};
 
 type Triangle = ncollide3d::shape::Triangle<f32>;
@@ -79,19 +79,15 @@ fn triangle_ray_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N
     //
     let e = -ray.dir.cross(&ap);
 
-    let mut v;
-    let mut w;
     let toi;
-    let normal;
-
     if t < ::na::zero() {
-        v = -::na::dot(&ac, &e);
+        let v = -::na::dot(&ac, &e);
 
         if v < ::na::zero() || v > d {
             return None;
         }
 
-        w = ::na::dot(&ab, &e);
+        let w = ::na::dot(&ab, &e);
 
         if w < ::na::zero() || v + w > d {
             return None;
@@ -99,17 +95,14 @@ fn triangle_ray_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N
 
         let invd = ::na::one::<N>() / d;
         toi = -t * invd;
-        normal = -::na::normalize(&n);
-        v = v * invd;
-        w = w * invd;
     } else {
-        v = ::na::dot(&ac, &e);
+        let v = ::na::dot(&ac, &e);
 
         if v < ::na::zero() || v > d {
             return None;
         }
 
-        w = -::na::dot(&ab, &e);
+        let w = -::na::dot(&ab, &e);
 
         if w < ::na::zero() || v + w > d {
             return None;
@@ -117,9 +110,6 @@ fn triangle_ray_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N
 
         let invd = ::na::one::<N>() / d;
         toi = t * invd;
-        normal = ::na::normalize(&n);
-        v = v * invd;
-        w = w * invd;
     }
 
     Some(ray.origin.coords + ray.dir * toi)
