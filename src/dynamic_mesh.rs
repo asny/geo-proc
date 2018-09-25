@@ -472,12 +472,41 @@ impl DynamicMesh
             }
         }
     }
+
+    fn test_is_valid(&self) -> Result<(), mesh::Error>
+    {
+        for vertex_id in self.vertex_iterator() {
+            if self.walker_from_vertex(&vertex_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Vertex {} does not point to a halfedge", vertex_id)}); }
+        }
+        for halfedge_id in self.halfedge_iterator() {
+            if self.walker_from_halfedge(&halfedge_id).twin_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a twin halfedge", halfedge_id)}); }
+            if self.walker_from_halfedge(&halfedge_id).vertex_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a vertex", halfedge_id)}); }
+            if self.walker_from_halfedge(&halfedge_id).face_id().is_some() != self.walker_from_halfedge(&halfedge_id).next_id().is_some() {
+                return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to only one face or next halfedge", halfedge_id)});
+            }
+        }
+        for face_id in self.face_iterator() {
+            if self.walker_from_face(&face_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Face {} does not point to a halfedge", face_id)}); }
+        }
+
+        for vertex_id1 in self.vertex_iterator()
+        {
+            for vertex_id2 in self.vertex_iterator()
+            {
+                if ::connectivity::connecting_edge(self, &vertex_id1, &vertex_id2).is_some() !=
+                    ::connectivity::connecting_edge(self, &vertex_id2, &vertex_id1).is_some()
+                {
+                    return Err(mesh::Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected one way, but not the other way", vertex_id1, vertex_id2)});
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use connectivity::*;
 
     #[test]
     fn test_one_face_connectivity() {
@@ -680,6 +709,8 @@ mod tests {
         let face_id = mesh.face_iterator().next().unwrap();
         mesh.remove_face(&face_id);
 
+        mesh.test_is_valid().unwrap();
+
         assert_eq!(8, mesh.no_vertices());
         assert_eq!(36, mesh.no_halfedges());
         assert_eq!(11, mesh.no_faces());
@@ -694,6 +725,8 @@ mod tests {
         assert_eq!(0, mesh.no_vertices());
         assert_eq!(0, mesh.no_halfedges());
         assert_eq!(0, mesh.no_faces());
+
+        mesh.test_is_valid().unwrap();
     }
 
     #[test]
@@ -709,18 +742,6 @@ mod tests {
                 assert_eq!(mesh.no_vertices(), 4);
                 assert_eq!(mesh.no_halfedges(), 2 * 3 + 4);
                 assert_eq!(mesh.no_faces(), 2);
-
-                for vertex_id in mesh.vertex_iterator() {
-                    assert!(mesh.walker_from_vertex(&vertex_id).halfedge_id().is_some());
-                }
-                for he_id in mesh.halfedge_iterator() {
-                    assert!(mesh.walker_from_halfedge(&he_id).twin_id().is_some());
-                    assert!(mesh.walker_from_halfedge(&he_id).vertex_id().is_some());
-                    assert_eq!(mesh.walker_from_halfedge(&he_id).face_id().is_some(), mesh.walker_from_halfedge(&he_id).next_id().is_some());
-                }
-                for face_id in mesh.face_iterator() {
-                    assert!(mesh.walker_from_face(&face_id).halfedge_id().is_some());
-                }
 
                 let mut walker = mesh.walker_from_halfedge(&halfedge_id);
                 assert!(walker.halfedge_id().is_some());
@@ -742,13 +763,7 @@ mod tests {
                 assert!(walker.face_id().is_none());
                 assert!(walker.vertex_id().is_some());
 
-                for vertex_id1 in mesh.vertex_iterator()
-                {
-                    for vertex_id2 in mesh.vertex_iterator()
-                    {
-                        assert_eq!(connecting_edge(&mesh, &vertex_id1, &vertex_id2).is_some(), connecting_edge(&mesh, &vertex_id2, &vertex_id1).is_some());
-                    }
-                }
+                mesh.test_is_valid().unwrap();
 
                 break;
             }
@@ -768,18 +783,6 @@ mod tests {
                 assert_eq!(mesh.no_halfedges(), 4 * 3 + 4);
                 assert_eq!(mesh.no_faces(), 4);
 
-                for vertex_id in mesh.vertex_iterator() {
-                    assert!(mesh.walker_from_vertex(&vertex_id).halfedge_id().is_some());
-                }
-                for he_id in mesh.halfedge_iterator() {
-                    assert!(mesh.walker_from_halfedge(&he_id).twin_id().is_some());
-                    assert!(mesh.walker_from_halfedge(&he_id).vertex_id().is_some());
-                    assert_eq!(mesh.walker_from_halfedge(&he_id).face_id().is_some(), mesh.walker_from_halfedge(&he_id).next_id().is_some());
-                }
-                for face_id in mesh.face_iterator() {
-                    assert!(mesh.walker_from_face(&face_id).halfedge_id().is_some());
-                }
-
                 let mut w = mesh.walker_from_vertex(&vertex_id);
                 let start_halfedge_id = w.halfedge_id();
                 let mut end_halfedge_id = w.twin_id();
@@ -792,6 +795,8 @@ mod tests {
                     end_halfedge_id = w.halfedge_id();
                 }
                 assert_eq!(start_halfedge_id, end_halfedge_id, "Did not go the full round");
+
+                mesh.test_is_valid().unwrap();
                 break;
             }
         }
@@ -809,18 +814,6 @@ mod tests {
         assert_eq!(mesh.no_halfedges(), 3 * 3 + 3);
         assert_eq!(mesh.no_faces(), 3);
 
-        for vertex_id in mesh.vertex_iterator() {
-            assert!(mesh.walker_from_vertex(&vertex_id).halfedge_id().is_some());
-        }
-        for he_id in mesh.halfedge_iterator() {
-            assert!(mesh.walker_from_halfedge(&he_id).twin_id().is_some());
-            assert!(mesh.walker_from_halfedge(&he_id).vertex_id().is_some());
-            assert_eq!(mesh.walker_from_halfedge(&he_id).face_id().is_some(), mesh.walker_from_halfedge(&he_id).next_id().is_some());
-        }
-        for face_id in mesh.face_iterator() {
-            assert!(mesh.walker_from_face(&face_id).halfedge_id().is_some());
-        }
-
         let mut walker = mesh.walker_from_vertex(&vertex_id);
         let start_edge = walker.halfedge_id().unwrap();
         let one_round_edge = walker.previous().twin().previous().twin().previous().twin().halfedge_id().unwrap();
@@ -835,6 +828,8 @@ mod tests {
 
         walker.twin().next().twin().next().twin();
         assert!(walker.face_id().is_none());
+
+        mesh.test_is_valid().unwrap();
     }
 
     fn create_single_face() -> DynamicMesh
