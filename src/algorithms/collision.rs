@@ -95,6 +95,11 @@ pub fn triangle_line_piece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c
 
     // the normal and the direction are orthogonal
     if d.is_zero() {
+        /*if ::na::dot(&dir.cross(&(*a - p0)), &n) == ::na::zero() // TODO
+        {
+            if is_point_in_triangle(p0, a, b, c) { return Some(p0.coords) }
+            if is_point_in_triangle(p1, a, b, c) { return Some(p1.coords) }
+        }*/
         return None;
     }
 
