@@ -10,13 +10,19 @@ use dynamic_mesh::DynamicMesh;
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
     let stitches = split_at_intersections(mesh1, mesh2);
-    // Todo: 
+    // Todo:
     mesh1.clone()
 }
 
 fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
+
+    for ((vertex_id1, vertex_id2), point) in intersections.vertex_vertex_intersections.iter()
+    {
+        mesh1.set_position(vertex_id1.clone(), point.clone());
+        mesh2.set_position(vertex_id2.clone(), point.clone());
+    }
 
     let mut face_splits1 = HashMap::new();
     for ((face_id1, edge2), point) in intersections.face_edge_intersections.drain()
