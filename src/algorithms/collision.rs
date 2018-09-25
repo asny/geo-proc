@@ -1,6 +1,8 @@
 
 extern crate ncollide3d;
 
+use na::{self, Real, Vector3};
+
 use types::*;
 use ids::*;
 use dynamic_mesh::DynamicMesh;
@@ -16,9 +18,16 @@ pub fn find_intersection_point(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &D
     let mut walker = mesh2.walker_from_halfedge(halfedge_id2);
     let p0 = Point::from_coordinates(*mesh2.position(&walker.vertex_id().unwrap()));
     let p1 = Point::from_coordinates(*mesh2.position(&walker.twin().vertex_id().unwrap()));
-    let triangle = face_id_to_triangle(mesh1, face_id1);
     let ray = Ray::new(p0.clone(), p1 - p0);
-    triangle.toi_with_ray(&Isometry3::identity(), &ray, false).and_then(|toi| Some(ray.origin.coords + ray.dir * toi))
+
+    walker = mesh1.walker_from_face(face_id1);
+    let a = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
+    walker.next();
+    let b = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
+    walker.next();
+    let c = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
+
+    triangle_ray_intersection(&a, &b, &c, &ray)
 }
 
 pub fn is_intersecting(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID) -> bool
@@ -39,4 +48,79 @@ fn face_id_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> Triangle
     walker.next();
     let p3 = Point::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
     Triangle::new(p1, p2, p3)
+}
+
+fn triangle_ray_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N>, ray: &Ray<N>) -> Option<Vector3<N>>
+{
+    let ab = *b - *a;
+    let ac = *c - *a;
+
+    // normal
+    let n = ab.cross(&ac);
+    let d = ::na::dot(&n, &ray.dir);
+
+    // the normal and the ray direction are parallel
+    if d.is_zero() {
+        return None;
+    }
+
+    let ap = ray.origin - *a;
+    let t = ::na::dot(&ap, &n);
+
+    // the ray does not intersect the plane defined by the triangle
+    if (t < ::na::zero() && d < na::zero()) || (t > ::na::zero() && d > ::na::zero()) {
+        return None;
+    }
+
+    let d = d.abs();
+
+    //
+    // intersection: compute barycentric coordinates
+    //
+    let e = -ray.dir.cross(&ap);
+
+    let mut v;
+    let mut w;
+    let toi;
+    let normal;
+
+    if t < ::na::zero() {
+        v = -::na::dot(&ac, &e);
+
+        if v < ::na::zero() || v > d {
+            return None;
+        }
+
+        w = ::na::dot(&ab, &e);
+
+        if w < ::na::zero() || v + w > d {
+            return None;
+        }
+
+        let invd = ::na::one::<N>() / d;
+        toi = -t * invd;
+        normal = -::na::normalize(&n);
+        v = v * invd;
+        w = w * invd;
+    } else {
+        v = ::na::dot(&ac, &e);
+
+        if v < ::na::zero() || v > d {
+            return None;
+        }
+
+        w = -::na::dot(&ab, &e);
+
+        if w < ::na::zero() || v + w > d {
+            return None;
+        }
+
+        let invd = ::na::one::<N>() / d;
+        toi = t * invd;
+        normal = ::na::normalize(&n);
+        v = v * invd;
+        w = w * invd;
+    }
+
+    Some(ray.origin.coords + ray.dir * toi)
 }
