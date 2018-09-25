@@ -10,7 +10,7 @@ use dynamic_mesh::DynamicMesh;
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
     let stitches = split_at_intersections(mesh1, mesh2);
-
+    // Todo: 
     mesh1.clone()
 }
 

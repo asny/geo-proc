@@ -273,6 +273,8 @@ impl DynamicMesh
 
     fn remove_face(&mut self, face_id: &FaceID)
     {
+        // Todo: Move the code from connectivity_info to here
+        // Todo: Make it safe (retains a valid mesh)
         self.connectivity_info.remove_face(face_id);
     }
 
