@@ -473,7 +473,7 @@ impl DynamicMesh
         }
     }
 
-    fn test_is_valid(&self) -> Result<(), mesh::Error>
+    pub fn test_is_valid(&self) -> Result<(), mesh::Error>
     {
         for vertex_id in self.vertex_iterator() {
             if self.walker_from_vertex(&vertex_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Vertex {} does not point to a halfedge", vertex_id)}); }

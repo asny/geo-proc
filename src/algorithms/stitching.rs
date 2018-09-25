@@ -492,6 +492,9 @@ mod tests {
         assert_eq!(mesh2.no_faces(), 12);
 
         assert_eq!(stitches.len(), 5);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
     }
 
     #[test]
@@ -522,6 +525,9 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 19 * 3 + 7);
 
         assert_eq!(stitches.len(), 8);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
     }
 
     #[test]
@@ -564,6 +570,9 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(stitches.len(), 2);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
     }
 
     #[test]
@@ -599,6 +608,9 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(stitches.len(), 2);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
     }
 
     #[test]
@@ -607,7 +619,9 @@ mod tests {
         let mut mesh1 = create_simple_mesh_x_z();
         let mut mesh2 = create_simple_mesh_y_z();
         let stitched = stitch(&mut mesh1, &mut mesh2);
-        
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
     }
 
     fn create_simple_mesh_x_z() -> DynamicMesh
