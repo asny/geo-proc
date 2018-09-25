@@ -14,66 +14,6 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     mesh1.clone()
 }
 
-fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
-{
-    if let Some(new_faces) = face_splits.get(&face_id)
-    {
-        for new_face_id in new_faces.iter()
-        {
-            if mesh.is_inside(new_face_id, &point)
-            {
-                match find_close_type(mesh, new_face_id.clone(), &point) {
-                    IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
-                    IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
-                    IdType::Face(fid) => { return IdType::Face(fid) }
-                }
-            }
-        }
-        panic!("ARGH")
-    }
-    IdType::Face(face_id)
-}
-
-fn find_type_to_split_edge(edge_splits: &HashMap<Edge, HashSet<Edge>>, mesh: &DynamicMesh, edge: Edge, point: &Vec3) -> IdType
-{
-    if let Some(new_edges) = edge_splits.get(&edge)
-    {
-        for new_edge in new_edges
-        {
-            let v1 = point - mesh.position(&new_edge.v0);
-            let v2 = point - mesh.position(&new_edge.v1);
-            if v1.dot(&v2) < 0.0
-            {
-                if let Some(vertex_id) = find_close_vertex_on_edge(mesh, &edge, &point) {
-                    return IdType::Vertex(vertex_id)
-                }
-                return IdType::Edge(new_edge.clone())
-            }
-        }
-        panic!("ARGH")
-    }
-    IdType::Edge(edge)
-}
-
-fn insert_edges(edge_list: &mut HashMap<Edge, HashSet<Edge>>, mesh: &DynamicMesh, edge: Edge, split_edge: &Edge, vertex_id: &VertexID)
-{
-    if !edge_list.contains_key(&edge) { edge_list.insert(edge.clone(), HashSet::new()); }
-    let list = edge_list.get_mut(&edge).unwrap();
-    list.insert(Edge::new(edge.v0, vertex_id.clone()));
-    list.insert(Edge::new(edge.v1, vertex_id.clone()));
-}
-
-fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, vertex_id: &VertexID)
-{
-    if !face_list.contains_key(&face_id) { face_list.insert(face_id, HashSet::new()); }
-    let list = face_list.get_mut(&face_id).unwrap();
-
-    let mut iter = mesh.vertex_halfedge_iterator(vertex_id);
-    list.insert(iter.next().unwrap().face_id().unwrap());
-    list.insert(iter.next().unwrap().face_id().unwrap());
-    list.insert(iter.next().unwrap().face_id().unwrap());
-}
-
 fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
@@ -178,6 +118,66 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
     }
 
     intersections.vertex_vertex_intersections.iter().map(|pair| pair.0.clone()).collect()
+}
+
+fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
+{
+    if let Some(new_faces) = face_splits.get(&face_id)
+    {
+        for new_face_id in new_faces.iter()
+        {
+            if mesh.is_inside(new_face_id, &point)
+            {
+                match find_close_type(mesh, new_face_id.clone(), &point) {
+                    IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
+                    IdType::Edge(edge_id) => { return IdType::Edge(edge_id) },
+                    IdType::Face(fid) => { return IdType::Face(fid) }
+                }
+            }
+        }
+        panic!("ARGH")
+    }
+    IdType::Face(face_id)
+}
+
+fn find_type_to_split_edge(edge_splits: &HashMap<Edge, HashSet<Edge>>, mesh: &DynamicMesh, edge: Edge, point: &Vec3) -> IdType
+{
+    if let Some(new_edges) = edge_splits.get(&edge)
+    {
+        for new_edge in new_edges
+        {
+            let v1 = point - mesh.position(&new_edge.v0);
+            let v2 = point - mesh.position(&new_edge.v1);
+            if v1.dot(&v2) < 0.0
+            {
+                if let Some(vertex_id) = find_close_vertex_on_edge(mesh, &edge, &point) {
+                    return IdType::Vertex(vertex_id)
+                }
+                return IdType::Edge(new_edge.clone())
+            }
+        }
+        panic!("ARGH")
+    }
+    IdType::Edge(edge)
+}
+
+fn insert_edges(edge_list: &mut HashMap<Edge, HashSet<Edge>>, mesh: &DynamicMesh, edge: Edge, split_edge: &Edge, vertex_id: &VertexID)
+{
+    if !edge_list.contains_key(&edge) { edge_list.insert(edge.clone(), HashSet::new()); }
+    let list = edge_list.get_mut(&edge).unwrap();
+    list.insert(Edge::new(edge.v0, vertex_id.clone()));
+    list.insert(Edge::new(edge.v1, vertex_id.clone()));
+}
+
+fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, vertex_id: &VertexID)
+{
+    if !face_list.contains_key(&face_id) { face_list.insert(face_id, HashSet::new()); }
+    let list = face_list.get_mut(&face_id).unwrap();
+
+    let mut iter = mesh.vertex_halfedge_iterator(vertex_id);
+    list.insert(iter.next().unwrap().face_id().unwrap());
+    list.insert(iter.next().unwrap().face_id().unwrap());
+    list.insert(iter.next().unwrap().face_id().unwrap());
 }
 
 #[derive(Debug)]
