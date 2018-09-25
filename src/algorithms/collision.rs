@@ -26,7 +26,7 @@ pub fn find_intersection_point(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &D
     walker.next();
     let c = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
 
-    triangle_linepiece_intersection(&a, &b, &c, &p0, &p1)
+    triangle_line_piece_intersection(&a, &b, &c, &p0, &p1)
 }
 
 pub fn is_intersecting(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID) -> bool
@@ -49,7 +49,7 @@ fn face_id_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> Triangle
     Triangle::new(p1, p2, p3)
 }
 
-fn triangle_linepiece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N>, p0: &Point3<N>, p1: &Point3<N>) -> Option<Vector3<N>>
+fn triangle_line_piece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N>, p0: &Point3<N>, p1: &Point3<N>) -> Option<Vector3<N>>
 {
     let ab = *b - *a;
     let ac = *c - *a;
@@ -59,18 +59,13 @@ fn triangle_linepiece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Po
     let n = ab.cross(&ac);
     let d = ::na::dot(&n, &dir);
 
-    // the normal and the ray direction are orthogonal
+    // the normal and the direction are orthogonal
     if d.is_zero() {
         return None;
     }
 
     let ap = p0 - *a;
     let t = ::na::dot(&ap, &n);
-
-    // the ray does not intersect the plane defined by the triangle
-    /*if (t < ::na::zero() && d < na::zero()) || (t > ::na::zero() && d > ::na::zero()) {
-        return None;
-    }*/
 
     let d = d.abs();
 
@@ -93,8 +88,7 @@ fn triangle_linepiece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Po
             return None;
         }
 
-        let invd = ::na::one::<N>() / d;
-        toi = -t * invd;
+        toi = -t / d;
     } else {
         let v = ::na::dot(&ac, &e);
 
@@ -108,9 +102,12 @@ fn triangle_linepiece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Po
             return None;
         }
 
-        let invd = ::na::one::<N>() / d;
-        toi = t * invd;
+        toi = t / d;
     }
 
+    if toi < ::na::zero() && toi > ::na::one::<N>()
+    {
+        return None;
+    }
     Some(p0.coords + dir * toi)
 }
