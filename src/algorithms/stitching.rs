@@ -17,11 +17,9 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
-
-    for ((vertex_id1, vertex_id2), point) in intersections.vertex_vertex_intersections.iter()
-    {
-        mesh1.set_position(vertex_id1.clone(), point.clone());
-        mesh2.set_position(vertex_id2.clone(), point.clone());
+    println!("{:?}", intersections);
+    if intersections.only_stitches() {
+        return intersections.vertex_vertex_intersections.iter().map(|pair| pair.0.clone()).collect()
     }
 
     let mut face_splits1 = HashMap::new();
@@ -122,8 +120,13 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
             IdType::Face(face_id) => {}
         }
     }
+    for ((vertex_id1, vertex_id2), point) in intersections.vertex_vertex_intersections.drain()
+    {
+        mesh1.set_position(vertex_id1.clone(), point.clone());
+        mesh2.set_position(vertex_id2.clone(), point.clone());
 
-    intersections.vertex_vertex_intersections.iter().map(|pair| pair.0.clone()).collect()
+    }
+    split_at_intersections(mesh1, mesh2)
 }
 
 fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> IdType
@@ -225,6 +228,14 @@ impl Intersections
         Intersections {face_edge_intersections: HashMap::new(), edge_face_intersections: HashMap::new(), face_vertex_intersections: HashMap::new(),
             vertex_face_intersections: HashMap::new(), edge_edge_intersections: HashMap::new(),
             vertex_edge_intersections: HashMap::new(), edge_vertex_intersections: HashMap::new(), vertex_vertex_intersections: HashMap::new()}
+    }
+
+    pub fn only_stitches(&self) -> bool
+    {
+        self.face_edge_intersections.len() == 0 && self.edge_face_intersections.len() == 0
+            && self.face_vertex_intersections.len() == 0 && self.vertex_face_intersections.len() == 0
+            && self.edge_edge_intersections.len() == 0
+            && self.vertex_edge_intersections.len() == 0 && self.edge_vertex_intersections.len() == 0
     }
 }
 
