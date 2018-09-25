@@ -206,6 +206,7 @@ impl DynamicMesh
         else {
             let new_halfedge_id = self.connectivity_info.create_halfedge(twin_vertex_id, None, None);
             self.connectivity_info.set_halfedge_twin(split_halfedge_id, new_halfedge_id);
+            self.connectivity_info.set_halfedge_vertex(&twin_halfedge_id, new_vertex_id.clone());
         };
 
         new_vertex_id
