@@ -132,7 +132,7 @@ fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Dyn
     {
         for new_face_id in new_faces.iter()
         {
-            if mesh.is_inside(new_face_id, &point)
+            if is_inside(mesh, new_face_id, &point)
             {
                 match find_close_type(mesh, new_face_id.clone(), &point) {
                     IdType::Vertex(vertex_id) => { return IdType::Vertex(vertex_id) },
@@ -146,6 +146,21 @@ fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Dyn
     IdType::Face(face_id)
 }
 
+fn is_inside(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> bool
+{
+    let mut walker = mesh.walker_from_face(face_id);
+    let p0 = *mesh.position(&walker.vertex_id().unwrap());
+    walker.next();
+    let p1 = *mesh.position(&walker.vertex_id().unwrap());
+    walker.next();
+    let p2 = *mesh.position(&walker.vertex_id().unwrap());
+
+    let a = |p0: &Vec3, p1: &Vec3, p2: &Vec3| -> f32 {(p1 - p0).cross(&(p2 - p0)).norm()};
+
+    let f = a(&p0, &p1, &p2) - (a(&p0, &p1, point) + a(&p1, &p2, point) + a(&p2, &p0, point));
+    f.abs() <= 0.001
+}
+
 fn find_type_to_split_edge(edge_splits: &HashMap<Edge, HashSet<Edge>>, mesh: &DynamicMesh, edge: Edge, point: &Vec3) -> IdType
 {
     if let Some(new_edges) = edge_splits.get(&edge)
@@ -154,7 +169,7 @@ fn find_type_to_split_edge(edge_splits: &HashMap<Edge, HashSet<Edge>>, mesh: &Dy
         {
             let v1 = point - mesh.position(&new_edge.v0);
             let v2 = point - mesh.position(&new_edge.v1);
-            if v1.dot(&v2) < 0.0
+            if v1.dot(&v2) < MARGIN
             {
                 if let Some(vertex_id) = find_close_vertex_on_edge(mesh, &edge, &point) {
                     return IdType::Vertex(vertex_id)
@@ -314,17 +329,17 @@ fn find_close_edge(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option
     walker.next();
     let vertex_id2 = walker.vertex_id().unwrap();
 
-    if point_linesegment_distance(point, mesh.position(&vertex_id1), mesh.position(&vertex_id2)) < MARGIN {
+    if point_line_segment_distance(point, mesh.position(&vertex_id1), mesh.position(&vertex_id2)) < MARGIN {
         return Some(Edge::new(vertex_id1, vertex_id2))
     }
 
     walker.next();
     let vertex_id3 = walker.vertex_id().unwrap();
 
-    if point_linesegment_distance(point, mesh.position(&vertex_id2), mesh.position(&vertex_id3)) < MARGIN {
+    if point_line_segment_distance(point, mesh.position(&vertex_id2), mesh.position(&vertex_id3)) < MARGIN {
         return Some(Edge::new(vertex_id2, vertex_id3))
     }
-    if point_linesegment_distance(point, mesh.position(&vertex_id3), mesh.position(&vertex_id1)) < MARGIN {
+    if point_line_segment_distance(point, mesh.position(&vertex_id3), mesh.position(&vertex_id1)) < MARGIN {
         return Some(Edge::new(vertex_id3, vertex_id1))
     }
     None
@@ -352,22 +367,6 @@ fn find_close_vertex_on_edge(mesh: &DynamicMesh, edge: &Edge, point: &Vec3) -> O
         return Some(edge.v1)
     }
     None
-}
-
-fn point_linesegment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
-{
-    let v  = p1 - p0;
-    let w  = point - p0;
-
-    let c1 = w.dot(&v);
-    if c1 <= 0.0 { return w.norm(); }
-
-    let c2 = v.dot(&v);
-    if c2 <= c1 { return (point - p1).norm(); }
-
-    let b = c1 / c2;
-    let pb = p0 + b * v;
-    (point - &pb).norm()
 }
 
 

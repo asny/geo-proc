@@ -49,7 +49,41 @@ fn face_id_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> Triangle
     Triangle::new(p1, p2, p3)
 }
 
-fn triangle_line_piece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N>, p0: &Point3<N>, p1: &Point3<N>) -> Option<Vector3<N>>
+pub fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
+{
+    let v  = p1 - p0;
+    let w  = point - p0;
+
+    let c1 = w.dot(&v);
+    if c1 <= 0.0 { return w.norm(); }
+
+    let c2 = v.dot(&v);
+    if c2 <= c1 { return (point - p1).norm(); }
+
+    let b = c1 / c2;
+    let pb = p0 + b * v;
+    (point - &pb).norm()
+}
+
+pub fn is_point_in_triangle<N: Real>(p: &Point3<N>, p1: &Point3<N>, p2: &Point3<N>, p3: &Point3<N>) -> bool
+{
+    let p1p2 = *p2 - *p1;
+    let p2p3 = *p3 - *p2;
+    let p3p1 = *p1 - *p3;
+
+    let p1p = *p - *p1;
+    let p2p = *p - *p2;
+    let p3p = *p - *p3;
+
+    let d11 = ::na::dot(&p1p, &p1p2);
+    let d12 = ::na::dot(&p2p, &p2p3);
+    let d13 = ::na::dot(&p3p, &p3p1);
+
+    d11 >= ::na::zero() && d11 <= ::na::norm_squared(&p1p2) && d12 >= ::na::zero()
+        && d12 <= ::na::norm_squared(&p2p3) && d13 >= ::na::zero() && d13 <= ::na::norm_squared(&p3p1)
+}
+
+pub fn triangle_line_piece_intersection<N: Real>(a: &Point3<N>, b: &Point3<N>, c: &Point3<N>, p0: &Point3<N>, p1: &Point3<N>) -> Option<Vector3<N>>
 {
     let ab = *b - *a;
     let ac = *c - *a;
