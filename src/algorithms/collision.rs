@@ -65,16 +65,20 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     }
     else if d0.signum() != d1.signum() // The edge intersects the plane spanned by the face
     {
-        let d = n.dot(&p01);
+        // Find intersection point:
+        let t = n.dot(&ap0) / n.dot(&p01);
+        let point = p0 + p01 * t;
 
-        let t = ap0.dot(&n);
 
-        let d = d.abs();
+        // TODO: Compute barycentric coordinates and check if intersection is inside face, on edge, at vertex or outside
+
+        let coords = barycentric(&point, a, b, c);
+        let id2 = PrimitiveID::Edge(edge.clone());
 
         //
         // intersection: compute barycentric coordinates
         //
-        let e = -p01.cross(&ap0);
+        /*let e = -p01.cross(&ap0);
 
         let toi;
         if t < 0.0 {
@@ -105,15 +109,30 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
             }
 
             toi = t / d;
-        }
+        }*/
 
-        if MARGIN < toi && toi < 1.0 - MARGIN
-        {
-            intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2: PrimitiveID::Edge(edge.clone()), point: p0 + p01 * toi});
-        }
+        intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2, point});
     }
 
     intersections
+}
+// Compute barycentric coordinates (u, v, w) for
+// point p with respect to triangle (a, b, c)
+fn barycentric(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32, f32)
+{
+    let v0 = b - a;
+    let v1 = c - a;
+    let v2 = p - a;
+    let d00 = v0.dot(&v0);
+    let d01 = v0.dot(&v1);
+    let d11 = v1.dot(&v1);
+    let d20 = v2.dot(&v0);
+    let d21 = v2.dot(&v1);
+    let denom = d00 * d11 - d01 * d01;
+    let v = (d11 * d20 - d01 * d21) / denom;
+    let w = (d00 * d21 - d01 * d20) / denom;
+    let u = 1.0 - v - w;
+    (u, v, w)
 }
 
 const MARGIN: f32 = 0.01;
