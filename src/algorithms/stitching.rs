@@ -244,60 +244,67 @@ impl Edge {
 
 fn find_intersections(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> Intersections
 {
+    let edges1 = mesh1.halfedge_iterator().collect();
+    let edges2 = mesh2.halfedge_iterator().collect();
+    find_intersections_between_edge_face(mesh1, &edges1, mesh2, &edges2)
+}
+
+fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<HalfEdgeID>, mesh2: &DynamicMesh, edges2: &Vec<HalfEdgeID>) -> Intersections
+{
     let mut intersections = Intersections::new();
-    for face_id1 in mesh1.face_iterator()
+    for halfedge_id1 in edges1
     {
         for face_id2 in mesh2.face_iterator()
         {
-            if is_intersecting(mesh1, &face_id1, mesh2, &face_id2)
+            if let Some(point) = find_intersection_point(mesh2, &face_id2, mesh1,halfedge_id1)
             {
-                for walker in mesh2.face_halfedge_iterator(&face_id2)
+                let walker = mesh1.walker_from_halfedge(halfedge_id1);
+                let edge1 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
+                if let Some(vertex_id1) = find_close_vertex_on_edge(mesh1,&edge1, &point)
                 {
-                    if let Some(point) = find_intersection_point(mesh1, &face_id1, mesh2,&walker.halfedge_id().unwrap())
-                    {
-                        let edge2 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
-                        if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
-                        {
-                            match find_close_type(mesh1, face_id1, &point) {
-                                IdType::Vertex(vertex_id1) => { intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point); },
-                                IdType::Edge(edge1) => { intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point); },
-                                IdType::Face(face_id1) => { intersections.face_vertex_intersections.insert((face_id1, vertex_id2), point); }
-                            }
-                        }
-                        else {
-                            match find_close_type(mesh1, face_id1, &point) {
-                                IdType::Vertex(vertex_id1) => { intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point); },
-                                IdType::Edge(edge1) => { intersections.edge_edge_intersections.insert((edge1, edge2), point); },
-                                IdType::Face(face_id1) => { intersections.face_edge_intersections.insert((face_id1, edge2), point); }
-                            }
-                        }
-                    };
+                    match find_close_type(mesh2, face_id2, &point) {
+                        IdType::Vertex(vertex_id2) => { intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point); },
+                        IdType::Edge(edge2) => { intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point); },
+                        IdType::Face(face_id2) => { intersections.vertex_face_intersections.insert((vertex_id1, face_id2), point); }
+                    }
                 }
-                for walker in mesh1.face_halfedge_iterator(&face_id1)
-                {
-                    if let Some(point) = find_intersection_point(mesh2, &face_id2, mesh1,&walker.halfedge_id().unwrap())
-                    {
-                        let edge1 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
-                        if let Some(vertex_id1) = find_close_vertex_on_edge(mesh1,&edge1, &point)
-                        {
-                            match find_close_type(mesh2, face_id2, &point) {
-                                IdType::Vertex(vertex_id2) => { intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point); },
-                                IdType::Edge(edge2) => { intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point); },
-                                IdType::Face(face_id2) => { intersections.vertex_face_intersections.insert((vertex_id1, face_id2), point); }
-                            }
-                        }
-                        else {
-                            match find_close_type(mesh2, face_id2, &point) {
-                                IdType::Vertex(vertex_id2) => { intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point); },
-                                IdType::Edge(edge2) => { intersections.edge_edge_intersections.insert((edge1, edge2), point); },
-                                IdType::Face(face_id2) => { intersections.edge_face_intersections.insert((edge1, face_id2), point); }
-                            }
-                        }
-                    };
+                else {
+                    match find_close_type(mesh2, face_id2, &point) {
+                        IdType::Vertex(vertex_id2) => { intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point); },
+                        IdType::Edge(edge2) => { intersections.edge_edge_intersections.insert((edge1, edge2), point); },
+                        IdType::Face(face_id2) => { intersections.edge_face_intersections.insert((edge1, face_id2), point); }
+                    }
                 }
-            }
+            };
         }
     }
+    for halfedge_id2 in edges2
+    {
+        for face_id1 in mesh1.face_iterator()
+        {
+            if let Some(point) = find_intersection_point(mesh1, &face_id1, mesh2, halfedge_id2)
+            {
+                let walker = mesh2.walker_from_halfedge(halfedge_id2);
+                let edge2 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
+                if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
+                {
+                    match find_close_type(mesh1, face_id1, &point) {
+                        IdType::Vertex(vertex_id1) => { intersections.vertex_vertex_intersections.insert((vertex_id1, vertex_id2), point); },
+                        IdType::Edge(edge1) => { intersections.edge_vertex_intersections.insert((edge1, vertex_id2), point); },
+                        IdType::Face(face_id1) => { intersections.face_vertex_intersections.insert((face_id1, vertex_id2), point); }
+                    }
+                }
+                else {
+                    match find_close_type(mesh1, face_id1, &point) {
+                        IdType::Vertex(vertex_id1) => { intersections.vertex_edge_intersections.insert((vertex_id1, edge2), point); },
+                        IdType::Edge(edge1) => { intersections.edge_edge_intersections.insert((edge1, edge2), point); },
+                        IdType::Face(face_id1) => { intersections.face_edge_intersections.insert((face_id1, edge2), point); }
+                    }
+                }
+            };
+        }
+    }
+    println!("{:?}", intersections);
     intersections
 }
 
