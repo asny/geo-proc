@@ -13,6 +13,63 @@ use na::{Isometry3, Point3};
 type Triangle = ncollide3d::shape::Triangle<f32>;
 type Point = Point3<f32>;
 
+pub struct Intersection {
+    pub id1: PrimitiveID,
+    pub id2: PrimitiveID,
+    pub point: Vec3
+}
+
+pub fn find_intersections(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Vec<Intersection>
+{
+    let mut intersections = Vec::new();
+
+    let p0 = mesh2.position(&edge.0);
+    let p1 = mesh2.position(&edge.1);
+
+    let face_vertices = mesh1.face_vertices(face_id1);
+    let a = mesh1.position(&face_vertices.0);
+    let b = mesh1.position(&face_vertices.1);
+    let c = mesh1.position(&face_vertices.2);
+
+    if let Some(vertex_id) = is_close_to_vertex(p0, a, b, c, &face_vertices) {
+        intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.0), id2: PrimitiveID::Vertex(vertex_id), point: p0.clone()});
+    }
+    if let Some(vertex_id) = is_close_to_vertex(p1, a, b, c, &face_vertices) {
+        intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.1), id2: PrimitiveID::Vertex(vertex_id), point: p1.clone()});
+    }
+
+
+    intersections
+}
+
+const MARGIN: f32 = 0.01;
+fn is_close_to_vertex(point: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3, vertices: &(VertexID, VertexID, VertexID) ) -> Option<VertexID>
+{
+    if (point - a).norm() < MARGIN {
+        return Some(vertices.0)
+    }
+    if (point - b).norm() < MARGIN {
+        return Some(vertices.1)
+    }
+    if (point - c).norm() < MARGIN {
+        return Some(vertices.2)
+    }
+    None
+}
+
+fn find_close_vertex_on_edge(mesh: &DynamicMesh, edge: &(VertexID, VertexID), point: &Vec3) -> Option<VertexID>
+{
+    if(point - mesh.position(&edge.0)).norm() < MARGIN
+    {
+        return Some(edge.0)
+    }
+    if (point - mesh.position(&edge.1)).norm() < MARGIN
+    {
+        return Some(edge.1)
+    }
+    None
+}
+
 pub fn find_intersection_point(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Option<Vec3>
 {
     let p0 = Point::from_coordinates(*mesh2.position(&edge.0));
