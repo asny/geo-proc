@@ -67,15 +67,14 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     {
         let d = n.dot(&p01);
 
-        let ap = p0 - *a;
-        let t = ap.dot(&n);
+        let t = ap0.dot(&n);
 
         let d = d.abs();
 
         //
         // intersection: compute barycentric coordinates
         //
-        let e = -p01.cross(&ap);
+        let e = -p01.cross(&ap0);
 
         let toi;
         if t < 0.0 {
