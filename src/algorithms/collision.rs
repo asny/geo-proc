@@ -18,12 +18,11 @@ pub fn find_intersection_point(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &D
     let p0 = Point::from_coordinates(*mesh2.position(&edge.0));
     let p1 = Point::from_coordinates(*mesh2.position(&edge.1));
 
-    let mut walker = mesh1.walker_from_face(face_id1);
-    let a = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
-    walker.next();
-    let b = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
-    walker.next();
-    let c = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
+    let face_vertices = mesh1.face_vertices(face_id1);
+
+    let a = Point::from_coordinates(*mesh1.position(&face_vertices.0));
+    let b = Point::from_coordinates(*mesh1.position(&face_vertices.1));
+    let c = Point::from_coordinates(*mesh1.position(&face_vertices.2));
 
     triangle_line_piece_intersection(&a, &b, &c, &p0, &p1)
 }
