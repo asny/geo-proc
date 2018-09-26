@@ -19,23 +19,106 @@ pub struct Intersection {
     pub point: Vec3
 }
 
-pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Vec<Intersection>
+pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Vec<Intersection>
 {
     let mut intersections = Vec::new();
 
     let p0 = mesh2.position(&edge.0);
     let p1 = mesh2.position(&edge.1);
 
-    let face_vertices = mesh1.face_vertices(face_id1);
+    let face_vertices = mesh1.face_vertices(face_id);
     let a = mesh1.position(&face_vertices.0);
     let b = mesh1.position(&face_vertices.1);
     let c = mesh1.position(&face_vertices.2);
 
-    if let Some(vertex_id) = is_close_to_vertex(p0, a, b, c, &face_vertices) {
-        intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.0), id2: PrimitiveID::Vertex(vertex_id), point: p0.clone()});
+    let ab = *b - *a;
+    let ac = *c - *a;
+    let p01 = *p1 - *p0;
+    let ap0 = *p0 - *a;
+    let ap1 = *p1 - *a;
+
+    let n = ab.cross(&ac); // normal
+
+    let d0 = n.dot(&ap0); // Todo: Use distance to plane
+    let d1 = n.dot(&ap1); // Todo: Use distance to plane
+
+    if d0.abs() < MARGIN && d1.abs() < MARGIN { // p0 and p1 lies in the same plane as the face
+        // TODO: p0 and p1 lies in the same plane as the face
+        if let Some(vertex_id) = is_close_to_vertex(p0, a, b, c, &face_vertices) {
+            intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.0), id2: PrimitiveID::Vertex(vertex_id), point: p0.clone()});
+        }
+        if let Some(vertex_id) = is_close_to_vertex(p1, a, b, c, &face_vertices) {
+            intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.1), id2: PrimitiveID::Vertex(vertex_id), point: p1.clone()});
+        }
     }
-    if let Some(vertex_id) = is_close_to_vertex(p1, a, b, c, &face_vertices) {
-        intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.1), id2: PrimitiveID::Vertex(vertex_id), point: p1.clone()});
+    else if d0.abs() < MARGIN { // p0 lies in the same plane as the face
+        // TODO: p0 lies in the same plane as the face
+        if let Some(vertex_id) = is_close_to_vertex(p0, a, b, c, &face_vertices) {
+            intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.0), id2: PrimitiveID::Vertex(vertex_id), point: p0.clone()});
+        }
+    }
+    else if d1.abs() < MARGIN { // p1 lies in the same plane as the face
+        // TODO: p1 lies in the same plane as the face
+        if let Some(vertex_id) = is_close_to_vertex(p1, a, b, c, &face_vertices) {
+            intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.1), id2: PrimitiveID::Vertex(vertex_id), point: p1.clone()});
+        }
+    }
+    else if d0.signum() == d1.signum() // The edge lies on one side of the plane spanned by the face
+    {
+        return intersections;
+    }
+    else // The edge intersects the plane spanned by the face
+    {
+
+    }
+
+    let d = n.dot(&p01);
+
+    let ap = p0 - *a;
+    let t = ap.dot(&n);
+
+    let d = d.abs();
+
+    //
+    // intersection: compute barycentric coordinates
+    //
+    let e = -p01.cross(&ap);
+
+    let toi;
+    if t < 0.0 {
+        let v = -ac.dot( &e);
+
+        if v < -MARGIN || v + MARGIN > d {
+            return intersections;
+        }
+
+        let w = ab.dot( &e);
+
+        if w < -MARGIN || v + w + MARGIN > d {
+            return intersections;
+        }
+
+        toi = -t / d;
+    } else {
+        let v = ac.dot(&e);
+
+        if v < -MARGIN || v + MARGIN > d {
+            return intersections;
+        }
+
+        let w = -ab.dot(&e);
+
+        if w < -MARGIN || v + w + MARGIN > d {
+            return intersections;
+        }
+
+        toi = t / d;
+    }
+
+    if MARGIN < toi && toi < 1.0 - MARGIN
+    {
+        intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2: PrimitiveID::Edge(edge.clone()), point: p0 + p01 * toi});
+        return intersections;
     }
 
 
