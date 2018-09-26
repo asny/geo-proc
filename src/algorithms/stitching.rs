@@ -9,7 +9,7 @@ use dynamic_mesh::DynamicMesh;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
-    let stitches = split_at_intersections(mesh1, mesh2);
+    let _stitches = split_at_intersections(mesh1, mesh2);
     // Todo:
     mesh1.clone()
 }
@@ -67,7 +67,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
                     PrimitiveID::Edge(ref split_edge) => {
                         let halfedge_id = connecting_edge(mesh1, &split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh1.split_edge(&halfedge_id, point);
-                        insert_edges(&mut edge_splits1, mesh1, edge, split_edge, &vertex_id);
+                        insert_edges(&mut edge_splits1, edge, &vertex_id);
                         vertex_id
                     },
                     _ => {unreachable!()}
@@ -83,7 +83,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
                     PrimitiveID::Edge(ref split_edge) => {
                         let halfedge_id = connecting_edge(mesh2, &split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh2.split_edge(&halfedge_id, point);
-                        insert_edges(&mut edge_splits2, mesh2, edge, split_edge, &vertex_id);
+                        insert_edges(&mut edge_splits2, edge, &vertex_id);
                         vertex_id
                     },
                     _ => {unreachable!()}
@@ -154,7 +154,7 @@ fn find_type_to_split_edge(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(
     PrimitiveID::Edge(edge)
 }
 
-fn insert_edges(edge_list: &mut HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &DynamicMesh, edge: (VertexID, VertexID), split_edge: &(VertexID, VertexID), vertex_id: &VertexID)
+fn insert_edges(edge_list: &mut HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, edge: (VertexID, VertexID), vertex_id: &VertexID)
 {
     if !edge_list.contains_key(&edge) { edge_list.insert(edge.clone(), HashSet::new()); }
     let list = edge_list.get_mut(&edge).unwrap();
@@ -292,7 +292,6 @@ fn find_close_vertex_on_edge(mesh: &DynamicMesh, edge: &(VertexID, VertexID), po
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mesh::Renderable;
 
     #[test]
     fn test_finding_edge_edge_intersections()
@@ -489,6 +488,7 @@ mod tests {
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
+        stitched.test_is_valid().unwrap();
     }
 
     fn create_simple_mesh_x_z() -> DynamicMesh

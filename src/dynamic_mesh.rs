@@ -758,7 +758,7 @@ mod tests {
         {
             if mesh.walker_from_halfedge(&halfedge_id).face_id().is_some()
             {
-                let new_vertex_id = mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
+                mesh.split_edge(&halfedge_id, vec3(-1.0, -1.0, -1.0));
 
                 assert_eq!(mesh.no_vertices(), 4);
                 assert_eq!(mesh.no_halfedges(), 2 * 3 + 4);
