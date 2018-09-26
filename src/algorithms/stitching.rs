@@ -52,9 +52,6 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
             new_intersections.insert((id1, id2), point);
         }
     }
-    println!("Face splits: ");
-    println!("1: {:?}", face_splits1);
-    println!("2: {:?}", face_splits2);
 
     // Split edges
     let mut stitches = Vec::new();
@@ -252,23 +249,16 @@ const MARGIN: f32 = 0.01;
 
 fn find_close_edge(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<(VertexID, VertexID)>
 {
-    let mut walker = mesh.walker_from_face(face_id);
-    let vertex_id1 = walker.vertex_id().unwrap();
-    walker.next();
-    let vertex_id2 = walker.vertex_id().unwrap();
+    let vertex_ids = mesh.face_vertices(face_id);
 
-    if point_line_segment_distance(point, mesh.position(&vertex_id1), mesh.position(&vertex_id2)) < MARGIN {
-        return Some((vertex_id1, vertex_id2))
+    if point_line_segment_distance(point, mesh.position(&vertex_ids.0), mesh.position(&vertex_ids.1)) < MARGIN {
+        return Some((vertex_ids.0, vertex_ids.1))
     }
-
-    walker.next();
-    let vertex_id3 = walker.vertex_id().unwrap();
-
-    if point_line_segment_distance(point, mesh.position(&vertex_id2), mesh.position(&vertex_id3)) < MARGIN {
-        return Some((vertex_id2, vertex_id3))
+    if point_line_segment_distance(point, mesh.position(&vertex_ids.1), mesh.position(&vertex_ids.2)) < MARGIN {
+        return Some((vertex_ids.1, vertex_ids.2))
     }
-    if point_line_segment_distance(point, mesh.position(&vertex_id3), mesh.position(&vertex_id1)) < MARGIN {
-        return Some((vertex_id3, vertex_id1))
+    if point_line_segment_distance(point, mesh.position(&vertex_ids.0), mesh.position(&vertex_ids.2)) < MARGIN {
+        return Some((vertex_ids.0, vertex_ids.2))
     }
     None
 }
