@@ -19,7 +19,7 @@ pub struct Intersection {
     pub point: Vec3
 }
 
-pub fn find_intersections(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Vec<Intersection>
+pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Vec<Intersection>
 {
     let mut intersections = Vec::new();
 

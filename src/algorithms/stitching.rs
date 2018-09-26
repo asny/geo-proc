@@ -187,38 +187,20 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
     {
         for face_id2 in mesh2.face_iterator()
         {
-            if let Some(point) = find_intersection_point(mesh2, &face_id2, mesh1,edge1)
+            for intersection in find_face_edge_intersections(mesh2, &face_id2, mesh1,edge1)
             {
-                let id1 = match find_close_vertex_on_edge(mesh1,&edge1, &point) {
-                    Some(vertex_id1) => PrimitiveID::Vertex(vertex_id1),
-                    None => PrimitiveID::Edge(*edge1)
-                };
-                let id2 = match find_close_type(mesh2, face_id2, &point) {
-                    PrimitiveID::Vertex(vertex_id) => { PrimitiveID::Vertex(vertex_id) },
-                    PrimitiveID::Edge(edge) => { PrimitiveID::Edge(edge) },
-                    PrimitiveID::Face(face_id) => { PrimitiveID::Face(face_id) }
-                };
-                intersections.insert((id1, id2), point);
-            };
+                intersections.insert((intersection.id2, intersection.id1), intersection.point);
+            }
         }
     }
     for edge2 in edges2
     {
         for face_id1 in mesh1.face_iterator()
         {
-            if let Some(point) = find_intersection_point(mesh1, &face_id1, mesh2, edge2)
+            for intersection in find_face_edge_intersections(mesh1, &face_id1, mesh2, edge2)
             {
-                let id2 = match find_close_vertex_on_edge(mesh2,&edge2, &point) {
-                    Some(vertex_id2) => PrimitiveID::Vertex(vertex_id2),
-                    None => PrimitiveID::Edge(*edge2)
-                };
-                let id1 = match find_close_type(mesh1, face_id1, &point) {
-                    PrimitiveID::Vertex(vertex_id) => { PrimitiveID::Vertex(vertex_id) },
-                    PrimitiveID::Edge(edge) => { PrimitiveID::Edge(edge) },
-                    PrimitiveID::Face(face_id) => { PrimitiveID::Face(face_id) }
-                };
-                intersections.insert((id1, id2), point);
-            };
+                intersections.insert((intersection.id1, intersection.id2), intersection.point);
+            }
         }
     }
     println!("{:?}", intersections);
