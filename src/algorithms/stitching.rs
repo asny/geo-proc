@@ -60,7 +60,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
     let mut stitches = Vec::new();
     let mut edge_splits1 = HashMap::new();
     let mut edge_splits2 = HashMap::new();
-    for ((id1, id2), point) in intersections.drain()
+    for ((id1, id2), point) in new_intersections.drain()
     {
         let vertex_id1 = match id1 {
             PrimitiveID::Vertex(vertex_id) => { vertex_id },
