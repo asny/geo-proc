@@ -2,6 +2,7 @@ use mesh::{self, Renderable};
 use connectivity_info::ConnectivityInfo;
 use traversal::*;
 use std::rc::Rc;
+use std::iter::FromIterator;
 use std::collections::{HashSet, HashMap};
 use ids::*;
 use types::*;
@@ -9,6 +10,7 @@ use types::*;
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
+pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
 
 #[derive(Clone, Debug)]
 pub struct DynamicMesh {
@@ -177,6 +179,12 @@ impl DynamicMesh
     pub fn face_iterator(&self) -> FaceIterator
     {
         self.connectivity_info.face_iterator()
+    }
+
+    pub fn edge_iterator(&self) -> EdgeIterator
+    {
+        let set: HashSet<(VertexID, VertexID)> = HashSet::from_iter(self.halfedge_iterator().map(|halfedge_id| self.edge_vertices(&halfedge_id)));
+        Box::new(set.into_iter())
     }
 
     //////////////////////////////////////////
