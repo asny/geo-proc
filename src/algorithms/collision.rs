@@ -37,10 +37,10 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     let ap0 = *p0 - *a;
     let ap1 = *p1 - *a;
 
-    let n = ab.cross(&ac); // normal
+    let n = ab.cross(&ac).normalize(); // normal
 
-    let d0 = n.dot(&ap0); // Todo: Use distance to plane
-    let d1 = n.dot(&ap1); // Todo: Use distance to plane
+    let d0 = n.dot(&ap0);
+    let d1 = n.dot(&ap1);
 
     if d0.abs() < MARGIN && d1.abs() < MARGIN { // p0 and p1 lies in the same plane as the face
         // TODO: p0 and p1 lies in the same plane as the face
