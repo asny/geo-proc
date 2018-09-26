@@ -57,6 +57,13 @@ impl fmt::Display for FaceID {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+pub enum PrimitiveID {
+    Vertex(VertexID),
+    Edge((VertexID, VertexID)),
+    Face(FaceID)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

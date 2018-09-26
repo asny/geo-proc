@@ -225,13 +225,6 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
     intersections
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
-enum PrimitiveID {
-    Vertex(VertexID),
-    Edge((VertexID, VertexID)),
-    Face(FaceID)
-}
-
 fn find_close_type(mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> PrimitiveID
 {
     if let Some(vertex_id) = find_close_vertex_on_face(mesh, &face_id, &point)
