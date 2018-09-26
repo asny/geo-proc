@@ -63,64 +63,56 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
             intersections.push(Intersection {id1: PrimitiveID::Vertex(edge.1), id2: PrimitiveID::Vertex(vertex_id), point: p1.clone()});
         }
     }
-    else if d0.signum() == d1.signum() // The edge lies on one side of the plane spanned by the face
+    else if d0.signum() != d1.signum() // The edge intersects the plane spanned by the face
     {
-        return intersections;
-    }
-    else // The edge intersects the plane spanned by the face
-    {
+        let d = n.dot(&p01);
 
-    }
+        let ap = p0 - *a;
+        let t = ap.dot(&n);
 
-    let d = n.dot(&p01);
+        let d = d.abs();
 
-    let ap = p0 - *a;
-    let t = ap.dot(&n);
+        //
+        // intersection: compute barycentric coordinates
+        //
+        let e = -p01.cross(&ap);
 
-    let d = d.abs();
+        let toi;
+        if t < 0.0 {
+            let v = -ac.dot( &e);
 
-    //
-    // intersection: compute barycentric coordinates
-    //
-    let e = -p01.cross(&ap);
+            if v < -MARGIN || v + MARGIN > d {
+                return intersections;
+            }
 
-    let toi;
-    if t < 0.0 {
-        let v = -ac.dot( &e);
+            let w = ab.dot( &e);
 
-        if v < -MARGIN || v + MARGIN > d {
-            return intersections;
+            if w < -MARGIN || v + w + MARGIN > d {
+                return intersections;
+            }
+
+            toi = -t / d;
+        } else {
+            let v = ac.dot(&e);
+
+            if v < -MARGIN || v + MARGIN > d {
+                return intersections;
+            }
+
+            let w = -ab.dot(&e);
+
+            if w < -MARGIN || v + w + MARGIN > d {
+                return intersections;
+            }
+
+            toi = t / d;
         }
 
-        let w = ab.dot( &e);
-
-        if w < -MARGIN || v + w + MARGIN > d {
-            return intersections;
+        if MARGIN < toi && toi < 1.0 - MARGIN
+        {
+            intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2: PrimitiveID::Edge(edge.clone()), point: p0 + p01 * toi});
         }
-
-        toi = -t / d;
-    } else {
-        let v = ac.dot(&e);
-
-        if v < -MARGIN || v + MARGIN > d {
-            return intersections;
-        }
-
-        let w = -ab.dot(&e);
-
-        if w < -MARGIN || v + w + MARGIN > d {
-            return intersections;
-        }
-
-        toi = t / d;
     }
-
-    if MARGIN < toi && toi < 1.0 - MARGIN
-    {
-        intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2: PrimitiveID::Edge(edge.clone()), point: p0 + p01 * toi});
-        return intersections;
-    }
-
 
     intersections
 }
