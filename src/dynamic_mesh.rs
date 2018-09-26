@@ -309,6 +309,18 @@ impl DynamicMesh
         self.positions.insert(vertex_id, p);
     }
 
+    pub fn edge_positions(&self, halfedge_id: &HalfEdgeID) -> (&Vec3, &Vec3)
+    {
+        let vertices = self.edge_vertices(halfedge_id);
+        (self.position(&vertices.0), self.position(&vertices.1))
+    }
+
+    pub fn face_positions(&self, face_id: &FaceID) -> (&Vec3, &Vec3, &Vec3)
+    {
+        let vertices = self.face_vertices(face_id);
+        (self.position(&vertices.0), self.position(&vertices.1), self.position(&vertices.2))
+    }
+
     //////////////////////////////////////////
     // *** Functions related to the normal ***
     //////////////////////////////////////////
