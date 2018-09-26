@@ -244,12 +244,12 @@ impl Edge {
 
 fn find_intersections(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> Intersections
 {
-    let edges1 = mesh1.halfedge_iterator().collect();
-    let edges2 = mesh2.halfedge_iterator().collect();
+    let edges1 = mesh1.edge_iterator().collect();
+    let edges2 = mesh2.edge_iterator().collect();
     find_intersections_between_edge_face(mesh1, &edges1, mesh2, &edges2)
 }
 
-fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<HalfEdgeID>, mesh2: &DynamicMesh, edges2: &Vec<HalfEdgeID>) -> Intersections
+fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(VertexID, VertexID)>, mesh2: &DynamicMesh, edges2: &Vec<(VertexID, VertexID)>) -> Intersections
 {
     let mut intersections = Intersections::new();
     for halfedge_id1 in edges1
@@ -258,8 +258,7 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<HalfEd
         {
             if let Some(point) = find_intersection_point(mesh2, &face_id2, mesh1,halfedge_id1)
             {
-                let walker = mesh1.walker_from_halfedge(halfedge_id1);
-                let edge1 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
+                let edge1 = Edge::new(halfedge_id1.0, halfedge_id1.1);
                 if let Some(vertex_id1) = find_close_vertex_on_edge(mesh1,&edge1, &point)
                 {
                     match find_close_type(mesh2, face_id2, &point) {
@@ -284,8 +283,7 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<HalfEd
         {
             if let Some(point) = find_intersection_point(mesh1, &face_id1, mesh2, halfedge_id2)
             {
-                let walker = mesh2.walker_from_halfedge(halfedge_id2);
-                let edge2 = Edge::new(walker.vertex_id().unwrap(), walker.clone().twin().vertex_id().unwrap());
+                let edge2 = Edge::new(halfedge_id2.0, halfedge_id2.1);
                 if let Some(vertex_id2) = find_close_vertex_on_edge(mesh2,&edge2, &point)
                 {
                     match find_close_type(mesh1, face_id1, &point) {

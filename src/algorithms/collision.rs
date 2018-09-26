@@ -13,13 +13,12 @@ use na::{Isometry3, Point3};
 type Triangle = ncollide3d::shape::Triangle<f32>;
 type Point = Point3<f32>;
 
-pub fn find_intersection_point(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, halfedge_id2: &HalfEdgeID) -> Option<Vec3>
+pub fn find_intersection_point(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Option<Vec3>
 {
-    let mut walker = mesh2.walker_from_halfedge(halfedge_id2);
-    let p0 = Point::from_coordinates(*mesh2.position(&walker.vertex_id().unwrap()));
-    let p1 = Point::from_coordinates(*mesh2.position(&walker.twin().vertex_id().unwrap()));
+    let p0 = Point::from_coordinates(*mesh2.position(&edge.0));
+    let p1 = Point::from_coordinates(*mesh2.position(&edge.1));
 
-    walker = mesh1.walker_from_face(face_id1);
+    let mut walker = mesh1.walker_from_face(face_id1);
     let a = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
     walker.next();
     let b = Point::from_coordinates(*mesh1.position(&walker.vertex_id().unwrap()));
