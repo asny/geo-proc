@@ -9,47 +9,57 @@ use dynamic_mesh::DynamicMesh;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
-    let _stitches = split_at_intersections(mesh1, mesh2);
+    let mut intersections = find_intersections(mesh1, mesh2);
+    let _stitches = split_at_intersections(mesh1, mesh2, &mut intersections);
     // Todo:
     mesh1.clone()
 }
 
-fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Vec<(VertexID, VertexID)>
+
+
+fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, intersections: &HashMap<(PrimitiveID, PrimitiveID), Vec3>) -> Vec<(VertexID, VertexID)>
 {
-    let mut intersections = find_intersections(mesh1, mesh2);
+    let mut new_edges1 = HashSet::new();
+    let mut new_edges2 = HashSet::new();
 
     // Split faces
-    let mut new_intersections = HashMap::new();
+    let mut new_intersections: HashMap<(PrimitiveID, PrimitiveID), Vec3> = HashMap::new();
     let mut face_splits1 = HashMap::new();
     let mut face_splits2= HashMap::new();
-    for ((id1, id2), point) in intersections.drain()
+    for ((id1, id2), point) in intersections.iter()
     {
         if let PrimitiveID::Face(face_id) = id1
         {
-            match find_face_primitive_to_split(&face_splits1, mesh1, face_id.clone(), &point) {
-                PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((PrimitiveID::Vertex(vertex_id), id2), point); },
-                PrimitiveID::Edge(edge) => { new_intersections.insert((PrimitiveID::Edge(edge), id2), point); },
+            match find_face_primitive_to_split(&face_splits1, mesh1, face_id.clone(), point) {
+                PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((PrimitiveID::Vertex(vertex_id), *id2), *point); },
+                PrimitiveID::Edge(edge) => { new_intersections.insert((PrimitiveID::Edge(edge), *id2), *point); },
                 PrimitiveID::Face(face_id) => {
-                    let vertex_id = mesh1.split_face(&face_id, point);
+                    let vertex_id = mesh1.split_face(&face_id, *point);
                     insert_faces(&mut face_splits1, mesh1, face_id, &vertex_id);
-                    new_intersections.insert((PrimitiveID::Vertex(vertex_id), id2), point);
+                    for walker in mesh1.vertex_halfedge_iterator(&vertex_id) {
+                        new_edges1.insert(mesh1.edge_vertices(&walker.halfedge_id().unwrap()));
+                    }
+                    new_intersections.insert((PrimitiveID::Vertex(vertex_id), *id2), *point);
                 }
             }
         }
         else if let PrimitiveID::Face(face_id) = id2
         {
-            match find_face_primitive_to_split(&face_splits2, mesh2, face_id.clone(), &point) {
-                PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((id1, PrimitiveID::Vertex(vertex_id)), point); },
-                PrimitiveID::Edge(edge) => { new_intersections.insert((id1, PrimitiveID::Edge(edge)), point); },
+            match find_face_primitive_to_split(&face_splits2, mesh2, face_id.clone(), point) {
+                PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((*id1, PrimitiveID::Vertex(vertex_id)), *point); },
+                PrimitiveID::Edge(edge) => { new_intersections.insert((*id1, PrimitiveID::Edge(edge)), *point); },
                 PrimitiveID::Face(face_id) => {
-                    let vertex_id = mesh2.split_face(&face_id, point);
+                    let vertex_id = mesh2.split_face(&face_id, *point);
                     insert_faces(&mut face_splits2, mesh2, face_id, &vertex_id);
-                    new_intersections.insert((id1, PrimitiveID::Vertex(vertex_id)), point);
+                    for walker in mesh2.vertex_halfedge_iterator(&vertex_id) {
+                        new_edges2.insert(mesh2.edge_vertices(&walker.halfedge_id().unwrap()));
+                    }
+                    new_intersections.insert((*id1, PrimitiveID::Vertex(vertex_id)), *point);
                 }
             }
         }
         else {
-            new_intersections.insert((id1, id2), point);
+            new_intersections.insert((*id1, *id2), *point);
         }
     }
 
@@ -68,6 +78,13 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
                         let halfedge_id = connecting_edge(mesh1, &split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh1.split_edge(&halfedge_id, point);
                         insert_edges(&mut edge_splits1, edge, &vertex_id);
+                        for walker in mesh1.vertex_halfedge_iterator(&vertex_id) {
+                            let vid = walker.vertex_id().unwrap();
+                            if vid != split_edge.0 && vid != split_edge.1
+                            {
+                                new_edges1.insert(mesh1.edge_vertices(&walker.halfedge_id().unwrap()));
+                            }
+                        }
                         vertex_id
                     },
                     _ => {unreachable!()}
@@ -84,6 +101,13 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
                         let halfedge_id = connecting_edge(mesh2, &split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh2.split_edge(&halfedge_id, point);
                         insert_edges(&mut edge_splits2, edge, &vertex_id);
+                        for walker in mesh2.vertex_halfedge_iterator(&vertex_id) {
+                            let vid = walker.vertex_id().unwrap();
+                            if vid != split_edge.0 && vid != split_edge.1
+                            {
+                                new_edges2.insert(mesh2.edge_vertices(&walker.halfedge_id().unwrap()));
+                            }
+                        }
                         vertex_id
                     },
                     _ => {unreachable!()}
@@ -94,7 +118,6 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
 
         stitches.push((vertex_id1, vertex_id2));
     }
-
     stitches
 }
 
@@ -266,7 +289,8 @@ mod tests {
         let mut mesh1 = create_simple_mesh_x_z();
         let mut mesh2 = create_simple_mesh_y_z();
 
-        let stitches = split_at_intersections(&mut mesh1, &mut mesh2);
+        let intersections = find_intersections(&mesh1, &mesh2);
+        let stitches = split_at_intersections(&mut mesh1, &mut mesh2, &intersections);
 
         assert_eq!(mesh1.no_vertices(), 11);
         assert_eq!(mesh1.no_halfedges(), 12 * 3 + 8);
@@ -292,7 +316,7 @@ mod tests {
 
         assert_eq!(intersections.len(), 8);
 
-        let stitches = split_at_intersections(&mut mesh1, &mut mesh2);
+        let stitches = split_at_intersections(&mut mesh1, &mut mesh2, &intersections);
 
         assert_eq!(mesh1.no_vertices(), 14);
         assert_eq!(mesh1.no_faces(), 19);
@@ -324,7 +348,7 @@ mod tests {
 
         assert_eq!(intersections.len(), 2);
 
-        let stitches = split_at_intersections(&mut mesh1, &mut mesh2);
+        let stitches = split_at_intersections(&mut mesh1, &mut mesh2, &intersections);
 
         assert_eq!(mesh1.no_vertices(), 5);
         assert_eq!(mesh1.no_faces(), 5);
@@ -361,7 +385,7 @@ mod tests {
 
         assert_eq!(intersections.len(), 2);
 
-        let stitches = split_at_intersections(&mut mesh1, &mut mesh2);
+        let stitches = split_at_intersections(&mut mesh1, &mut mesh2, &intersections);
 
         assert_eq!(mesh1.no_vertices(), 5);
         assert_eq!(mesh1.no_faces(), 3);
