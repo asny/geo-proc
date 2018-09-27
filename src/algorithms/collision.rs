@@ -69,61 +69,37 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
         let t = n.dot(&-ap0) / n.dot(&p01);
         let point = p0 + p01 * t;
 
-        let ap = point - *a;
-        let d00 = ab.dot(&v0);
-
-        // TODO: Compute barycentric coordinates and check if intersection is inside face, on edge, at vertex or outside
-
+        // Compute barycentric coordinates
         let coords = barycentric(&point, a, b, c);
-        let id2 = PrimitiveID::Edge(edge.clone());
-        println!("{:?}", coords);
 
-        if -MARGIN < coords.0 && coords.0 < 1.0 + MARGIN && -MARGIN < coords.1 && coords.1 < 1.0 + MARGIN && -MARGIN < coords.2 && coords.2 < 1.0 + MARGIN {
-            println!("inside");
-            if coords.0 < MARGIN {
+        // Test whether the intersection point lies inside the face
+        if -MARGIN < coords.0 && coords.0 < 1.0 + MARGIN && -MARGIN < coords.1 && coords.1 < 1.0 + MARGIN
+            && -MARGIN < coords.2 && coords.2 < 1.0 + MARGIN // Intersection!
+        {
+            let id2 = PrimitiveID::Edge(edge.clone());
 
+            if coords.0 > 1.0 - MARGIN { // Through point a
+                intersections.push(Intersection{id1: PrimitiveID::Vertex(face_vertices.0), id2, point});
             }
-
-
-            intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2, point});
+            else if coords.1 > 1.0 - MARGIN { // Through point b
+                intersections.push(Intersection{id1: PrimitiveID::Vertex(face_vertices.1), id2, point});
+            }
+            else if coords.2 > 1.0 - MARGIN { // Through point c
+                intersections.push(Intersection{id1: PrimitiveID::Vertex(face_vertices.2), id2, point});
+            }
+            else if coords.0 < MARGIN { // Through edge bc
+                intersections.push(Intersection{id1: PrimitiveID::Edge((face_vertices.1, face_vertices.2)), id2, point});
+            }
+            else if coords.1 < MARGIN { // Through edge ac
+                intersections.push(Intersection{id1: PrimitiveID::Edge((face_vertices.0, face_vertices.2)), id2, point});
+            }
+            else if coords.2 < MARGIN { // Through edge ab
+                intersections.push(Intersection{id1: PrimitiveID::Edge((face_vertices.0, face_vertices.1)), id2, point});
+            }
+            else { // Inside the face
+                intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2, point});
+            }
         }
-
-        //
-        // intersection: compute barycentric coordinates
-        //
-        /*let e = -p01.cross(&ap0);
-
-        let toi;
-        if t < 0.0 {
-            let v = -ac.dot( &e);
-
-            if v < -MARGIN || v + MARGIN > d {
-                return intersections;
-            }
-
-            let w = ab.dot( &e);
-
-            if w < -MARGIN || v + w + MARGIN > d {
-                return intersections;
-            }
-
-            toi = -t / d;
-        } else {
-            let v = ac.dot(&e);
-
-            if v < -MARGIN || v + MARGIN > d {
-                return intersections;
-            }
-
-            let w = -ab.dot(&e);
-
-            if w < -MARGIN || v + w + MARGIN > d {
-                return intersections;
-            }
-
-            toi = t / d;
-        }*/
-
     }
 
     intersections
