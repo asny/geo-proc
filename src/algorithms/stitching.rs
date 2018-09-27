@@ -26,7 +26,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
     {
         if let PrimitiveID::Face(face_id) = id1
         {
-            match find_type_to_split(&face_splits1, mesh1, face_id.clone(), &point) {
+            match find_face_primitive_to_split(&face_splits1, mesh1, face_id.clone(), &point) {
                 PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((PrimitiveID::Vertex(vertex_id), id2), point); },
                 PrimitiveID::Edge(edge) => { new_intersections.insert((PrimitiveID::Edge(edge), id2), point); },
                 PrimitiveID::Face(face_id) => {
@@ -38,7 +38,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
         }
         else if let PrimitiveID::Face(face_id) = id2
         {
-            match find_type_to_split(&face_splits2, mesh2, face_id.clone(), &point) {
+            match find_face_primitive_to_split(&face_splits2, mesh2, face_id.clone(), &point) {
                 PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((id1, PrimitiveID::Vertex(vertex_id)), point); },
                 PrimitiveID::Edge(edge) => { new_intersections.insert((id1, PrimitiveID::Edge(edge)), point); },
                 PrimitiveID::Face(face_id) => {
@@ -62,7 +62,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
         let vertex_id1 = match id1 {
             PrimitiveID::Vertex(vertex_id) => { vertex_id },
             PrimitiveID::Edge(edge) => {
-                match find_type_to_split_edge(&edge_splits1, mesh1, edge, &point) {
+                match find_edge_primitive_to_split(&edge_splits1, mesh1, edge, &point) {
                     PrimitiveID::Vertex(vertex_id) => { vertex_id },
                     PrimitiveID::Edge(ref split_edge) => {
                         let halfedge_id = connecting_edge(mesh1, &split_edge.0, &split_edge.1).unwrap();
@@ -78,7 +78,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
         let vertex_id2 = match id2 {
             PrimitiveID::Vertex(vertex_id) => { vertex_id },
             PrimitiveID::Edge(edge) => {
-                match find_type_to_split_edge(&edge_splits2, mesh2, edge, &point) {
+                match find_edge_primitive_to_split(&edge_splits2, mesh2, edge, &point) {
                     PrimitiveID::Vertex(vertex_id) => { vertex_id },
                     PrimitiveID::Edge(ref split_edge) => {
                         let halfedge_id = connecting_edge(mesh2, &split_edge.0, &split_edge.1).unwrap();
@@ -98,7 +98,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> V
     stitches
 }
 
-fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> PrimitiveID
+fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> PrimitiveID
 {
     if let Some(new_faces) = face_splits.get(&face_id)
     {
@@ -111,7 +111,7 @@ fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Dyn
     PrimitiveID::Face(face_id)
 }
 
-fn find_type_to_split_edge(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &DynamicMesh, edge: (VertexID, VertexID), point: &Vec3) -> PrimitiveID
+fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &DynamicMesh, edge: (VertexID, VertexID), point: &Vec3) -> PrimitiveID
 {
     if let Some(new_edges) = edge_splits.get(&edge)
     {
