@@ -62,17 +62,18 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
 
 pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), point: &Vec3) -> Option<PrimitiveID>
 {
-    // TODO
-    let v0 = point - mesh.position(&edge.0);
-    let v1 = point - mesh.position(&edge.1);
-    if v0.dot(&v1) < MARGIN
+    let p0 = mesh.position(&edge.0);
+    let p1 = mesh.position(&edge.1);
+    let l0 = (point - p0).norm_squared();
+    if l0 < MARGIN {
+        return Some(PrimitiveID::Vertex(edge.0));
+    }
+    let l1 = (point - p1).norm_squared();
+    if l1 < MARGIN {
+        return Some(PrimitiveID::Vertex(edge.1));
+    }
+    if l0 + l1 < (p1 - p0).norm_squared() + MARGIN
     {
-        if v0.norm_squared() < MARGIN {
-            return Some(PrimitiveID::Vertex(edge.0));
-        }
-        if v1.norm_squared() < MARGIN {
-            return Some(PrimitiveID::Vertex(edge.1));
-        }
         return Some(PrimitiveID::Edge(edge.clone()));
     }
     None
