@@ -16,10 +16,8 @@ pub struct Intersection {
     pub point: Vec3
 }
 
-pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Vec<Intersection>
+pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Option<(Intersection, Option<Intersection>)>
 {
-    let mut intersections = Vec::new();
-
     let p0 = mesh2.position(&edge.0);
     let p1 = mesh2.position(&edge.1);
 
@@ -29,31 +27,37 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     match plane_line_piece_intersection(&p0, &p1, p, &n) {
         Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
             if let Some(id1) = find_face_intersection(mesh1, face_id,p0 ) {
-                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0});
+                if let Some(id1) = find_face_intersection(mesh1, face_id,p1 ) {
+                    return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0},
+                                 Some(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1})));
+                }
+                else {
+                    return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0}, None));
+                }
             }
-            if let Some(id1) = find_face_intersection(mesh1, face_id,p1 ) {
-                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1});
+            else if let Some(id1) = find_face_intersection(mesh1, face_id,p1 ) {
+                return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1}, None));
             }
         },
         Some(PlaneLinepieceIntersectionResult::P0InPlane) => {
             if let Some(id1) = find_face_intersection(mesh1, face_id,p0 ) {
-                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0});
+                return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0}, None));
             }
         },
         Some(PlaneLinepieceIntersectionResult::P1InPlane) => {
             if let Some(id1) = find_face_intersection(mesh1, face_id,p1 ) {
-                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1});
+                return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1}, None));
             }
         },
         Some(PlaneLinepieceIntersectionResult::Intersection(point)) => {
             if let Some(id1) = find_face_intersection(mesh1, face_id, &point ) {
-                intersections.push(Intersection{id1, id2: PrimitiveID::Edge(edge.clone()), point});
+                return Some((Intersection{id1, id2: PrimitiveID::Edge(edge.clone()), point}, None));
             }
         },
         None => {}
     }
 
-    intersections
+    None
 }
 
 pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), point: &Vec3) -> Option<PrimitiveID>

@@ -157,9 +157,14 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
     {
         for face_id2 in mesh2.face_iterator()
         {
-            for intersection in find_face_edge_intersections(mesh2, &face_id2, mesh1,edge1)
+            if let Some(result) = find_face_edge_intersections(mesh2, &face_id2, mesh1,edge1)
             {
+                let intersection = result.0;
                 intersections.insert((intersection.id2, intersection.id1), intersection.point);
+                if let Some(other_intersection) = result.1
+                {
+                    intersections.insert((other_intersection.id2, other_intersection.id1), other_intersection.point);
+                }
             }
         }
     }
@@ -167,9 +172,14 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
     {
         for face_id1 in mesh1.face_iterator()
         {
-            for intersection in find_face_edge_intersections(mesh1, &face_id1, mesh2, edge2)
+            if let Some(result) = find_face_edge_intersections(mesh1, &face_id1, mesh2, edge2)
             {
+                let intersection = result.0;
                 intersections.insert((intersection.id1, intersection.id2), intersection.point);
+                if let Some(other_intersection) = result.1
+                {
+                    intersections.insert((other_intersection.id1, other_intersection.id2), other_intersection.point);
+                }
             }
         }
     }
