@@ -8,10 +8,7 @@ use dynamic_mesh::DynamicMesh;
 use algorithms::collision::ncollide3d::query::{proximity, Proximity};
 use na::{Isometry3, Point3};
 
-type Triangle = ncollide3d::shape::Triangle<f32>;
-type Point = Point3<f32>;
-
-const MARGIN: f32 = 0.01;
+const MARGIN: f32 = 0.0001;
 
 pub struct Intersection {
     pub id1: PrimitiveID,
@@ -161,15 +158,15 @@ pub fn is_intersecting(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMe
     prox == Proximity::Intersecting
 }
 
-fn face_id_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> Triangle
+fn face_id_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> ncollide3d::shape::Triangle<f32>
 {
     let mut walker = mesh.walker_from_face(face_id);
-    let p1 = Point::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
+    let p1 = Point3::<f32>::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
     walker.next();
-    let p2 = Point::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
+    let p2 = Point3::<f32>::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
     walker.next();
-    let p3 = Point::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
-    Triangle::new(p1, p2, p3)
+    let p3 = Point3::<f32>::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
+    ncollide3d::shape::Triangle::<f32>::new(p1, p2, p3)
 }
 
 fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
