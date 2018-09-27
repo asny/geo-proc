@@ -32,25 +32,25 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
 
     match plane_line_piece_intersection(&p0, &p1, a, &n) {
         Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
-            if let Some(id1) = find_face_intersection_internal(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+            if let Some(id1) = find_face_intersection(mesh1, face_id,p0 ) {
                 intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0});
             }
-            if let Some(id1) = find_face_intersection_internal(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+            if let Some(id1) = find_face_intersection(mesh1, face_id,p1 ) {
                 intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1});
             }
         },
         Some(PlaneLinepieceIntersectionResult::P0InPlane) => {
-            if let Some(id1) = find_face_intersection_internal(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+            if let Some(id1) = find_face_intersection(mesh1, face_id,p0 ) {
                 intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0});
             }
         },
         Some(PlaneLinepieceIntersectionResult::P1InPlane) => {
-            if let Some(id1) = find_face_intersection_internal(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+            if let Some(id1) = find_face_intersection(mesh1, face_id,p1 ) {
                 intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1});
             }
         },
         Some(PlaneLinepieceIntersectionResult::Intersection(point)) => {
-            if let Some(id1) = find_face_intersection_internal(&point, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+            if let Some(id1) = find_face_intersection(mesh1, face_id, &point ) {
                 intersections.push(Intersection{id1, id2: PrimitiveID::Edge(edge.clone()), point});
             }
         },
@@ -82,15 +82,14 @@ pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), p
 pub fn find_face_intersection(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<PrimitiveID>
 {
     let face_vertices = mesh.face_vertices(face_id);
-    let a = mesh.position(&face_vertices.0);
-    let b = mesh.position(&face_vertices.1);
-    let c = mesh.position(&face_vertices.2);
+    let v0 = face_vertices.0;
+    let v1 = face_vertices.1;
+    let v2 = face_vertices.2;
 
-    find_face_intersection_internal(point, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone())
-}
+    let a = mesh.position(&v0);
+    let b = mesh.position(&v1);
+    let c = mesh.position(&v2);
 
-fn find_face_intersection_internal(point: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3, v0: VertexID, v1: VertexID, v2: VertexID, face_id: FaceID) -> Option<PrimitiveID>
-{
     // Compute barycentric coordinates
     let coords = barycentric(point, a, b, c);
 
@@ -117,7 +116,7 @@ fn find_face_intersection_internal(point: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3, v
             return Some(PrimitiveID::Edge((v0, v1)));
         }
         else { // Inside the face
-            return Some(PrimitiveID::Face(face_id));
+            return Some(PrimitiveID::Face(face_id.clone()));
         }
     }
     None
@@ -215,3 +214,6 @@ fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
     let pb = p0 + b * v;
     (point - &pb).norm()
 }
+
+
+// TODO: TESTS!!!!
