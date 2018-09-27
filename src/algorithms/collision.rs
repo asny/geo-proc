@@ -33,7 +33,6 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
 
     let ab = *b - *a;
     let ac = *c - *a;
-    let p01 = *p1 - *p0;
     let ap0 = *p0 - *a;
     let ap1 = *p1 - *a;
 
@@ -66,6 +65,7 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     else if d0.signum() != d1.signum() // The edge intersects the plane spanned by the face
     {
         // Find intersection point:
+        let p01 = *p1 - *p0;
         let t = n.dot(&-ap0) / n.dot(&p01);
         let point = p0 + p01 * t;
 
