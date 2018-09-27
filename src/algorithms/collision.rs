@@ -41,26 +41,18 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     let d0 = n.dot(&ap0);
     let d1 = n.dot(&ap1);
 
-    if d0.abs() < MARGIN && d1.abs() < MARGIN { // p0 and p1 lies in the same plane as the face
-        if let Some(id1) = find_face_intersection(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-            let id2 = PrimitiveID::Vertex(edge.0);
-            intersections.push(Intersection{id1, id2, point: *p0});
+    if d0.abs() < MARGIN || d1.abs() < MARGIN { // p0 or p1 or both lies in the same plane as the face
+        if d0.abs() < MARGIN { // p0 lies in the same plane as the face
+            if let Some(id1) = find_face_intersection(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+                let id2 = PrimitiveID::Vertex(edge.0);
+                intersections.push(Intersection{id1, id2, point: *p0});
+            }
         }
-        if let Some(id1) = find_face_intersection(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-            let id2 = PrimitiveID::Vertex(edge.1);
-            intersections.push(Intersection{id1, id2, point: *p1});
-        }
-    }
-    else if d0.abs() < MARGIN { // p0 lies in the same plane as the face
-        if let Some(id1) = find_face_intersection(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-            let id2 = PrimitiveID::Vertex(edge.0);
-            intersections.push(Intersection{id1, id2, point: *p0});
-        }
-    }
-    else if d1.abs() < MARGIN { // p1 lies in the same plane as the face
-        if let Some(id1) = find_face_intersection(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-            let id2 = PrimitiveID::Vertex(edge.1);
-            intersections.push(Intersection{id1, id2, point: *p1});
+        if d1.abs() < MARGIN { // p1 lies in the same plane as the face
+            if let Some(id1) = find_face_intersection(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+                let id2 = PrimitiveID::Vertex(edge.1);
+                intersections.push(Intersection{id1, id2, point: *p1});
+            }
         }
     }
     else if d0.signum() != d1.signum() // The edge intersects the plane spanned by the face
