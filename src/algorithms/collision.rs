@@ -69,11 +69,24 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
         let t = n.dot(&ap0) / n.dot(&p01);
         let point = p0 + p01 * t;
 
+        let ap = point - *a;
+        let d00 = ab.dot(&v0);
 
         // TODO: Compute barycentric coordinates and check if intersection is inside face, on edge, at vertex or outside
 
         let coords = barycentric(&point, a, b, c);
         let id2 = PrimitiveID::Edge(edge.clone());
+        println!("{:?}", coords);
+
+        if -MARGIN < coords.0 && coords.0 < 1.0 + MARGIN && -MARGIN < coords.1 && coords.1 < 1.0 + MARGIN && -MARGIN < coords.2 && coords.2 < 1.0 + MARGIN {
+            println!("inside");
+            if coords.0 < MARGIN {
+
+            }
+
+
+            intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2, point});
+        }
 
         //
         // intersection: compute barycentric coordinates
@@ -111,7 +124,6 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
             toi = t / d;
         }*/
 
-        intersections.push(Intersection{id1: PrimitiveID::Face(face_id.clone()), id2, point});
     }
 
     intersections
