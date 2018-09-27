@@ -30,39 +30,39 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
 
     let ab = *b - *a;
     let ac = *c - *a;
-    let ap0 = *p0 - *a;
-    let ap1 = *p1 - *a;
 
     let n = ab.cross(&ac).normalize(); // normal
 
-    let d0 = n.dot(&ap0);
-    let d1 = n.dot(&ap1);
-
-    if d0.abs() < MARGIN || d1.abs() < MARGIN { // p0 or p1 or both lies in the same plane as the face
-        if d0.abs() < MARGIN { // p0 lies in the same plane as the face
+    match plane_line_piece_intersection(&p0, &p1, a, &n) {
+        Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
             if let Some(id1) = find_face_intersection_internal(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
                 let id2 = PrimitiveID::Vertex(edge.0);
                 intersections.push(Intersection{id1, id2, point: *p0});
             }
-        }
-        if d1.abs() < MARGIN { // p1 lies in the same plane as the face
             if let Some(id1) = find_face_intersection_internal(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
                 let id2 = PrimitiveID::Vertex(edge.1);
                 intersections.push(Intersection{id1, id2, point: *p1});
             }
-        }
-    }
-    else if d0.signum() != d1.signum() // The edge intersects the plane spanned by the face
-    {
-        // Find intersection point:
-        let p01 = *p1 - *p0;
-        let t = n.dot(&-ap0) / n.dot(&p01);
-        let point = p0 + p01 * t;
-
-        if let Some(id1) = find_face_intersection_internal(&point, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-            let id2 = PrimitiveID::Edge(edge.clone());
-            intersections.push(Intersection{id1, id2, point});
-        }
+        },
+        Some(PlaneLinepieceIntersectionResult::P0InPlane) => {
+            if let Some(id1) = find_face_intersection_internal(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+                let id2 = PrimitiveID::Vertex(edge.0);
+                intersections.push(Intersection{id1, id2, point: *p0});
+            }
+        },
+        Some(PlaneLinepieceIntersectionResult::P1InPlane) => {
+            if let Some(id1) = find_face_intersection_internal(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+                let id2 = PrimitiveID::Vertex(edge.1);
+                intersections.push(Intersection{id1, id2, point: *p1});
+            }
+        },
+        Some(PlaneLinepieceIntersectionResult::Intersection(point)) => {
+            if let Some(id1) = find_face_intersection_internal(&point, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
+                let id2 = PrimitiveID::Edge(edge.clone());
+                intersections.push(Intersection{id1, id2, point});
+            }
+        },
+        None => {}
     }
 
     intersections
@@ -128,6 +128,44 @@ fn find_face_intersection_internal(point: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3, v
         }
     }
     None
+}
+
+enum PlaneLinepieceIntersectionResult
+{
+    P0InPlane,
+    P1InPlane,
+    LineInPlane,
+    Intersection(Vec3)
+}
+
+fn plane_line_piece_intersection(p0: &Vec3, p1: &Vec3, a: &Vec3, n: &Vec3) -> Option<PlaneLinepieceIntersectionResult>
+{
+    let ap0 = *p0 - *a;
+    let ap1 = *p1 - *a;
+
+    let d0 = n.dot(&ap0);
+    let d1 = n.dot(&ap1);
+
+    if d0.abs() < MARGIN && d1.abs() < MARGIN { // p0 and p1 lies in the plane
+        Some(PlaneLinepieceIntersectionResult::LineInPlane)
+    }
+    else if d0.abs() < MARGIN { // p0 lies in the plane
+        Some(PlaneLinepieceIntersectionResult::P0InPlane)
+    }
+    else if d1.abs() < MARGIN { // p1 lies in the plane
+        Some(PlaneLinepieceIntersectionResult::P1InPlane)
+    }
+    else if d0.signum() != d1.signum() // The edge intersects the plane
+    {
+        // Find intersection point:
+        let p01 = *p1 - *p0;
+        let t = n.dot(&-ap0) / n.dot(&p01);
+        let point = p0 + p01 * t;
+        Some(PlaneLinepieceIntersectionResult::Intersection(point))
+    }
+    else {
+        None
+    }
 }
 
 // Compute barycentric coordinates (u, v, w) for
