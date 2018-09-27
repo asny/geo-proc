@@ -104,33 +104,11 @@ fn find_type_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Dyn
     {
         for new_face_id in new_faces.iter()
         {
-            if is_inside(mesh, new_face_id, &point)
-            {
-                match find_close_type(mesh, new_face_id.clone(), &point) {
-                    PrimitiveID::Vertex(vertex_id) => { return PrimitiveID::Vertex(vertex_id) },
-                    PrimitiveID::Edge(edge_id) => { return PrimitiveID::Edge(edge_id) },
-                    PrimitiveID::Face(fid) => { return PrimitiveID::Face(fid) }
-                }
-            }
+            if let Some(id) = find_face_intersection(mesh, new_face_id, point) { return id; }
         }
         panic!("ARGH")
     }
     PrimitiveID::Face(face_id)
-}
-
-fn is_inside(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> bool
-{
-    let mut walker = mesh.walker_from_face(face_id);
-    let p0 = *mesh.position(&walker.vertex_id().unwrap());
-    walker.next();
-    let p1 = *mesh.position(&walker.vertex_id().unwrap());
-    walker.next();
-    let p2 = *mesh.position(&walker.vertex_id().unwrap());
-
-    let a = |p0: &Vec3, p1: &Vec3, p2: &Vec3| -> f32 {(p1 - p0).cross(&(p2 - p0)).norm()};
-
-    let f = a(&p0, &p1, &p2) - (a(&p0, &p1, point) + a(&p1, &p2, point) + a(&p2, &p0, point));
-    f.abs() <= 0.001
 }
 
 fn find_type_to_split_edge(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &DynamicMesh, edge: (VertexID, VertexID), point: &Vec3) -> PrimitiveID
@@ -139,15 +117,7 @@ fn find_type_to_split_edge(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(
     {
         for new_edge in new_edges
         {
-            let v1 = point - mesh.position(&new_edge.0);
-            let v2 = point - mesh.position(&new_edge.1);
-            if v1.dot(&v2) < MARGIN
-            {
-                if let Some(vertex_id) = find_close_vertex_on_edge(mesh, &edge, &point) {
-                    return PrimitiveID::Vertex(vertex_id)
-                }
-                return PrimitiveID::Edge(new_edge.clone())
-            }
+            if let Some(id) = find_edge_intersection(mesh, new_edge, point) { return id; }
         }
         panic!("ARGH")
     }
@@ -206,63 +176,6 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
     println!("{:?}", intersections);
     intersections
 }
-
-fn find_close_type(mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> PrimitiveID
-{
-    if let Some(vertex_id) = find_close_vertex_on_face(mesh, &face_id, &point)
-    {
-        return PrimitiveID::Vertex(vertex_id)
-    }
-    else if let Some(edge) = find_close_edge(mesh, &face_id, &point)
-    {
-        return PrimitiveID::Edge(edge)
-    }
-    PrimitiveID::Face(face_id)
-}
-
-const MARGIN: f32 = 0.01;
-
-fn find_close_edge(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<(VertexID, VertexID)>
-{
-    let vertex_ids = mesh.face_vertices(face_id);
-
-    if point_line_segment_distance(point, mesh.position(&vertex_ids.0), mesh.position(&vertex_ids.1)) < MARGIN {
-        return Some((vertex_ids.0, vertex_ids.1))
-    }
-    if point_line_segment_distance(point, mesh.position(&vertex_ids.1), mesh.position(&vertex_ids.2)) < MARGIN {
-        return Some((vertex_ids.1, vertex_ids.2))
-    }
-    if point_line_segment_distance(point, mesh.position(&vertex_ids.0), mesh.position(&vertex_ids.2)) < MARGIN {
-        return Some((vertex_ids.0, vertex_ids.2))
-    }
-    None
-}
-
-fn find_close_vertex_on_face(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<VertexID>
-{
-    for walker in mesh.face_halfedge_iterator(face_id) {
-        let vertex_id = walker.vertex_id().unwrap();
-        if (mesh.position(&vertex_id) - point).norm() < MARGIN {
-            return Some(vertex_id)
-        }
-    }
-    None
-}
-
-fn find_close_vertex_on_edge(mesh: &DynamicMesh, edge: &(VertexID, VertexID), point: &Vec3) -> Option<VertexID>
-{
-    if(point - mesh.position(&edge.0)).norm() < MARGIN
-    {
-        return Some(edge.0)
-    }
-    if (point - mesh.position(&edge.1)).norm() < MARGIN
-    {
-        return Some(edge.1)
-    }
-    None
-}
-
-
 
 #[cfg(test)]
 mod tests {
