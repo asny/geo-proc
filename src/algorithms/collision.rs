@@ -28,38 +28,30 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     let b = mesh1.position(&face_vertices.1);
     let c = mesh1.position(&face_vertices.2);
 
-    let ab = *b - *a;
-    let ac = *c - *a;
-
-    let n = ab.cross(&ac).normalize(); // normal
+    let n = mesh1.compute_face_normal(face_id);
 
     match plane_line_piece_intersection(&p0, &p1, a, &n) {
         Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
             if let Some(id1) = find_face_intersection_internal(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-                let id2 = PrimitiveID::Vertex(edge.0);
-                intersections.push(Intersection{id1, id2, point: *p0});
+                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0});
             }
             if let Some(id1) = find_face_intersection_internal(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-                let id2 = PrimitiveID::Vertex(edge.1);
-                intersections.push(Intersection{id1, id2, point: *p1});
+                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1});
             }
         },
         Some(PlaneLinepieceIntersectionResult::P0InPlane) => {
             if let Some(id1) = find_face_intersection_internal(p0, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-                let id2 = PrimitiveID::Vertex(edge.0);
-                intersections.push(Intersection{id1, id2, point: *p0});
+                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0});
             }
         },
         Some(PlaneLinepieceIntersectionResult::P1InPlane) => {
             if let Some(id1) = find_face_intersection_internal(p1, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-                let id2 = PrimitiveID::Vertex(edge.1);
-                intersections.push(Intersection{id1, id2, point: *p1});
+                intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1});
             }
         },
         Some(PlaneLinepieceIntersectionResult::Intersection(point)) => {
             if let Some(id1) = find_face_intersection_internal(&point, a, b, c, face_vertices.0, face_vertices.1, face_vertices.2, face_id.clone() ) {
-                let id2 = PrimitiveID::Edge(edge.clone());
-                intersections.push(Intersection{id1, id2, point});
+                intersections.push(Intersection{id1, id2: PrimitiveID::Edge(edge.clone()), point});
             }
         },
         None => {}
