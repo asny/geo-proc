@@ -23,14 +23,10 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     let p0 = mesh2.position(&edge.0);
     let p1 = mesh2.position(&edge.1);
 
-    let face_vertices = mesh1.face_vertices(face_id);
-    let a = mesh1.position(&face_vertices.0);
-    let b = mesh1.position(&face_vertices.1);
-    let c = mesh1.position(&face_vertices.2);
-
+    let p = mesh1.position(&mesh1.walker_from_face(face_id).vertex_id().unwrap());
     let n = mesh1.compute_face_normal(face_id);
 
-    match plane_line_piece_intersection(&p0, &p1, a, &n) {
+    match plane_line_piece_intersection(&p0, &p1, p, &n) {
         Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
             if let Some(id1) = find_face_intersection(mesh1, face_id,p0 ) {
                 intersections.push(Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0});
@@ -130,10 +126,10 @@ enum PlaneLinepieceIntersectionResult
     Intersection(Vec3)
 }
 
-fn plane_line_piece_intersection(p0: &Vec3, p1: &Vec3, a: &Vec3, n: &Vec3) -> Option<PlaneLinepieceIntersectionResult>
+fn plane_line_piece_intersection(p0: &Vec3, p1: &Vec3, p: &Vec3, n: &Vec3) -> Option<PlaneLinepieceIntersectionResult>
 {
-    let ap0 = *p0 - *a;
-    let ap1 = *p1 - *a;
+    let ap0 = *p0 - *p;
+    let ap1 = *p1 - *p;
 
     let d0 = n.dot(&ap0);
     let d1 = n.dot(&ap1);
