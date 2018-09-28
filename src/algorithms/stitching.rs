@@ -6,6 +6,7 @@ use ids::*;
 use connectivity::*;
 use collision::*;
 use dynamic_mesh::DynamicMesh;
+use connected_components::*;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
@@ -16,10 +17,55 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     {
         intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
     }
+
+    split_mesh(mesh1, &stitches.iter().map(|pair| pair.0).collect());
+
+
     // Todo:
     mesh1.clone()
 }
 
+fn split_mesh(mesh: &DynamicMesh, seam: &Vec<VertexID>) -> (DynamicMesh, DynamicMesh)
+{
+    let mut limit = HashSet::new();
+
+    for vertex_id in seam {
+        for walker in mesh.vertex_halfedge_iterator(vertex_id) {
+            if seam.contains(&walker.vertex_id().unwrap()) {
+                limit.insert(walker.halfedge_id().unwrap());
+            }
+        }
+    }
+    /*while current.vertex_id().unwrap() != start_id {
+        current = next_edge(&current, seam);
+
+    }*/
+
+    let mut walker = mesh.walker_from_halfedge(&limit.iter().next().unwrap());
+    let face_id1 = walker.face_id().unwrap();
+    let face_id2 = walker.twin().face_id().unwrap();
+
+    let cc1 = connected_component_with_limit(mesh, &face_id1, &limit);
+    let cc2 = connected_component_with_limit(mesh, &face_id2, &limit);
+
+    println!("{:?}", cc1);
+    println!("{:?}", cc2);
+
+    let sub_mesh1 = mesh.create_sub_mesh(&cc1);
+    let sub_mesh2 = mesh.create_sub_mesh(&cc2);
+    (sub_mesh1, sub_mesh2)
+}
+
+/*fn next_edge(current: &HalfEdgeID, seam: &Vec<VertexID>) -> Option<HalfEdgeID>
+{
+    for walker in mesh.vertex_halfedge_iterator(&current.vertex_id().unwrap()) {
+        if seam.contains(&walker.vertex_id().unwrap()) && current != walker.twin_id() {
+            limit.insert(current.halfedge_id().unwrap());
+            return walker.halfedge_id();
+        }
+    }
+    None
+}*/
 
 
 fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, intersections: &HashMap<(PrimitiveID, PrimitiveID), Vec3>, stitches: &mut Vec<(VertexID, VertexID)>) -> Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>

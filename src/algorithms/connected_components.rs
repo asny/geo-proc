@@ -27,6 +27,33 @@ pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<Face
     component
 }
 
+pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limit: &HashSet<HalfEdgeID>) -> HashSet<FaceID>
+{
+    let mut component = HashSet::new();
+    component.insert(face_id.clone());
+    let mut to_be_tested = vec![face_id.clone()];
+
+    loop {
+        let test_face = match to_be_tested.pop() {
+            Some(f) => f,
+            None => break
+        };
+
+        for mut walker in mesh.face_halfedge_iterator(&test_face) {
+            if let Some(face_id) = walker.twin().face_id() {
+                if !limit.contains(&walker.halfedge_id().unwrap()) && !limit.contains(&walker.twin_id().unwrap()) {
+                    if !component.contains(&face_id)
+                    {
+                        component.insert(face_id.clone());
+                        to_be_tested.push(face_id);
+                    }
+                }
+            }
+        }
+    }
+    component
+}
+
 pub fn connected_components(mesh: &DynamicMesh) -> Vec<HashSet<FaceID>>
 {
     let mut result = Vec::new();
