@@ -10,16 +10,10 @@ use connected_components::*;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
-    let mut intersections = find_intersections(mesh1, mesh2);
-
-    let mut stitches = Vec::new();
-    while let Some((ref new_edges1, ref new_edges2)) = split_at_intersections(mesh1, mesh2, &intersections, &mut stitches)
-    {
-        intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
-    }
+    let stitches = split_meshes(mesh1, mesh2);
 
     let mut seam1 = HashMap::new();
-    stitches.iter().for_each(|pair| {seam1.insert(pair.0, pair.1);});
+    stitches.iter().for_each(|pair| {seam1.insert(pair.0.clone(), pair.1.clone());});
     let (mut mesh11, mesh12) = split_mesh(mesh1, mesh2,&seam1);
 
     let mut seam2 = HashMap::new();
@@ -30,9 +24,21 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     // Todo:
     stitch_with(&mut mesh11, &mesh21, &stitches);
     mesh11
+
+    /*let mut temps = HashSet::new();
+    for face_id in mesh1.face_iterator() {
+        for walker in mesh1.face_halfedge_iterator(&face_id) {
+            if is_at_seam(mesh1, mesh2, &seam1, &walker.halfedge_id().unwrap()) {
+                temps.insert(face_id);
+            }
+        }
+    }
+
+    let sub_mesh = mesh1.create_sub_mesh(&temps);
+    sub_mesh*/
 }
 
-fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &Vec<(VertexID, VertexID)>)
+fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &HashSet<(VertexID, VertexID)>)
 {
 
 }
@@ -42,14 +48,13 @@ fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID,
     let vertices = mesh1.edge_vertices(halfedge_id);
     if let Some(vertex_id1) = seam.get(&vertices.0) {
         if let Some(vertex_id2) = seam.get(&vertices.1) {
-            if connecting_edge(mesh2, vertex_id1, vertex_id2).is_some() {println!("{:?} and {:?} -> {:?} and {:?}", vertices.0, vertices.1, vertex_id1, vertex_id2);}
             return connecting_edge(mesh2, vertex_id1, vertex_id2).is_some()
         }
     }
     false
 }
 
-fn split_mesh(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>) -> (DynamicMesh, DynamicMesh)
+fn split_mesh(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>) -> (DynamicMesh, DynamicMesh)
 {
     let mut face_id1 = mesh1.face_iterator().next().unwrap();
     let mut face_id2 = face_id1.clone();
@@ -76,19 +81,23 @@ fn split_mesh(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<Verte
     (sub_mesh1, sub_mesh2)
 }
 
-/*fn next_edge(current: &HalfEdgeID, seam: &Vec<VertexID>) -> Option<HalfEdgeID>
+fn split_meshes(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> HashSet<(VertexID, VertexID)>
 {
-    for walker in mesh.vertex_halfedge_iterator(&current.vertex_id().unwrap()) {
-        if seam.contains(&walker.vertex_id().unwrap()) && current != walker.twin_id() {
-            limit.insert(current.halfedge_id().unwrap());
-            return walker.halfedge_id();
-        }
+    let mut intersections = find_intersections(mesh1, mesh2);
+    let mut stitches = HashSet::new();
+    while let Some((ref new_edges1, ref new_edges2)) = split_at_intersections(mesh1, mesh2, &intersections, &mut stitches)
+    {
+        println!("New edges: {:?}", new_edges1);
+        println!("New edges: {:?}", new_edges2);
+        intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
+        println!("New edges intersections: {:?}", intersections);
+        println!("Current stitches: {:?}", stitches);
     }
-    None
-}*/
+    println!("Final stitches: {:?}", stitches);
+    stitches
+}
 
-
-fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, intersections: &HashMap<(PrimitiveID, PrimitiveID), Vec3>, stitches: &mut Vec<(VertexID, VertexID)>) -> Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>
+fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, intersections: &HashMap<(PrimitiveID, PrimitiveID), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>
 {
     let mut new_edges1 = Vec::new();
     let mut new_edges2 = Vec::new();
@@ -186,7 +195,8 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
             _ => {unreachable!()}
         };
 
-        stitches.push((vertex_id1, vertex_id2));
+        println!("Insert: {:?}", (vertex_id1, vertex_id2));
+        stitches.insert((vertex_id1, vertex_id2));
     }
     if new_edges1.len() > 0 && new_edges2.len() > 0 { Some((new_edges1, new_edges2)) }
     else {None}
@@ -361,7 +371,7 @@ mod tests {
         let mut mesh2 = create_simple_mesh_y_z();
 
         let intersections = find_intersections(&mesh1, &mesh2);
-        let mut stitches = Vec::new();
+        let mut stitches = HashSet::new();
         split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches);
 
         assert_eq!(mesh1.no_vertices(), 11);
@@ -388,8 +398,8 @@ mod tests {
 
         assert_eq!(intersections.len(), 8);
 
-        let mut stitches = Vec::new();
-        split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches);
+        let mut stitches = HashSet::new();
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
         assert_eq!(mesh1.no_vertices(), 14);
         assert_eq!(mesh1.no_faces(), 19);
@@ -400,9 +410,12 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 19 * 3 + 7);
 
         assert_eq!(stitches.len(), 8);
+        assert_eq!(new_edges1.len(), 20);
+        assert_eq!(new_edges2.len(), 20);
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
+
     }
 
     #[test]
@@ -421,7 +434,7 @@ mod tests {
 
         assert_eq!(intersections.len(), 2);
 
-        let mut stitches = Vec::new();
+        let mut stitches = HashSet::new();
         split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches);
 
         assert_eq!(mesh1.no_vertices(), 5);
@@ -459,8 +472,8 @@ mod tests {
 
         assert_eq!(intersections.len(), 2);
 
-        let mut stitches = Vec::new();
-        split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches);
+        let mut stitches = HashSet::new();
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
         assert_eq!(mesh1.no_vertices(), 5);
         assert_eq!(mesh1.no_faces(), 3);
@@ -471,13 +484,50 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(stitches.len(), 2);
+        assert_eq!(new_edges1.len(), 2);
+        println!("{:?}", new_edges2);
+        assert_eq!(new_edges2.len(), 1);
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
     }
 
     #[test]
-    fn test_simple_stitching()
+    fn test_simple_simple_splitting()
+    {
+        let mut mesh1 = create_simple_mesh_x_z();
+        let mut mesh2 = create_shifted_simple_mesh_y_z();
+
+        let stitches = split_meshes(&mut mesh1, &mut mesh2);
+
+        println!("{:?}",stitches);
+
+        assert_eq!(stitches.len(), 8);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
+    }
+
+    #[test]
+    fn test_box_box_splitting()
+    {
+        let mut mesh1 = ::models::create_cube_as_dynamic_mesh().unwrap();
+        let mut mesh2 = ::models::create_cube_as_dynamic_mesh().unwrap();
+        for vertex_id in mesh2.vertex_iterator() {
+            mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
+        }
+        let stitches = split_meshes(&mut mesh1, &mut mesh2);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
+
+        println!("{:?}", stitches);
+
+        assert_eq!(stitches.len(), 20);
+    }
+
+    #[test]
+    fn test_box_box_stitching()
     {
         let mut mesh1 = ::models::create_cube_as_dynamic_mesh().unwrap();
         let mut mesh2 = ::models::create_cube_as_dynamic_mesh().unwrap();
