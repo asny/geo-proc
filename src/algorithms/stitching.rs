@@ -18,8 +18,13 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
         intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
     }
 
-    let (mut mesh11, mesh12) = split_mesh(mesh1, &stitches.iter().map(|pair| pair.0).collect());
-    let (mesh21, mesh22) = split_mesh(mesh2, &stitches.iter().map(|pair| pair.1).collect());
+    let mut seam1 = HashMap::new();
+    stitches.iter().for_each(|pair| {seam1.insert(pair.0, pair.1);});
+    let (mut mesh11, mesh12) = split_mesh(mesh1, mesh2,&seam1);
+
+    let mut seam2 = HashMap::new();
+    stitches.iter().for_each(|pair| {seam2.insert(pair.1, pair.0);});
+    let (mesh21, mesh22) = split_mesh(mesh2, mesh1, &seam2);
 
 
     // Todo:
@@ -32,34 +37,40 @@ fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &Vec<(Ver
 
 }
 
-fn split_mesh(mesh: &DynamicMesh, seam: &Vec<VertexID>) -> (DynamicMesh, DynamicMesh)
+fn split_mesh(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>) -> (DynamicMesh, DynamicMesh)
 {
-    let mut face_id1 = mesh.face_iterator().next().unwrap();
-    let mut face_id2 = mesh.face_iterator().next().unwrap();
-    for vertex_id in seam {
-        for mut walker in mesh.vertex_halfedge_iterator(vertex_id) {
-            if seam.contains(&walker.vertex_id().unwrap()) {
+    let is_at_seam = |halfedge_id: HalfEdgeID| {
+        let vertices = mesh1.edge_vertices(&halfedge_id);
+        if let Some(vertex_id1) = seam.get(&vertices.0) {
+            if let Some(vertex_id2) = seam.get(&vertices.1) {
+                return connecting_edge(mesh2, vertex_id1, vertex_id2).is_some()
+            }
+        }
+        false
+    };
+
+    let mut face_id1 = mesh1.face_iterator().next().unwrap();
+    let mut face_id2 = face_id1.clone();
+    if let Some(vertex_id) = seam.keys().next() {
+        for mut walker in mesh1.vertex_halfedge_iterator(vertex_id) {
+            if is_at_seam(walker.halfedge_id().unwrap()) {
                 face_id1 = walker.face_id().unwrap();
                 face_id2 = walker.twin().face_id().unwrap();
+                break;
             }
         }
     }
     println!("Face1: {:?}", face_id1);
     println!("Face2: {:?}", face_id2);
 
-    let limit = |halfedge_id: HalfEdgeID| {
-        let vertices = mesh.edge_vertices(&halfedge_id);
-        seam.contains(&vertices.0) && seam.contains(&vertices.1)
-    };
-
-    let cc1 = connected_component_with_limit(mesh, &face_id1, &limit);
-    let cc2 = connected_component_with_limit(mesh, &face_id2, &limit);
+    let cc1 = connected_component_with_limit(mesh1, &face_id1, &is_at_seam);
+    let cc2 = connected_component_with_limit(mesh1, &face_id2, &is_at_seam);
 
     println!("{:?}", cc1);
     println!("{:?}", cc2);
 
-    let sub_mesh1 = mesh.create_sub_mesh(&cc1);
-    let sub_mesh2 = mesh.create_sub_mesh(&cc2);
+    let sub_mesh1 = mesh1.create_sub_mesh(&cc1);
+    let sub_mesh2 = mesh1.create_sub_mesh(&cc2);
     (sub_mesh1, sub_mesh2)
 }
 
