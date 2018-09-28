@@ -4,30 +4,10 @@ use std::collections::HashSet;
 
 pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>
 {
-    let mut component = HashSet::new();
-    component.insert(face_id.clone());
-    let mut to_be_tested = vec![face_id.clone()];
-
-    loop {
-        let test_face = match to_be_tested.pop() {
-            Some(f) => f,
-            None => break
-        };
-
-        for mut walker in mesh.face_halfedge_iterator(&test_face) {
-            if let Some(face_id) = walker.twin().face_id() {
-                if !component.contains(&face_id)
-                {
-                    component.insert(face_id.clone());
-                    to_be_tested.push(face_id);
-                }
-            }
-        }
-    }
-    component
+    connected_component_with_limit(mesh, face_id, &|walker| false )
 }
 
-pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limit: &HashSet<HalfEdgeID>) -> HashSet<FaceID>
+pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
 {
     let mut component = HashSet::new();
     component.insert(face_id.clone());
@@ -40,8 +20,8 @@ pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limi
         };
 
         for mut walker in mesh.face_halfedge_iterator(&test_face) {
-            if let Some(face_id) = walker.twin().face_id() {
-                if !limit.contains(&walker.halfedge_id().unwrap()) && !limit.contains(&walker.twin_id().unwrap()) {
+            if !limit(walker.halfedge_id().unwrap()) {
+                if let Some(face_id) = walker.twin().face_id() {
                     if !component.contains(&face_id)
                     {
                         component.insert(face_id.clone());
