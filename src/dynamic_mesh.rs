@@ -738,7 +738,7 @@ mod tests {
     #[test]
     fn test_remove_face()
     {
-        let mut mesh = create_connected_box();
+        let mut mesh = ::models::create_cube_as_dynamic_mesh().unwrap();
         let face_id = mesh.face_iterator().next().unwrap();
         mesh.remove_face(&face_id);
 
@@ -884,36 +884,5 @@ mod tests {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
         let normals: Vec<f32> = vec![0.0; 4 * 3];
         DynamicMesh::create(indices, positions, Some(normals))
-    }
-
-    fn create_connected_box() -> DynamicMesh
-    {
-        let positions: Vec<f32> = vec![
-            1.0, -1.0, -1.0,
-            1.0, -1.0, 1.0,
-            -1.0, -1.0, 1.0,
-            -1.0, -1.0, -1.0,
-            1.0, 1.0, -1.0,
-            1.0, 1.0, 1.0,
-            -1.0, 1.0, 1.0,
-            -1.0, 1.0, -1.0
-        ];
-
-        let indices: Vec<u32> = vec![
-            0, 1, 2,
-            0, 2, 3,
-            4, 7, 6,
-            4, 6, 5,
-            0, 4, 5,
-            0, 5, 1,
-            1, 5, 6,
-            1, 6, 2,
-            2, 6, 7,
-            2, 7, 3,
-            4, 0, 3,
-            4, 3, 7
-        ];
-
-        DynamicMesh::create(indices, positions, None)
     }
 }
