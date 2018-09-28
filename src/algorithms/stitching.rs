@@ -18,11 +18,18 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
         intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
     }
 
-    let (mesh11, mesh12) = split_mesh(mesh1, &stitches.iter().map(|pair| pair.0).collect());
+    let (mut mesh11, mesh12) = split_mesh(mesh1, &stitches.iter().map(|pair| pair.0).collect());
+    let (mesh21, mesh22) = split_mesh(mesh2, &stitches.iter().map(|pair| pair.1).collect());
 
 
     // Todo:
-    mesh1.clone()
+    stitch_with(&mut mesh11, &mesh21, &stitches);
+    mesh11
+}
+
+fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &Vec<(VertexID, VertexID)>)
+{
+
 }
 
 fn split_mesh(mesh: &DynamicMesh, seam: &Vec<VertexID>) -> (DynamicMesh, DynamicMesh)
@@ -468,6 +475,7 @@ mod tests {
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
+
         stitched.test_is_valid().unwrap();
     }
 
