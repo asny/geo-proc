@@ -459,8 +459,11 @@ mod tests {
     #[test]
     fn test_simple_stitching()
     {
-        let mut mesh1 = create_simple_mesh_x_z();
-        let mut mesh2 = create_simple_mesh_y_z();
+        let mut mesh1 = ::models::create_cube_as_dynamic_mesh().unwrap();
+        let mut mesh2 = ::models::create_cube_as_dynamic_mesh().unwrap();
+        for vertex_id in mesh2.vertex_iterator() {
+            mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
+        }
         let stitched = stitch(&mut mesh1, &mut mesh2);
 
         mesh1.test_is_valid().unwrap();
