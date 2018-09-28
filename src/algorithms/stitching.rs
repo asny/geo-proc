@@ -37,23 +37,25 @@ fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &Vec<(Ver
 
 }
 
+fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
+{
+    let vertices = mesh1.edge_vertices(halfedge_id);
+    if let Some(vertex_id1) = seam.get(&vertices.0) {
+        if let Some(vertex_id2) = seam.get(&vertices.1) {
+            if connecting_edge(mesh2, vertex_id1, vertex_id2).is_some() {println!("{:?} and {:?} -> {:?} and {:?}", vertices.0, vertices.1, vertex_id1, vertex_id2);}
+            return connecting_edge(mesh2, vertex_id1, vertex_id2).is_some()
+        }
+    }
+    false
+}
+
 fn split_mesh(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>) -> (DynamicMesh, DynamicMesh)
 {
-    let is_at_seam = |halfedge_id: HalfEdgeID| {
-        let vertices = mesh1.edge_vertices(&halfedge_id);
-        if let Some(vertex_id1) = seam.get(&vertices.0) {
-            if let Some(vertex_id2) = seam.get(&vertices.1) {
-                return connecting_edge(mesh2, vertex_id1, vertex_id2).is_some()
-            }
-        }
-        false
-    };
-
     let mut face_id1 = mesh1.face_iterator().next().unwrap();
     let mut face_id2 = face_id1.clone();
     if let Some(vertex_id) = seam.keys().next() {
         for mut walker in mesh1.vertex_halfedge_iterator(vertex_id) {
-            if is_at_seam(walker.halfedge_id().unwrap()) {
+            if is_at_seam(mesh1, mesh2,seam, &walker.halfedge_id().unwrap()) {
                 face_id1 = walker.face_id().unwrap();
                 face_id2 = walker.twin().face_id().unwrap();
                 break;
@@ -63,8 +65,8 @@ fn split_mesh(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<Verte
     println!("Face1: {:?}", face_id1);
     println!("Face2: {:?}", face_id2);
 
-    let cc1 = connected_component_with_limit(mesh1, &face_id1, &is_at_seam);
-    let cc2 = connected_component_with_limit(mesh1, &face_id2, &is_at_seam);
+    let cc1 = connected_component_with_limit(mesh1, &face_id1, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id));
+    let cc2 = connected_component_with_limit(mesh1, &face_id2, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id));
 
     println!("{:?}", cc1);
     println!("{:?}", cc2);

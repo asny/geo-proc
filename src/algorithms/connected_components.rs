@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>
 {
-    connected_component_with_limit(mesh, face_id, &|walker| false )
+    connected_component_with_limit(mesh, face_id, &|halfedge_id| false )
 }
 
 pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
