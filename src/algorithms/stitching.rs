@@ -18,7 +18,7 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
         intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
     }
 
-    split_mesh(mesh1, &stitches.iter().map(|pair| pair.0).collect());
+    let (mesh11, mesh12) = split_mesh(mesh1, &stitches.iter().map(|pair| pair.0).collect());
 
 
     // Todo:
@@ -27,23 +27,23 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 
 fn split_mesh(mesh: &DynamicMesh, seam: &Vec<VertexID>) -> (DynamicMesh, DynamicMesh)
 {
-    let mut limit = HashSet::new();
-
+    let mut face_id1 = mesh.face_iterator().next().unwrap();
+    let mut face_id2 = mesh.face_iterator().next().unwrap();
     for vertex_id in seam {
-        for walker in mesh.vertex_halfedge_iterator(vertex_id) {
+        for mut walker in mesh.vertex_halfedge_iterator(vertex_id) {
             if seam.contains(&walker.vertex_id().unwrap()) {
-                limit.insert(walker.halfedge_id().unwrap());
+                face_id1 = walker.face_id().unwrap();
+                face_id2 = walker.twin().face_id().unwrap();
             }
         }
     }
-    /*while current.vertex_id().unwrap() != start_id {
-        current = next_edge(&current, seam);
+    println!("Face1: {:?}", face_id1);
+    println!("Face2: {:?}", face_id2);
 
-    }*/
-
-    let mut walker = mesh.walker_from_halfedge(&limit.iter().next().unwrap());
-    let face_id1 = walker.face_id().unwrap();
-    let face_id2 = walker.twin().face_id().unwrap();
+    let limit = |halfedge_id: HalfEdgeID| {
+        let vertices = mesh.edge_vertices(&halfedge_id);
+        seam.contains(&vertices.0) && seam.contains(&vertices.1)
+    };
 
     let cc1 = connected_component_with_limit(mesh, &face_id1, &limit);
     let cc2 = connected_component_with_limit(mesh, &face_id2, &limit);
