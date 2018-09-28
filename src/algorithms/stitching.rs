@@ -72,7 +72,7 @@ fn split_mesh(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<Verte
     println!("{:?}", cc2);
 
     let sub_mesh1 = mesh1.create_sub_mesh(&cc1);
-    let sub_mesh2 = mesh1.create_sub_mesh(&cc2);
+    let sub_mesh2 = mesh2.create_sub_mesh(&cc2);
     (sub_mesh1, sub_mesh2)
 }
 
