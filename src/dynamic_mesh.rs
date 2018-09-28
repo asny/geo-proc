@@ -125,8 +125,9 @@ impl DynamicMesh
         for vertex_id in info.vertex_iterator() {
             let p = self.position(&vertex_id).clone();
             positions.insert(vertex_id.clone(), p);
-            let n = self.normal(&vertex_id).clone();
-            normals.insert(vertex_id, n);
+            if let Some(normal) = self.normal(&vertex_id) {
+                normals.insert(vertex_id, normal.clone());
+            }
         }
 
         DynamicMesh {positions, normals, connectivity_info: Rc::new(info)}
@@ -325,9 +326,9 @@ impl DynamicMesh
     // *** Functions related to the normal ***
     //////////////////////////////////////////
 
-    pub fn normal(&self, vertex_id: &VertexID) -> &Vec3
+    pub fn normal(&self, vertex_id: &VertexID) ->  Option<&Vec3>
     {
-        self.normals.get(vertex_id).unwrap()
+        self.normals.get(vertex_id)
     }
 
     pub fn set_normal(&mut self, vertex_id: VertexID, value: Vec3)
@@ -714,7 +715,7 @@ mod tests {
         mesh.update_vertex_normals();
 
         for vertex_id in mesh.vertex_iterator() {
-            let normal = mesh.normal(&vertex_id);
+            let normal = mesh.normal(&vertex_id).unwrap();
             assert_eq!(0.0, normal.x);
             assert_eq!(1.0, normal.y);
             assert_eq!(0.0, normal.z);
