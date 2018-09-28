@@ -372,7 +372,7 @@ mod tests {
 
         let intersections = find_intersections(&mesh1, &mesh2);
         let mut stitches = HashSet::new();
-        split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches);
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
         assert_eq!(mesh1.no_vertices(), 11);
         assert_eq!(mesh1.no_halfedges(), 12 * 3 + 8);
@@ -383,6 +383,8 @@ mod tests {
         assert_eq!(mesh2.no_faces(), 12);
 
         assert_eq!(stitches.len(), 5);
+        assert_eq!(new_edges1.len(), 0); // TODO
+        assert_eq!(new_edges2.len(), 0); // TODO
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
@@ -410,8 +412,8 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 19 * 3 + 7);
 
         assert_eq!(stitches.len(), 8);
-        assert_eq!(new_edges1.len(), 20);
-        assert_eq!(new_edges2.len(), 20);
+        assert_eq!(new_edges1.len(), 20); // TODO
+        assert_eq!(new_edges2.len(), 20); // TODO
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
@@ -435,7 +437,7 @@ mod tests {
         assert_eq!(intersections.len(), 2);
 
         let mut stitches = HashSet::new();
-        split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches);
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
         assert_eq!(mesh1.no_vertices(), 5);
         assert_eq!(mesh1.no_faces(), 5);
@@ -452,6 +454,8 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(stitches.len(), 2);
+        assert_eq!(new_edges1.len(), 0); // TODO
+        assert_eq!(new_edges2.len(), 0); // TODO
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
@@ -484,9 +488,8 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(stitches.len(), 2);
-        assert_eq!(new_edges1.len(), 2);
-        println!("{:?}", new_edges2);
-        assert_eq!(new_edges2.len(), 1);
+        assert_eq!(new_edges1.len(), 2); // TODO
+        assert_eq!(new_edges2.len(), 1); // TODO
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
