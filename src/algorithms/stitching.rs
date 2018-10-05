@@ -87,13 +87,8 @@ fn split_meshes(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> HashSet<(Ve
     let mut stitches = HashSet::new();
     while let Some((ref new_edges1, ref new_edges2)) = split_at_intersections(mesh1, mesh2, &intersections, &mut stitches)
     {
-        println!("New edges: {:?}", new_edges1);
-        println!("New edges: {:?}", new_edges2);
         intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
-        println!("New edges intersections: {:?}", intersections);
-        println!("Current stitches: {:?}", stitches);
     }
-    println!("Final stitches: {:?}", stitches);
     stitches
 }
 
@@ -195,7 +190,6 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
             _ => {unreachable!()}
         };
 
-        println!("Insert: {:?}", (vertex_id1, vertex_id2));
         stitches.insert((vertex_id1, vertex_id2));
     }
     if new_edges1.len() > 0 && new_edges2.len() > 0 { Some((new_edges1, new_edges2)) }
@@ -522,8 +516,6 @@ mod tests {
 
         let stitches = split_meshes(&mut mesh1, &mut mesh2);
 
-        println!("{:?}",stitches);
-
         assert_eq!(stitches.len(), 8);
 
         mesh1.test_is_valid().unwrap();
@@ -542,8 +534,6 @@ mod tests {
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
-
-        println!("{:?}", stitches);
 
         assert_eq!(stitches.len(), 20);
     }
