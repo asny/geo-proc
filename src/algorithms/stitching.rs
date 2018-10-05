@@ -24,18 +24,6 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     // Todo:
     stitch_with(&mut mesh11, &mesh21, &stitches);
     mesh11
-
-    /*let mut temps = HashSet::new();
-    for face_id in mesh1.face_iterator() {
-        for walker in mesh1.face_halfedge_iterator(&face_id) {
-            if is_at_seam(mesh1, mesh2, &seam1, &walker.halfedge_id().unwrap()) {
-                temps.insert(face_id);
-            }
-        }
-    }
-
-    let sub_mesh = mesh1.create_sub_mesh(&temps);
-    sub_mesh*/
 }
 
 fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &HashSet<(VertexID, VertexID)>)
@@ -67,14 +55,9 @@ fn split_mesh(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID,
             }
         }
     }
-    println!("Face1: {:?}", face_id1);
-    println!("Face2: {:?}", face_id2);
 
     let cc1 = connected_component_with_limit(mesh1, &face_id1, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id));
     let cc2 = connected_component_with_limit(mesh1, &face_id2, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id));
-
-    println!("{:?}", cc1);
-    println!("{:?}", cc2);
 
     let sub_mesh1 = mesh1.create_sub_mesh(&cc1);
     let sub_mesh2 = mesh2.create_sub_mesh(&cc2);
