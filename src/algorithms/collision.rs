@@ -10,6 +10,7 @@ use na::{Isometry3, Point3};
 
 const MARGIN: f32 = 0.0001;
 
+#[derive(Debug)]
 pub struct Intersection {
     pub id1: PrimitiveID,
     pub id2: PrimitiveID,
@@ -27,9 +28,9 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     match plane_line_piece_intersection(&p0, &p1, p, &n) {
         Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
             if let Some(id1) = find_face_intersection(mesh1, face_id,p0 ) {
-                if let Some(id1) = find_face_intersection(mesh1, face_id,p1 ) {
+                if let Some(id1_) = find_face_intersection(mesh1, face_id,p1 ) {
                     return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0},
-                                 Some(Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1})));
+                                 Some(Intersection{id1: id1_, id2: PrimitiveID::Vertex(edge.1), point: *p1})));
                 }
                 else {
                     return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0}, None));
