@@ -112,6 +112,10 @@ impl DynamicMesh
                 let halfedge = self.connectivity_info.halfedge(&halfedge_id).unwrap();
                 info.add_halfedge(halfedge_id, halfedge);
 
+                let twin_id = walker.twin_id().unwrap();
+                let twin = self.connectivity_info.halfedge(&twin_id).unwrap();
+                info.add_halfedge(twin_id, twin);
+
                 let vertex_id = walker.vertex_id().unwrap();
                 let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
                 info.add_vertex(vertex_id, vertex);
