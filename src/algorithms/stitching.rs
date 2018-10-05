@@ -21,8 +21,8 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     let (mesh21, mesh22) = split_mesh(mesh2, mesh1, &seam2);
 
 
+    mesh11.merge_with(&mesh21, &seam2);
     // Todo:
-    stitch_with(&mut mesh11, &mesh21, &stitches);
     mesh11
 }
 
