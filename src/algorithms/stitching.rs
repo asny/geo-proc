@@ -60,7 +60,7 @@ fn split_mesh(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID,
     let cc2 = connected_component_with_limit(mesh1, &face_id2, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id));
 
     let sub_mesh1 = mesh1.create_sub_mesh(&cc1);
-    let sub_mesh2 = mesh2.create_sub_mesh(&cc2);
+    let sub_mesh2 = mesh1.create_sub_mesh(&cc2);
     (sub_mesh1, sub_mesh2)
 }
 
