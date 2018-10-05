@@ -534,8 +534,25 @@ mod tests {
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
+    }
 
-        assert_eq!(stitches.len(), 20);
+    #[test]
+    fn test_face_face_stitching()
+    {
+        let indices1: Vec<u32> = vec![0, 1, 2];
+        let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
+        let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
+
+        let indices2: Vec<u32> = vec![0, 1, 2];
+        let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
+
+        let stitched = stitch(&mut mesh1, &mut mesh2);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
+
+        stitched.test_is_valid().unwrap();
     }
 
     #[test]
