@@ -383,8 +383,8 @@ mod tests {
         assert_eq!(mesh2.no_faces(), 12);
 
         assert_eq!(stitches.len(), 5);
-        assert_eq!(new_edges1.len(), 0); // TODO
-        assert_eq!(new_edges2.len(), 0); // TODO
+        assert_eq!(new_edges1.len(), 8);
+        assert_eq!(new_edges2.len(), 8);
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
@@ -412,8 +412,8 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 19 * 3 + 7);
 
         assert_eq!(stitches.len(), 8);
-        assert_eq!(new_edges1.len(), 20); // TODO
-        assert_eq!(new_edges2.len(), 20); // TODO
+        assert_eq!(new_edges1.len(), 19);
+        assert_eq!(new_edges2.len(), 19);
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
@@ -454,8 +454,8 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(stitches.len(), 2);
-        assert_eq!(new_edges1.len(), 0); // TODO
-        assert_eq!(new_edges2.len(), 0); // TODO
+        assert_eq!(new_edges1.len(), 6);
+        assert_eq!(new_edges2.len(), 2);
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
@@ -488,8 +488,27 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
         assert_eq!(stitches.len(), 2);
-        assert_eq!(new_edges1.len(), 2); // TODO
-        assert_eq!(new_edges2.len(), 1); // TODO
+        assert_eq!(new_edges1.len(), 2);
+        assert_eq!(new_edges2.len(), 2);
+
+        mesh1.test_is_valid().unwrap();
+        mesh2.test_is_valid().unwrap();
+    }
+
+    #[test]
+    fn test_face_face_splitting()
+    {
+        let indices1: Vec<u32> = vec![0, 1, 2];
+        let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
+        let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
+
+        let indices2: Vec<u32> = vec![0, 1, 2];
+        let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
+
+        let stitches = split_meshes(&mut mesh1, &mut mesh2);
+
+        assert_eq!(stitches.len(), 2);
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
