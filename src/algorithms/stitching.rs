@@ -14,16 +14,18 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 
     let mut seam1 = HashMap::new();
     stitches.iter().for_each(|pair| {seam1.insert(pair.0.clone(), pair.1.clone());});
-    let (mut mesh11, mesh12) = split_mesh(mesh1, mesh2,&seam1);
+    let (mut mesh11, mesh12) = split_mesh(mesh1,
+                      &|mesh, halfedge_id| { is_at_seam(mesh, mesh2, &seam1, halfedge_id) });
 
     let mut seam2 = HashMap::new();
     stitches.iter().for_each(|pair| {seam2.insert(pair.1, pair.0);});
-    let (mesh21, mesh22) = split_mesh(mesh2, mesh1, &seam2);
+    let (mesh21, mesh22) = split_mesh(mesh2,
+                      &|mesh, halfedge_id| { is_at_seam(mesh, mesh1, &seam2, halfedge_id) });
 
     let mut m1 = if mesh11.no_faces() > mesh12.no_faces() { mesh11 } else { mesh12 };
     let m2 = if mesh21.no_faces() > mesh22.no_faces() { mesh21 } else { mesh22 };
     m1.merge_with(&m2, &seam2);
-    
+
     m1
 }
 
@@ -38,29 +40,28 @@ fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID,
     false
 }
 
-fn split_mesh(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>) -> (DynamicMesh, DynamicMesh)
+fn split_mesh(mesh: &DynamicMesh, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> (DynamicMesh, DynamicMesh)
 {
     let mut face_id1 = None;
     let mut face_id2 = None;
-    if let Some(vertex_id) = seam.keys().next() {
-        for mut walker in mesh1.vertex_halfedge_iterator(vertex_id) {
-            if is_at_seam(mesh1, mesh2,seam, &walker.halfedge_id().unwrap()) {
-                face_id1 = walker.face_id();
-                face_id2 = walker.twin().face_id();
-                break;
-            }
+    for halfedge_id in mesh.halfedge_iterator() {
+        if is_at_split(mesh, &halfedge_id) {
+            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+            face_id1 = walker.face_id();
+            face_id2 = walker.twin().face_id();
+            break;
         }
     }
 
     let cc1 = if let Some(face_id) = face_id1 {
-        connected_component_with_limit(mesh1, &face_id, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id))
+        connected_component_with_limit(mesh, &face_id, &|halfedge_id| is_at_split(mesh, &halfedge_id))
     } else { HashSet::new() };
     let cc2 = if let Some(face_id) = face_id2 {
-        connected_component_with_limit(mesh1, &face_id, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id))
+        connected_component_with_limit(mesh, &face_id, &|halfedge_id| is_at_split(mesh, &halfedge_id))
     } else { HashSet::new() };
 
-    let sub_mesh1 = mesh1.create_sub_mesh(&cc1);
-    let sub_mesh2 = mesh1.create_sub_mesh(&cc2);
+    let sub_mesh1 = mesh.create_sub_mesh(&cc1);
+    let sub_mesh2 = mesh.create_sub_mesh(&cc2);
     (sub_mesh1, sub_mesh2)
 }
 
