@@ -150,29 +150,45 @@ impl DynamicMesh
             vid
         };
 
-        let mut stitch_edge = |mesh: &mut DynamicMesh, vertex_id1, vertex_id2| {
-            if let Some(halfedge_id) = ::connectivity::connecting_edge(mesh, vertex_id1, vertex_id2)
-            {
-                let mut walker = mesh.walker_from_halfedge(&halfedge_id);
-                if walker.face_id().is_some() { walker.twin(); }
-                if walker.face_id().is_some() { panic!("Mergin will create non manifold mesh") }
-                //mesh.remove_edge(walker.halfedge_id());
-            }
-            else { unreachable!() };
+        let mut stitch_edge = |mesh: &mut DynamicMesh, halfedge_id|
+        {
+            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+            if walker.face_id().is_some() { walker.twin(); }
+            if walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
+
+            mesh.connectivity_info.remove_halfedge(&walker.halfedge_id().unwrap());
         };
 
         for face_id in other.face_iterator() {
+
             let vertex_ids = other.face_vertices(&face_id);
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
             let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);
             let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
+
+            if stitches.contains_key(&vertex_ids.0) && stitches.contains_key(&vertex_ids.1)
+                && ::connectivity::connecting_edge(other, &vertex_ids.0, &vertex_ids.1).is_some()
+            {
+                let halfedge_id = ::connectivity::connecting_edge(self, &vertex_id0, &vertex_id1).unwrap();
+                stitch_edge(self, halfedge_id);
+            }
+            if stitches.contains_key(&vertex_ids.1) && stitches.contains_key(&vertex_ids.2)
+                && ::connectivity::connecting_edge(other, &vertex_ids.1, &vertex_ids.2).is_some()
+            {
+                let halfedge_id = ::connectivity::connecting_edge(self, &vertex_id1, &vertex_id2).unwrap();
+                stitch_edge(self, halfedge_id);
+            }
+            if stitches.contains_key(&vertex_ids.2) && stitches.contains_key(&vertex_ids.0)
+                && ::connectivity::connecting_edge(other, &vertex_ids.2, &vertex_ids.0).is_some()
+            {
+                let halfedge_id = ::connectivity::connecting_edge(self, &vertex_id2, &vertex_id0).unwrap();
+                stitch_edge(self, halfedge_id);
+            }
+
             self.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
         }
 
         self.create_twin_connectivity();
-
-        // TODO: Create twin edges
-
     }
 
     ////////////////////////////////
