@@ -41,7 +41,7 @@ pub fn merge_with(mesh1: &mut DynamicMesh, other: &DynamicMesh, stitches: &HashM
         vid
     };
 
-    let mut stitch_edge = |mesh: &mut DynamicMesh, halfedge_id|
+    let stitch_edge = |mesh: &mut DynamicMesh, halfedge_id|
     {
         let mut walker = mesh.walker_from_halfedge(&halfedge_id);
         if walker.face_id().is_some() { walker.twin(); }

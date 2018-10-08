@@ -5,7 +5,6 @@ use types::*;
 use dynamic_mesh::*;
 use connectivity::*;
 use collision::*;
-use splitting_and_merging::*;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 {
