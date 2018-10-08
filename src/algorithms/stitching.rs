@@ -44,20 +44,24 @@ fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID,
 
 fn split_mesh(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>) -> (DynamicMesh, DynamicMesh)
 {
-    let mut face_id1 = mesh1.face_iterator().next().unwrap();
-    let mut face_id2 = face_id1.clone();
+    let mut face_id1 = None;
+    let mut face_id2 = None;
     if let Some(vertex_id) = seam.keys().next() {
         for mut walker in mesh1.vertex_halfedge_iterator(vertex_id) {
             if is_at_seam(mesh1, mesh2,seam, &walker.halfedge_id().unwrap()) {
-                face_id1 = walker.face_id().unwrap();
-                face_id2 = walker.twin().face_id().unwrap();
+                face_id1 = walker.face_id();
+                face_id2 = walker.twin().face_id();
                 break;
             }
         }
     }
 
-    let cc1 = connected_component_with_limit(mesh1, &face_id1, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id));
-    let cc2 = connected_component_with_limit(mesh1, &face_id2, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id));
+    let cc1 = if let Some(face_id) = face_id1 {
+        connected_component_with_limit(mesh1, &face_id, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id))
+    } else { HashSet::new() };
+    let cc2 = if let Some(face_id) = face_id2 {
+        connected_component_with_limit(mesh1, &face_id, &|halfedge_id| is_at_seam(mesh1, mesh2, seam, &halfedge_id))
+    } else { HashSet::new() };
 
     let sub_mesh1 = mesh1.create_sub_mesh(&cc1);
     let sub_mesh2 = mesh1.create_sub_mesh(&cc2);
