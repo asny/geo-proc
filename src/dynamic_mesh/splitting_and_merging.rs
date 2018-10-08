@@ -2,9 +2,45 @@
 use dynamic_mesh::*;
 use connected_components::*;
 use std::collections::{HashSet, HashMap};
+use std::rc::Rc;
 
 impl DynamicMesh
 {
+    pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
+    {
+        let info = connectivity_info::ConnectivityInfo::new(faces.len(), faces.len());
+        for face_id in faces {
+            let face = self.connectivity_info.face(face_id).unwrap();
+            for walker in self.face_halfedge_iterator(face_id) {
+                let halfedge_id = walker.halfedge_id().unwrap();
+                let halfedge = self.connectivity_info.halfedge(&halfedge_id).unwrap();
+                info.add_halfedge(halfedge_id, halfedge);
+
+                let twin_id = walker.twin_id().unwrap();
+                let twin = self.connectivity_info.halfedge(&twin_id).unwrap();
+                info.add_halfedge(twin_id, twin);
+
+                let vertex_id = walker.vertex_id().unwrap();
+                let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
+                info.add_vertex(vertex_id, vertex);
+            }
+
+            info.add_face(face_id.clone(), face);
+        }
+
+        let mut positions = HashMap::with_capacity(info.no_vertices());
+        let mut normals = HashMap::with_capacity(info.no_vertices());
+        for vertex_id in info.vertex_iterator() {
+            let p = self.position(&vertex_id).clone();
+            positions.insert(vertex_id.clone(), p);
+            if let Some(normal) = self.normal(&vertex_id) {
+                normals.insert(vertex_id, normal.clone());
+            }
+        }
+
+        DynamicMesh::create_internal(positions, normals, Rc::new(info))
+    }
+
     pub fn split(&self, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> (DynamicMesh, DynamicMesh)
     {
         let mut face_id1 = None;

@@ -86,6 +86,11 @@ impl DynamicMesh
         mesh
     }
 
+    pub(super) fn create_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> DynamicMesh
+    {
+        DynamicMesh {positions, normals, connectivity_info}
+    }
+
     pub fn no_vertices(&self) -> usize
     {
         self.connectivity_info.no_vertices()
@@ -99,41 +104,6 @@ impl DynamicMesh
     pub fn no_faces(&self) -> usize
     {
         self.connectivity_info.no_faces()
-    }
-
-    pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
-    {
-        let info = ConnectivityInfo::new(faces.len(), faces.len());
-        for face_id in faces {
-            let face = self.connectivity_info.face(face_id).unwrap();
-            for walker in self.face_halfedge_iterator(face_id) {
-                let halfedge_id = walker.halfedge_id().unwrap();
-                let halfedge = self.connectivity_info.halfedge(&halfedge_id).unwrap();
-                info.add_halfedge(halfedge_id, halfedge);
-
-                let twin_id = walker.twin_id().unwrap();
-                let twin = self.connectivity_info.halfedge(&twin_id).unwrap();
-                info.add_halfedge(twin_id, twin);
-
-                let vertex_id = walker.vertex_id().unwrap();
-                let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
-                info.add_vertex(vertex_id, vertex);
-            }
-
-            info.add_face(face_id.clone(), face);
-        }
-
-        let mut positions = HashMap::with_capacity(info.no_vertices());
-        let mut normals = HashMap::with_capacity(info.no_vertices());
-        for vertex_id in info.vertex_iterator() {
-            let p = self.position(&vertex_id).clone();
-            positions.insert(vertex_id.clone(), p);
-            if let Some(normal) = self.normal(&vertex_id) {
-                normals.insert(vertex_id, normal.clone());
-            }
-        }
-
-        DynamicMesh {positions, normals, connectivity_info: Rc::new(info)}
     }
 
     ////////////////////////////////
