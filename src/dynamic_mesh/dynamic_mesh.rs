@@ -125,8 +125,7 @@ impl DynamicMesh
         {
             for vertex_id2 in self.vertex_iterator()
             {
-                if ::connectivity::connecting_edge(self, &vertex_id1, &vertex_id2).is_some() !=
-                    ::connectivity::connecting_edge(self, &vertex_id2, &vertex_id1).is_some()
+                if self.connecting_edge(&vertex_id1, &vertex_id2).is_some() != self.connecting_edge(&vertex_id2, &vertex_id1).is_some()
                 {
                     return Err(mesh::Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected one way, but not the other way", vertex_id1, vertex_id2)});
                 }

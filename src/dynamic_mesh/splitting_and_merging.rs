@@ -95,21 +95,21 @@ impl DynamicMesh
             let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
 
             if stitches.contains_key(&vertex_ids.0) && stitches.contains_key(&vertex_ids.1)
-                && ::connectivity::connecting_edge(other, &vertex_ids.0, &vertex_ids.1).is_some()
+                && other.connecting_edge(&vertex_ids.0, &vertex_ids.1).is_some()
             {
-                let halfedge_id = ::connectivity::connecting_edge(self, &vertex_id0, &vertex_id1).unwrap();
+                let halfedge_id = self.connecting_edge(&vertex_id0, &vertex_id1).unwrap();
                 stitch_edge(self, halfedge_id);
             }
             if stitches.contains_key(&vertex_ids.1) && stitches.contains_key(&vertex_ids.2)
-                && ::connectivity::connecting_edge(other, &vertex_ids.1, &vertex_ids.2).is_some()
+                && other.connecting_edge(&vertex_ids.1, &vertex_ids.2).is_some()
             {
-                let halfedge_id = ::connectivity::connecting_edge(self, &vertex_id1, &vertex_id2).unwrap();
+                let halfedge_id = self.connecting_edge(&vertex_id1, &vertex_id2).unwrap();
                 stitch_edge(self, halfedge_id);
             }
             if stitches.contains_key(&vertex_ids.2) && stitches.contains_key(&vertex_ids.0)
-                && ::connectivity::connecting_edge(other, &vertex_ids.2, &vertex_ids.0).is_some()
+                && other.connecting_edge(&vertex_ids.2, &vertex_ids.0).is_some()
             {
-                let halfedge_id = ::connectivity::connecting_edge(self, &vertex_id2, &vertex_id0).unwrap();
+                let halfedge_id = self.connecting_edge(&vertex_id2, &vertex_id0).unwrap();
                 stitch_edge(self, halfedge_id);
             }
 

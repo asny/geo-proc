@@ -32,7 +32,7 @@ fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID,
     let vertices = mesh1.edge_vertices(halfedge_id);
     if let Some(vertex_id1) = seam.get(&vertices.0) {
         if let Some(vertex_id2) = seam.get(&vertices.1) {
-            return connecting_edge(mesh2, vertex_id1, vertex_id2).is_some()
+            return mesh2.connecting_edge(vertex_id1, vertex_id2).is_some()
         }
     }
     false
@@ -106,7 +106,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                 match find_edge_primitive_to_split(&edge_splits1, mesh1, edge, &point) {
                     PrimitiveID::Vertex(vertex_id) => { vertex_id },
                     PrimitiveID::Edge(ref split_edge) => {
-                        let halfedge_id = connecting_edge(mesh1, &split_edge.0, &split_edge.1).unwrap();
+                        let halfedge_id = mesh1.connecting_edge(&split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh1.split_edge(&halfedge_id, point);
                         insert_edges(&mut edge_splits1, edge, &vertex_id);
                         for walker in mesh1.vertex_halfedge_iterator(&vertex_id) {
@@ -129,7 +129,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                 match find_edge_primitive_to_split(&edge_splits2, mesh2, edge, &point) {
                     PrimitiveID::Vertex(vertex_id) => { vertex_id },
                     PrimitiveID::Edge(ref split_edge) => {
-                        let halfedge_id = connecting_edge(mesh2, &split_edge.0, &split_edge.1).unwrap();
+                        let halfedge_id = mesh2.connecting_edge(&split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh2.split_edge(&halfedge_id, point);
                         insert_edges(&mut edge_splits2, edge, &vertex_id);
                         for walker in mesh2.vertex_halfedge_iterator(&vertex_id) {
