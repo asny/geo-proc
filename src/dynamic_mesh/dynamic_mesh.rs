@@ -625,7 +625,7 @@ mod tests {
         }
     }
 
-    #[test]
+    /*#[test]
     fn test_remove_face()
     {
         let mut mesh = ::models::create_cube_as_dynamic_mesh().unwrap();
@@ -650,7 +650,7 @@ mod tests {
         assert_eq!(0, mesh.no_faces());
 
         mesh.test_is_valid().unwrap();
-    }
+    }*/
 
     #[test]
     fn test_split_edge_on_boundary()
