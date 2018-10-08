@@ -1,11 +1,10 @@
 use mesh::{self, Renderable};
-use connectivity_info::ConnectivityInfo;
-use traversal::*;
+use dynamic_mesh::connectivity_info::ConnectivityInfo;
+use dynamic_mesh::*;
+use types::*;
 use std::rc::Rc;
 use std::iter::FromIterator;
 use std::collections::{HashSet, HashMap};
-use ids::*;
-use types::*;
 
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;

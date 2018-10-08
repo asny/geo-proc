@@ -1,6 +1,5 @@
 
-use mesh::DynamicMesh;
-use ids::*;
+use dynamic_mesh::*;
 use connected_components::*;
 use std::collections::{HashSet, HashMap};
 

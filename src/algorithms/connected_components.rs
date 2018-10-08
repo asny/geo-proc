@@ -1,5 +1,4 @@
-use ids::*;
-use dynamic_mesh::DynamicMesh;
+use dynamic_mesh::*;
 use std::collections::HashSet;
 
 pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>

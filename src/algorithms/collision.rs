@@ -2,8 +2,7 @@
 extern crate ncollide3d;
 
 use types::*;
-use ids::*;
-use dynamic_mesh::DynamicMesh;
+use dynamic_mesh::*;
 
 use algorithms::collision::ncollide3d::query::{proximity, Proximity};
 use na::{Isometry3, Point3};

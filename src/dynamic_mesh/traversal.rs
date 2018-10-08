@@ -1,6 +1,6 @@
 use std::rc::{Rc};
-use ids::*;
-use connectivity_info::{HalfEdge, ConnectivityInfo};
+use dynamic_mesh::*;
+use dynamic_mesh::connectivity_info::{HalfEdge, ConnectivityInfo};
 
 pub struct VertexHalfedgeIterator
 {

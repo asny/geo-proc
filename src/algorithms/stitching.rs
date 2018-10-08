@@ -2,10 +2,9 @@
 use std::collections::{HashMap, HashSet};
 
 use types::*;
-use ids::*;
+use dynamic_mesh::*;
 use connectivity::*;
 use collision::*;
-use dynamic_mesh::DynamicMesh;
 use splitting_and_merging::*;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh

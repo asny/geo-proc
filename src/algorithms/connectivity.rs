@@ -1,6 +1,5 @@
 
-use ids::*;
-use dynamic_mesh::DynamicMesh;
+use dynamic_mesh::*;
 
 pub fn connecting_edge(mesh: &DynamicMesh, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
 {
