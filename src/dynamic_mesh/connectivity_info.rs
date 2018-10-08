@@ -163,6 +163,7 @@ impl ConnectivityInfo {
 
     pub fn remove_face(&self, face_id: &FaceID)
     {
+        // TODO: Only used in tests!
         let mut edge_ids = vec![];
         let mut id = self.face_halfedge(face_id).unwrap(); edge_ids.push(id);
         id = self.halfedge_next(&edge_ids[0]).unwrap(); edge_ids.push(id);

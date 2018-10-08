@@ -253,14 +253,6 @@ impl DynamicMesh
         new_vertex_id
     }
 
-
-    fn remove_face(&mut self, face_id: &FaceID)
-    {
-        // Todo: Move the code from connectivity_info to here
-        // Todo: Make it safe (retains a valid mesh)
-        self.connectivity_info.remove_face(face_id);
-    }
-
     ////////////////////////////////////////////
     // *** Functions related to the position ***
     ////////////////////////////////////////////
@@ -695,7 +687,7 @@ mod tests {
     {
         let mut mesh = ::models::create_cube_as_dynamic_mesh().unwrap();
         let face_id = mesh.face_iterator().next().unwrap();
-        mesh.remove_face(&face_id);
+        mesh.connectivity_info.remove_face(&face_id);
 
         //mesh.test_is_valid().unwrap(); Is not valid!
 
@@ -706,7 +698,7 @@ mod tests {
         let mut i = 0;
         for face_id in mesh.face_iterator()
         {
-            mesh.remove_face(&face_id);
+            mesh.connectivity_info.remove_face(&face_id);
             i = i+1;
         }
         assert_eq!(i, 11);
