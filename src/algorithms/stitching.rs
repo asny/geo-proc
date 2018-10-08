@@ -23,13 +23,8 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     let mut m1 = if mesh11.no_faces() > mesh12.no_faces() { mesh11 } else { mesh12 };
     let m2 = if mesh21.no_faces() > mesh22.no_faces() { mesh21 } else { mesh22 };
     m1.merge_with(&m2, &seam2);
-    // Todo:
+    
     m1
-}
-
-fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &HashSet<(VertexID, VertexID)>)
-{
-
 }
 
 fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
