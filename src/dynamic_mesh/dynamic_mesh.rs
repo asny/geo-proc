@@ -106,6 +106,36 @@ impl DynamicMesh
         self.connectivity_info.no_faces()
     }
 
+    pub fn test_is_valid(&self) -> Result<(), mesh::Error>
+    {
+        for vertex_id in self.vertex_iterator() {
+            if self.walker_from_vertex(&vertex_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Vertex {} does not point to a halfedge", vertex_id)}); }
+        }
+        for halfedge_id in self.halfedge_iterator() {
+            if self.walker_from_halfedge(&halfedge_id).twin_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a twin halfedge", halfedge_id)}); }
+            if self.walker_from_halfedge(&halfedge_id).vertex_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a vertex", halfedge_id)}); }
+            if self.walker_from_halfedge(&halfedge_id).face_id().is_some() != self.walker_from_halfedge(&halfedge_id).next_id().is_some() {
+                return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to only one face or next halfedge", halfedge_id)});
+            }
+        }
+        for face_id in self.face_iterator() {
+            if self.walker_from_face(&face_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Face {} does not point to a halfedge", face_id)}); }
+        }
+
+        for vertex_id1 in self.vertex_iterator()
+        {
+            for vertex_id2 in self.vertex_iterator()
+            {
+                if ::connectivity::connecting_edge(self, &vertex_id1, &vertex_id2).is_some() !=
+                    ::connectivity::connecting_edge(self, &vertex_id2, &vertex_id1).is_some()
+                {
+                    return Err(mesh::Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected one way, but not the other way", vertex_id1, vertex_id2)});
+                }
+            }
+        }
+        Ok(())
+    }
+
     ////////////////////////////////
     // *** Walkers and iterators ***
     ////////////////////////////////
@@ -159,6 +189,32 @@ impl DynamicMesh
     {
         let set: HashSet<(VertexID, VertexID)> = HashSet::from_iter(self.halfedge_iterator().map(|halfedge_id| self.edge_vertices(&halfedge_id)));
         Box::new(set.into_iter())
+    }
+
+    pub fn edge_vertices(&self, halfedge_id: &HalfEdgeID) -> (VertexID, VertexID)
+    {
+        let mut walker = self.walker_from_halfedge(halfedge_id);
+        let v1 = walker.vertex_id().unwrap();
+        let v2 = walker.twin().vertex_id().unwrap();
+        if v1 < v2 { (v1, v2) } else { (v2, v1) }
+    }
+
+    pub fn face_vertices(&self, face_id: &FaceID) -> (VertexID, VertexID, VertexID)
+    {
+        let mut walker = self.walker_from_face(face_id);
+        let v1 = walker.vertex_id().unwrap();
+        walker.next();
+        let v2 = walker.vertex_id().unwrap();
+        walker.next();
+        let v3 = walker.vertex_id().unwrap();
+        if v1 < v2 {
+            if v2 < v3 { (v1, v2, v3) }
+            else { if v1 < v3 { (v1, v3, v2) } else { (v3, v1, v2) } }
+        }
+        else {
+            if v1 < v3 { (v2, v1, v3) }
+            else { if v2 < v3 { (v2, v3, v1) } else { (v3, v2, v1) } }
+        }
     }
 
     //////////////////////////////////////////
@@ -352,7 +408,7 @@ impl DynamicMesh
     // *** Internal connectivity changing functions ***
     ///////////////////////////////////////////////////
 
-    pub fn create_vertex(&mut self, position: Vec3, normal: Option<Vec3>) -> VertexID
+    pub(super) fn create_vertex(&mut self, position: Vec3, normal: Option<Vec3>) -> VertexID
     {
         let id = self.connectivity_info.create_vertex();
         self.positions.insert(id.clone(), position);
@@ -360,7 +416,7 @@ impl DynamicMesh
         id
     }
 
-    pub fn create_twin_connectivity(&mut self)
+    pub(super) fn create_twin_connectivity(&mut self)
     {
         let mut walker = Walker::create(&self.connectivity_info);
         let edges: Vec<HalfEdgeID> = self.halfedge_iterator().collect();
@@ -424,62 +480,6 @@ impl DynamicMesh
             else {
                 panic!("Split one face failed")
             }
-        }
-    }
-
-    pub fn test_is_valid(&self) -> Result<(), mesh::Error>
-    {
-        for vertex_id in self.vertex_iterator() {
-            if self.walker_from_vertex(&vertex_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Vertex {} does not point to a halfedge", vertex_id)}); }
-        }
-        for halfedge_id in self.halfedge_iterator() {
-            if self.walker_from_halfedge(&halfedge_id).twin_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a twin halfedge", halfedge_id)}); }
-            if self.walker_from_halfedge(&halfedge_id).vertex_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a vertex", halfedge_id)}); }
-            if self.walker_from_halfedge(&halfedge_id).face_id().is_some() != self.walker_from_halfedge(&halfedge_id).next_id().is_some() {
-                return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to only one face or next halfedge", halfedge_id)});
-            }
-        }
-        for face_id in self.face_iterator() {
-            if self.walker_from_face(&face_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Face {} does not point to a halfedge", face_id)}); }
-        }
-
-        for vertex_id1 in self.vertex_iterator()
-        {
-            for vertex_id2 in self.vertex_iterator()
-            {
-                if ::connectivity::connecting_edge(self, &vertex_id1, &vertex_id2).is_some() !=
-                    ::connectivity::connecting_edge(self, &vertex_id2, &vertex_id1).is_some()
-                {
-                    return Err(mesh::Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected one way, but not the other way", vertex_id1, vertex_id2)});
-                }
-            }
-        }
-        Ok(())
-    }
-
-    pub fn edge_vertices(&self, halfedge_id: &HalfEdgeID) -> (VertexID, VertexID)
-    {
-        let mut walker = self.walker_from_halfedge(halfedge_id);
-        let v1 = walker.vertex_id().unwrap();
-        let v2 = walker.twin().vertex_id().unwrap();
-        if v1 < v2 { (v1, v2) } else { (v2, v1) }
-    }
-
-    pub fn face_vertices(&self, face_id: &FaceID) -> (VertexID, VertexID, VertexID)
-    {
-        let mut walker = self.walker_from_face(face_id);
-        let v1 = walker.vertex_id().unwrap();
-        walker.next();
-        let v2 = walker.vertex_id().unwrap();
-        walker.next();
-        let v3 = walker.vertex_id().unwrap();
-        if v1 < v2 {
-            if v2 < v3 { (v1, v2, v3) }
-            else { if v1 < v3 { (v1, v3, v2) } else { (v3, v1, v2) } }
-        }
-        else {
-            if v1 < v3 { (v2, v1, v3) }
-            else { if v2 < v3 { (v2, v3, v1) } else { (v3, v2, v1) } }
         }
     }
 }
