@@ -3,7 +3,7 @@ use dynamic_mesh::*;
 use connected_components::*;
 use std::collections::{HashSet, HashMap};
 
-pub fn split_mesh(mesh: &DynamicMesh, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> (DynamicMesh, DynamicMesh)
+pub fn split(mesh: &DynamicMesh, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> (DynamicMesh, DynamicMesh)
 {
     let mut face_id1 = None;
     let mut face_id2 = None;
