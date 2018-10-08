@@ -15,7 +15,7 @@ pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
 pub struct DynamicMesh {
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,
-    connectivity_info: Rc<ConnectivityInfo>
+    pub(super) connectivity_info: Rc<ConnectivityInfo>
 }
 
 impl Renderable for DynamicMesh
@@ -283,10 +283,6 @@ impl DynamicMesh
         new_vertex_id
     }
 
-    pub fn remove_halfedge(&mut self, halfedge_id: &HalfEdgeID)
-    {
-        self.connectivity_info.remove_halfedge(halfedge_id);
-    }
 
     fn remove_face(&mut self, face_id: &FaceID)
     {

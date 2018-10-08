@@ -47,7 +47,7 @@ pub fn merge_with(mesh1: &mut DynamicMesh, other: &DynamicMesh, stitches: &HashM
         if walker.face_id().is_some() { walker.twin(); }
         if walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
 
-        mesh.remove_halfedge(&walker.halfedge_id().unwrap());
+        mesh.connectivity_info.remove_halfedge(&walker.halfedge_id().unwrap());
     };
 
     for face_id in other.face_iterator() {
