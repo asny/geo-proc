@@ -6,7 +6,6 @@ use ids::*;
 use connectivity::*;
 use collision::*;
 use dynamic_mesh::DynamicMesh;
-use connected_components::*;
 use splitting_and_merging::*;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
@@ -15,7 +14,7 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 
     let mut seam1 = HashMap::new();
     stitches.iter().for_each(|pair| {seam1.insert(pair.0.clone(), pair.1.clone());});
-    let (mut mesh11, mesh12) = split_mesh(mesh1,
+    let (mesh11, mesh12) = split_mesh(mesh1,
                       &|mesh, halfedge_id| { is_at_seam(mesh, mesh2, &seam1, halfedge_id) });
 
     let mut seam2 = HashMap::new();

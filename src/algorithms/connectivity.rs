@@ -12,15 +12,18 @@ pub fn connecting_edge(mesh: &DynamicMesh, vertex_id1: &VertexID, vertex_id2: &V
     None
 }
 
-pub fn find_edge(mesh: &DynamicMesh, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
+impl DynamicMesh
 {
-    let mut walker = mesh.walker();
-    for halfedge_id in mesh.halfedge_iterator() {
-        walker.jump_to_edge(&halfedge_id);
-        if &walker.vertex_id().unwrap() == vertex_id2 && &walker.twin().vertex_id().unwrap() == vertex_id1
-        {
-            return Some(halfedge_id)
+    pub fn find_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
+    {
+        let mut walker = self.walker();
+        for halfedge_id in self.halfedge_iterator() {
+            walker.jump_to_edge(&halfedge_id);
+            if &walker.vertex_id().unwrap() == vertex_id2 && &walker.twin().vertex_id().unwrap() == vertex_id1
+            {
+                return Some(halfedge_id)
+            }
         }
+        None
     }
-    None
 }
