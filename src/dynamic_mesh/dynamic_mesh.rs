@@ -185,7 +185,7 @@ impl DynamicMesh
             self.split_one_face(&twin_halfedge_id, split_halfedge_id, new_vertex_id.clone());
         }
         else {
-            let new_halfedge_id = self.connectivity_info.create_halfedge(twin_vertex_id, None, None);
+            let new_halfedge_id = self.connectivity_info.new_halfedge(twin_vertex_id, None, None);
             self.connectivity_info.set_halfedge_twin(split_halfedge_id, new_halfedge_id);
             self.connectivity_info.set_halfedge_vertex(&twin_halfedge_id, new_vertex_id.clone());
         };
@@ -353,7 +353,7 @@ impl DynamicMesh
 
     pub(super) fn create_vertex(&mut self, position: Vec3, normal: Option<Vec3>) -> VertexID
     {
-        let id = self.connectivity_info.create_vertex();
+        let id = self.connectivity_info.new_vertex();
         self.positions.insert(id.clone(), position);
         if let Some(nor) = normal {self.normals.insert(id.clone(), nor);}
         id
@@ -386,7 +386,7 @@ impl DynamicMesh
                     }
                 }
                 let halfedge_id2 = halfedge2.unwrap_or_else(|| {
-                        self.connectivity_info.create_halfedge(Some(vertex_id2), None,None)
+                        self.connectivity_info.new_halfedge(Some(vertex_id2), None, None)
                     });
                 self.connectivity_info.set_halfedge_twin(halfedge_id1, halfedge_id2);
 

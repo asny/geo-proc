@@ -35,14 +35,15 @@ impl ConnectivityInfo {
         RefCell::borrow(&self.faces).len()
     }
 
+    // Creates a face and the three internal halfedges and connects them to eachother and to the three given vertices
     pub fn create_face(&self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
     {
         let id = self.new_face();
 
         // Create inner halfedges
-        let halfedge1 = self.create_halfedge(Some(vertex_id2.clone()), None, Some(id.clone()));
-        let halfedge3 = self.create_halfedge(Some(vertex_id1.clone()), Some(halfedge1.clone()),Some(id.clone()));
-        let halfedge2 = self.create_halfedge(Some(vertex_id3.clone()), Some(halfedge3.clone()),Some(id.clone()));
+        let halfedge1 = self.new_halfedge(Some(vertex_id2.clone()), None, Some(id.clone()));
+        let halfedge3 = self.new_halfedge(Some(vertex_id1.clone()), Some(halfedge1.clone()), Some(id.clone()));
+        let halfedge2 = self.new_halfedge(Some(vertex_id3.clone()), Some(halfedge3.clone()), Some(id.clone()));
 
         self.set_halfedge_next(&halfedge1, halfedge2.clone());
 
@@ -55,7 +56,7 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_vertex(&self) -> VertexID
+    pub fn new_vertex(&self) -> VertexID
     {
         let vertices = &mut *RefCell::borrow_mut(&self.vertices);
 
@@ -70,7 +71,7 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_halfedge(&self, vertex: Option<VertexID>, next: Option<HalfEdgeID>, face: Option<FaceID>) -> HalfEdgeID
+    pub fn new_halfedge(&self, vertex: Option<VertexID>, next: Option<HalfEdgeID>, face: Option<FaceID>) -> HalfEdgeID
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
 
