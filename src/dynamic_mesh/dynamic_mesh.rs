@@ -3,8 +3,7 @@ use dynamic_mesh::connectivity_info::ConnectivityInfo;
 use dynamic_mesh::*;
 use types::*;
 use std::rc::Rc;
-use std::iter::FromIterator;
-use std::collections::{HashSet, HashMap};
+use std::collections::HashMap;
 
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
@@ -134,61 +133,6 @@ impl DynamicMesh
             }
         }
         Ok(())
-    }
-
-    ////////////////////////////////
-    // *** Walkers and iterators ***
-    ////////////////////////////////
-
-    pub fn walker(&self) -> Walker
-    {
-        Walker::create(&self.connectivity_info)
-    }
-
-    pub fn walker_from_vertex(&self, vertex_id: &VertexID) -> Walker
-    {
-        Walker::create_from_vertex(vertex_id, &self.connectivity_info)
-    }
-
-    pub fn walker_from_halfedge(&self, halfedge_id: &HalfEdgeID) -> Walker
-    {
-        Walker::create_from_halfedge(halfedge_id, &self.connectivity_info)
-    }
-
-    pub fn walker_from_face(&self, face_id: &FaceID) -> Walker
-    {
-        Walker::create_from_face(&face_id, &self.connectivity_info)
-    }
-
-    pub fn vertex_halfedge_iterator(&self, vertex_id: &VertexID) -> VertexHalfedgeIterator
-    {
-        VertexHalfedgeIterator::new(vertex_id, &self.connectivity_info)
-    }
-
-    pub fn face_halfedge_iterator(&self, face_id: &FaceID) -> FaceHalfedgeIterator
-    {
-        FaceHalfedgeIterator::new(face_id, &self.connectivity_info)
-    }
-
-    pub fn vertex_iterator(&self) -> VertexIterator
-    {
-        self.connectivity_info.vertex_iterator()
-    }
-
-    pub fn halfedge_iterator(&self) -> HalfEdgeIterator
-    {
-        self.connectivity_info.halfedge_iterator()
-    }
-
-    pub fn face_iterator(&self) -> FaceIterator
-    {
-        self.connectivity_info.face_iterator()
-    }
-
-    pub fn edge_iterator(&self) -> EdgeIterator
-    {
-        let set: HashSet<(VertexID, VertexID)> = HashSet::from_iter(self.halfedge_iterator().map(|halfedge_id| self.edge_vertices(&halfedge_id)));
-        Box::new(set.into_iter())
     }
 
     pub fn edge_vertices(&self, halfedge_id: &HalfEdgeID) -> (VertexID, VertexID)
