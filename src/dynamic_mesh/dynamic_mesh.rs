@@ -80,7 +80,7 @@ impl DynamicMesh
             let v0 = VertexID::new(indices[face * 3] as usize);
             let v1 = VertexID::new(indices[face * 3 + 1] as usize);
             let v2 = VertexID::new(indices[face * 3 + 2] as usize);
-            mesh.create_face(&v0, &v1, &v2);
+            mesh.connectivity_info.create_face(&v0, &v1, &v2);
         }
         mesh.create_twin_connectivity();
         mesh
@@ -241,8 +241,8 @@ impl DynamicMesh
         let twin_id3 = walker.twin_id().unwrap();
         let vertex_id3 = walker.vertex_id().unwrap();
 
-        let face_id1 = self.create_face(&vertex_id1, &vertex_id2, &new_vertex_id);
-        let face_id2 = self.create_face(&vertex_id2, &vertex_id3, &new_vertex_id);
+        let face_id1 = self.connectivity_info.create_face(&vertex_id1, &vertex_id2, &new_vertex_id);
+        let face_id2 = self.connectivity_info.create_face(&vertex_id2, &vertex_id3, &new_vertex_id);
 
         self.connectivity_info.set_halfedge_vertex(&halfedge_id2, new_vertex_id.clone());
 
@@ -398,26 +398,6 @@ impl DynamicMesh
         id
     }
 
-    pub fn create_face(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
-    {
-        let id = self.connectivity_info.create_face();
-
-        // Create inner halfedges
-        let halfedge1 = self.connectivity_info.create_halfedge(Some(vertex_id2.clone()), None, Some(id.clone()));
-        let halfedge3 = self.connectivity_info.create_halfedge(Some(vertex_id1.clone()), Some(halfedge1.clone()),Some(id.clone()));
-        let halfedge2 = self.connectivity_info.create_halfedge(Some(vertex_id3.clone()), Some(halfedge3.clone()),Some(id.clone()));
-
-        self.connectivity_info.set_halfedge_next(&halfedge1, halfedge2.clone());
-
-        self.connectivity_info.set_vertex_halfedge(&vertex_id1, halfedge1.clone());
-        self.connectivity_info.set_vertex_halfedge(&vertex_id2, halfedge2);
-        self.connectivity_info.set_vertex_halfedge(&vertex_id3, halfedge3);
-
-        self.connectivity_info.set_face_halfedge(&id, halfedge1);
-
-        id
-    }
-
     pub fn create_twin_connectivity(&mut self)
     {
         let mut walker = Walker::create(&self.connectivity_info);
@@ -464,7 +444,7 @@ impl DynamicMesh
         let halfedge_to_update2 = walker.halfedge_id().unwrap();
 
         self.connectivity_info.set_halfedge_vertex(halfedge_id, new_vertex_id);
-        let new_face_id = self.create_face(&vertex_id1, &vertex_id2, &new_vertex_id);
+        let new_face_id = self.connectivity_info.create_face(&vertex_id1, &vertex_id2, &new_vertex_id);
 
         // Update twin information
         for walker in self.face_halfedge_iterator(&new_face_id) {
@@ -553,7 +533,7 @@ mod tests {
         let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
         let v2 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
         let v3 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
-        let f1 = mesh.create_face(&v1, &v2, &v3);
+        let f1 = mesh.connectivity_info.create_face(&v1, &v2, &v3);
         mesh.create_twin_connectivity();
 
         let t1 = mesh.walker_from_vertex(&v1).vertex_id();

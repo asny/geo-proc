@@ -77,7 +77,7 @@ impl DynamicMesh
                 stitch_edge(self, halfedge_id);
             }
 
-            self.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
+            self.connectivity_info.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
         }
 
         self.create_twin_connectivity();

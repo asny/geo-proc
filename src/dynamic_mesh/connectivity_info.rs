@@ -35,6 +35,26 @@ impl ConnectivityInfo {
         RefCell::borrow(&self.faces).len()
     }
 
+    pub fn create_face(&self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
+    {
+        let id = self.new_face();
+
+        // Create inner halfedges
+        let halfedge1 = self.create_halfedge(Some(vertex_id2.clone()), None, Some(id.clone()));
+        let halfedge3 = self.create_halfedge(Some(vertex_id1.clone()), Some(halfedge1.clone()),Some(id.clone()));
+        let halfedge2 = self.create_halfedge(Some(vertex_id3.clone()), Some(halfedge3.clone()),Some(id.clone()));
+
+        self.set_halfedge_next(&halfedge1, halfedge2.clone());
+
+        self.set_vertex_halfedge(&vertex_id1, halfedge1.clone());
+        self.set_vertex_halfedge(&vertex_id2, halfedge2);
+        self.set_vertex_halfedge(&vertex_id3, halfedge3);
+
+        self.set_face_halfedge(&id, halfedge1);
+
+        id
+    }
+
     pub fn create_vertex(&self) -> VertexID
     {
         let vertices = &mut *RefCell::borrow_mut(&self.vertices);
@@ -65,7 +85,7 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_face(&self) -> FaceID
+    fn new_face(&self) -> FaceID
     {
         let faces = &mut *RefCell::borrow_mut(&self.faces);
 
