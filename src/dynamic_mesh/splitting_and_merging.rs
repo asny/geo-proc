@@ -96,21 +96,21 @@ impl DynamicMesh
 
             if stitches.contains_key(&vertex_ids.0) && stitches.contains_key(&vertex_ids.1)
             {
-                if let Some(halfedge_id) = self.connecting_edge(&vertex_ids.0, &vertex_ids.1)
+                if let Some(halfedge_id) = self.find_edge(&vertex_id0, &vertex_id1)
                 {
                     stitch_edge(self, halfedge_id);
                 }
             }
             if stitches.contains_key(&vertex_ids.1) && stitches.contains_key(&vertex_ids.2)
             {
-                if let Some(halfedge_id) = self.connecting_edge(&vertex_ids.1, &vertex_ids.2)
+                if let Some(halfedge_id) = self.find_edge(&vertex_id1, &vertex_id2)
                 {
                     stitch_edge(self, halfedge_id);
                 }
             }
             if stitches.contains_key(&vertex_ids.2) && stitches.contains_key(&vertex_ids.0)
             {
-                if let Some(halfedge_id) = self.connecting_edge(&vertex_ids.2, &vertex_ids.0)
+                if let Some(halfedge_id) = self.find_edge(&vertex_id2, &vertex_id0)
                 {
                     stitch_edge(self, halfedge_id);
                 }
