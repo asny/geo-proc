@@ -3,7 +3,6 @@ use std::collections::{HashMap, HashSet};
 
 use types::*;
 use dynamic_mesh::*;
-use connectivity::*;
 use collision::*;
 
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
