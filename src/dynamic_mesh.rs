@@ -137,6 +137,7 @@ impl DynamicMesh
         DynamicMesh {positions, normals, connectivity_info: Rc::new(info)}
     }
 
+    // Stitches is a map of vertex id in the other mesh to vertex id in self where the two meshes should be connected.
     pub fn merge_with(&mut self, other: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>)
     {
         let mut mapping = stitches.clone();
@@ -149,6 +150,17 @@ impl DynamicMesh
             vid
         };
 
+        let mut stitch_edge = |mesh: &mut DynamicMesh, vertex_id1, vertex_id2| {
+            if let Some(halfedge_id) = ::connectivity::connecting_edge(mesh, vertex_id1, vertex_id2)
+            {
+                let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+                if walker.face_id().is_some() { walker.twin(); }
+                if walker.face_id().is_some() { panic!("Mergin will create non manifold mesh") }
+                //mesh.remove_edge(walker.halfedge_id());
+            }
+            else { unreachable!() };
+        };
+
         for face_id in other.face_iterator() {
             let vertex_ids = other.face_vertices(&face_id);
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
@@ -156,7 +168,9 @@ impl DynamicMesh
             let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
             self.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
         }
-        
+
+        self.create_twin_connectivity();
+
         // TODO: Create twin edges
 
     }
