@@ -20,10 +20,11 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
     stitches.iter().for_each(|pair| {seam2.insert(pair.1, pair.0);});
     let (mesh21, mesh22) = split_mesh(mesh2, mesh1, &seam2);
 
-
-    mesh11.merge_with(&mesh21, &seam2);
+    let mut m1 = if mesh11.no_faces() > mesh12.no_faces() { mesh11 } else { mesh12 };
+    let m2 = if mesh21.no_faces() > mesh22.no_faces() { mesh21 } else { mesh22 };
+    m1.merge_with(&m2, &seam2);
     // Todo:
-    mesh11
+    m1
 }
 
 fn stitch_with(mesh1: &mut DynamicMesh, mesh2: &DynamicMesh, stitches: &HashSet<(VertexID, VertexID)>)
@@ -524,14 +525,14 @@ mod tests {
     }
 
     #[test]
-    fn test_face_face_stitching()
+    fn test_face_face_stitching_at_edge()
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
         let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
-        let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
+        let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
 
         let stitched = stitch(&mut mesh1, &mut mesh2);
@@ -539,6 +540,8 @@ mod tests {
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
 
+        assert_eq!(stitched.no_faces(), 2);
+        assert_eq!(stitched.no_vertices(), 4);
         stitched.test_is_valid().unwrap();
     }
 
