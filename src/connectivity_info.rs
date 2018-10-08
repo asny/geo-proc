@@ -113,7 +113,14 @@ impl ConnectivityInfo {
         vertices.remove(vertex_id);
     }
 
-    fn remove_halfedge(&self, halfedge_id: &HalfEdgeID, twin_id: &HalfEdgeID, prev_id: &HalfEdgeID)
+    pub fn remove_halfedge(&self, halfedge_id: &HalfEdgeID)
+    {
+        let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+        let halfedge = halfedges.remove(halfedge_id).unwrap();
+        halfedges.get_mut(&halfedge.twin.unwrap()).unwrap().twin = None;
+    }
+
+    fn remove_halfedge_and_vertices(&self, halfedge_id: &HalfEdgeID, twin_id: &HalfEdgeID, prev_id: &HalfEdgeID)
     {
         let vertex_id1 = self.halfedge_vertex(halfedge_id).unwrap();
         let vertex_id2 = self.halfedge_vertex(twin_id).unwrap();
@@ -157,7 +164,7 @@ impl ConnectivityInfo {
             let twin_id = self.halfedge_twin(halfedge_id).unwrap();
             if self.halfedge_face(halfedge_id).is_none() && self.halfedge_face(&twin_id).is_none()
             {
-                self.remove_halfedge(halfedge_id, &twin_id, &edge_ids[(i+2)%3]);
+                self.remove_halfedge_and_vertices(halfedge_id, &twin_id, &edge_ids[(i+2)%3]);
             }
         }
     }
