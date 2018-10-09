@@ -108,17 +108,69 @@ impl DynamicMesh
     pub fn test_is_valid(&self) -> Result<(), mesh::Error>
     {
         for vertex_id in self.vertex_iterator() {
-            if self.walker_from_vertex(&vertex_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Vertex {} does not point to a halfedge", vertex_id)}); }
+            if let Some(halfedge_id) = self.walker_from_vertex(&vertex_id).halfedge_id()
+            {
+                if !self.halfedge_iterator().any(|he_id| he_id == halfedge_id) {
+                    return Err(mesh::Error::IsNotValid {message: format!("Vertex {} points to an invalid halfedge", vertex_id)});
+                }
+            }
+            else {
+                return Err(mesh::Error::IsNotValid {message: format!("Vertex {} does not point to a halfedge", vertex_id)});
+            }
         }
         for halfedge_id in self.halfedge_iterator() {
-            if self.walker_from_halfedge(&halfedge_id).twin_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a twin halfedge", halfedge_id)}); }
-            if self.walker_from_halfedge(&halfedge_id).vertex_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a vertex", halfedge_id)}); }
-            if self.walker_from_halfedge(&halfedge_id).face_id().is_some() != self.walker_from_halfedge(&halfedge_id).next_id().is_some() {
-                return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to only one face or next halfedge", halfedge_id)});
+            let walker = self.walker_from_halfedge(&halfedge_id);
+
+            if let Some(twin_id) = walker.twin_id()
+            {
+                if !self.halfedge_iterator().any(|he_id| he_id == twin_id) {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to an invalid twin halfedge", halfedge_id)});
+                }
+            }
+            else {
+                return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a twin halfedge", halfedge_id)});
+            }
+
+            if let Some(vertex_id) = walker.vertex_id()
+            {
+                if !self.vertex_iterator().any(|vid| vid == vertex_id) {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to an invalid vertex", halfedge_id)});
+                }
+            }
+            else {
+                return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} does not point to a vertex", halfedge_id)});
+            }
+
+            if let Some(face_id) = walker.face_id()
+            {
+                if !self.face_iterator().any(|fid| fid == face_id) {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to an invalid face", halfedge_id)});
+                }
+                if walker.next_id().is_none() {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to a face but not a next halfedge", halfedge_id)});
+                }
+            }
+
+            if let Some(next_id) = walker.next_id()
+            {
+                if !self.halfedge_iterator().any(|he_id| he_id == next_id) {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to an invalid next halfedge", halfedge_id)});
+                }
+                if walker.face_id().is_none() {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to a next halfedge but not a face", halfedge_id)});
+                }
             }
         }
         for face_id in self.face_iterator() {
-            if self.walker_from_face(&face_id).halfedge_id().is_none() { return Err(mesh::Error::IsNotValid {message: format!("Face {} does not point to a halfedge", face_id)}); }
+            if let Some(halfedge_id) = self.walker_from_face(&face_id).halfedge_id()
+            {
+                if !self.halfedge_iterator().any(|he_id| he_id == halfedge_id) {
+                    return Err(mesh::Error::IsNotValid {message: format!("Face {} points to an invalid halfedge", face_id)});
+                }
+            }
+            else {
+                return Err(mesh::Error::IsNotValid {message: format!("Face {} does not point to a halfedge", face_id)});
+            }
         }
 
         for vertex_id1 in self.vertex_iterator()

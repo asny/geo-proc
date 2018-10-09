@@ -148,11 +148,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
+        let mesh1 = DynamicMesh::create(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.0, -2.0, -2.0, 0.5, 0.0];
-        let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
+        let mesh2 = DynamicMesh::create(indices2, positions2, None);
 
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iterator() {
@@ -178,11 +178,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
+        let mesh1 = DynamicMesh::create(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.5, 0.0, -2.0, 0.0, -2.0];
-        let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
+        let mesh2 = DynamicMesh::create(indices2, positions2, None);
 
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iterator() {
