@@ -1,8 +1,12 @@
-use ids::*;
-use dynamic_mesh::DynamicMesh;
+use dynamic_mesh::*;
 use std::collections::HashSet;
 
 pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>
+{
+    connected_component_with_limit(mesh, face_id, &|_| false )
+}
+
+pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
 {
     let mut component = HashSet::new();
     component.insert(face_id.clone());
@@ -15,11 +19,13 @@ pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<Face
         };
 
         for mut walker in mesh.face_halfedge_iterator(&test_face) {
-            if let Some(face_id) = walker.twin().face_id() {
-                if !component.contains(&face_id)
-                {
-                    component.insert(face_id.clone());
-                    to_be_tested.push(face_id);
+            if !limit(walker.halfedge_id().unwrap()) {
+                if let Some(face_id) = walker.twin().face_id() {
+                    if !component.contains(&face_id)
+                    {
+                        component.insert(face_id.clone());
+                        to_be_tested.push(face_id);
+                    }
                 }
             }
         }

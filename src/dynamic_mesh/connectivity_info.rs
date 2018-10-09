@@ -1,5 +1,5 @@
 use std::cell::{RefCell};
-use ids::*;
+use dynamic_mesh::*;
 use std;
 use std::collections::HashMap;
 
@@ -35,7 +35,28 @@ impl ConnectivityInfo {
         RefCell::borrow(&self.faces).len()
     }
 
-    pub fn create_vertex(&self) -> VertexID
+    // Creates a face and the three internal halfedges and connects them to eachother and to the three given vertices
+    pub fn create_face(&self, vertex_id1: &VertexID, vertex_id2: &VertexID, vertex_id3: &VertexID) -> FaceID
+    {
+        let id = self.new_face();
+
+        // Create inner halfedges
+        let halfedge1 = self.new_halfedge(Some(vertex_id2.clone()), None, Some(id.clone()));
+        let halfedge3 = self.new_halfedge(Some(vertex_id1.clone()), Some(halfedge1.clone()), Some(id.clone()));
+        let halfedge2 = self.new_halfedge(Some(vertex_id3.clone()), Some(halfedge3.clone()), Some(id.clone()));
+
+        self.set_halfedge_next(&halfedge1, halfedge2.clone());
+
+        self.set_vertex_halfedge(&vertex_id1, halfedge1.clone());
+        self.set_vertex_halfedge(&vertex_id2, halfedge2);
+        self.set_vertex_halfedge(&vertex_id3, halfedge3);
+
+        self.set_face_halfedge(&id, halfedge1);
+
+        id
+    }
+
+    pub fn new_vertex(&self) -> VertexID
     {
         let vertices = &mut *RefCell::borrow_mut(&self.vertices);
 
@@ -50,7 +71,7 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_halfedge(&self, vertex: Option<VertexID>, next: Option<HalfEdgeID>, face: Option<FaceID>) -> HalfEdgeID
+    pub fn new_halfedge(&self, vertex: Option<VertexID>, next: Option<HalfEdgeID>, face: Option<FaceID>) -> HalfEdgeID
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
 
@@ -65,7 +86,7 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_face(&self) -> FaceID
+    fn new_face(&self) -> FaceID
     {
         let faces = &mut *RefCell::borrow_mut(&self.faces);
 
@@ -98,7 +119,14 @@ impl ConnectivityInfo {
         faces.insert(face_id, face);
     }
 
-    fn remove_vertex_if_lonely(&self, vertex_id: &VertexID)
+    pub fn remove_halfedge(&self, halfedge_id: &HalfEdgeID)
+    {
+        let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
+        let halfedge = halfedges.remove(halfedge_id).unwrap();
+        halfedges.get_mut(&halfedge.twin.unwrap()).unwrap().twin = None;
+    }
+
+    /*fn remove_vertex_if_lonely(&self, vertex_id: &VertexID)
     {
         let vertices = &mut *RefCell::borrow_mut(&self.vertices);
 
@@ -113,7 +141,7 @@ impl ConnectivityInfo {
         vertices.remove(vertex_id);
     }
 
-    fn remove_halfedge(&self, halfedge_id: &HalfEdgeID, twin_id: &HalfEdgeID, prev_id: &HalfEdgeID)
+    fn remove_halfedge_and_vertices(&self, halfedge_id: &HalfEdgeID, twin_id: &HalfEdgeID, prev_id: &HalfEdgeID)
     {
         let vertex_id1 = self.halfedge_vertex(halfedge_id).unwrap();
         let vertex_id2 = self.halfedge_vertex(twin_id).unwrap();
@@ -136,6 +164,7 @@ impl ConnectivityInfo {
 
     pub fn remove_face(&self, face_id: &FaceID)
     {
+        // TODO: Only used in tests!
         let mut edge_ids = vec![];
         let mut id = self.face_halfedge(face_id).unwrap(); edge_ids.push(id);
         id = self.halfedge_next(&edge_ids[0]).unwrap(); edge_ids.push(id);
@@ -157,10 +186,10 @@ impl ConnectivityInfo {
             let twin_id = self.halfedge_twin(halfedge_id).unwrap();
             if self.halfedge_face(halfedge_id).is_none() && self.halfedge_face(&twin_id).is_none()
             {
-                self.remove_halfedge(halfedge_id, &twin_id, &edge_ids[(i+2)%3]);
+                self.remove_halfedge_and_vertices(halfedge_id, &twin_id, &edge_ids[(i+2)%3]);
             }
         }
-    }
+    }*/
 
     pub fn set_vertex_halfedge(&self, id: &VertexID, val: HalfEdgeID)
     {
