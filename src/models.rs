@@ -1,5 +1,38 @@
 
 use mesh::*;
+use std;
+
+pub fn create_cylinder() -> Result<StaticMesh, Error>
+{
+    let x_subdivisions = 10;
+    let angle_subdivisions = 10;
+    let mut positions = Vec::new();
+    let mut indices = Vec::new();
+    for i in 0..x_subdivisions {
+        let x = i as f32 / x_subdivisions as f32;
+        for j in 0..angle_subdivisions {
+            let angle = 2.0 * std::f32::consts::PI * j as f32 / angle_subdivisions as f32;
+
+            positions.push(x);
+            positions.push(angle.cos());
+            positions.push(angle.sin());
+        }
+    }
+    for i in 0..x_subdivisions {
+        for j in 0..angle_subdivisions {
+            indices.push(i * angle_subdivisions + j);
+            indices.push(i * angle_subdivisions + (j+1)%angle_subdivisions);
+            indices.push(((i+1) % x_subdivisions) * angle_subdivisions + (j+1)%angle_subdivisions);
+
+            indices.push(i * angle_subdivisions + j);
+            indices.push(((i+1) % x_subdivisions) * angle_subdivisions + (j+1)%angle_subdivisions);
+            indices.push(((i+1) % x_subdivisions) * angle_subdivisions + j);
+        }
+    }
+
+    let mesh = StaticMesh::create(indices, att!["position" => (positions, 3)])?;
+    Ok(mesh)
+}
 
 pub fn create_connected_cube() -> Result<StaticMesh, Error>
 {
