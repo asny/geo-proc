@@ -81,7 +81,7 @@ pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), p
 
 pub fn find_face_intersection(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<PrimitiveID>
 {
-    let face_vertices = mesh.face_vertices(face_id);
+    let face_vertices = mesh.ordered_face_vertices(face_id);
     let v0 = face_vertices.0;
     let v1 = face_vertices.1;
     let v2 = face_vertices.2;

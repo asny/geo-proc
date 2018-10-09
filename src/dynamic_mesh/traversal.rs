@@ -53,7 +53,7 @@ impl DynamicMesh
 
     pub fn edge_iterator(&self) -> EdgeIterator
     {
-        let set: HashSet<(VertexID, VertexID)> = HashSet::from_iter(self.halfedge_iterator().map(|halfedge_id| self.edge_vertices(&halfedge_id)));
+        let set: HashSet<(VertexID, VertexID)> = HashSet::from_iter(self.halfedge_iterator().map(|halfedge_id| self.ordered_edge_vertices(&halfedge_id)));
         Box::new(set.into_iter())
     }
 }

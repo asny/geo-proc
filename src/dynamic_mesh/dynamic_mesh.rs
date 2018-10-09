@@ -191,10 +191,29 @@ impl DynamicMesh
         let mut walker = self.walker_from_halfedge(halfedge_id);
         let v1 = walker.vertex_id().unwrap();
         let v2 = walker.twin().vertex_id().unwrap();
+        (v1, v2)
+    }
+
+    pub fn ordered_edge_vertices(&self, halfedge_id: &HalfEdgeID) -> (VertexID, VertexID)
+    {
+        let mut walker = self.walker_from_halfedge(halfedge_id);
+        let v1 = walker.vertex_id().unwrap();
+        let v2 = walker.twin().vertex_id().unwrap();
         if v1 < v2 { (v1, v2) } else { (v2, v1) }
     }
 
     pub fn face_vertices(&self, face_id: &FaceID) -> (VertexID, VertexID, VertexID)
+    {
+        let mut walker = self.walker_from_face(face_id);
+        let v1 = walker.vertex_id().unwrap();
+        walker.next();
+        let v2 = walker.vertex_id().unwrap();
+        walker.next();
+        let v3 = walker.vertex_id().unwrap();
+        (v1, v2, v3)
+    }
+
+    pub fn ordered_face_vertices(&self, face_id: &FaceID) -> (VertexID, VertexID, VertexID)
     {
         let mut walker = self.walker_from_face(face_id);
         let v1 = walker.vertex_id().unwrap();
@@ -329,13 +348,13 @@ impl DynamicMesh
 
     pub fn edge_positions(&self, halfedge_id: &HalfEdgeID) -> (&Vec3, &Vec3)
     {
-        let vertices = self.edge_vertices(halfedge_id);
+        let vertices = self.ordered_edge_vertices(halfedge_id);
         (self.position(&vertices.0), self.position(&vertices.1))
     }
 
     pub fn face_positions(&self, face_id: &FaceID) -> (&Vec3, &Vec3, &Vec3)
     {
-        let vertices = self.face_vertices(face_id);
+        let vertices = self.ordered_face_vertices(face_id);
         (self.position(&vertices.0), self.position(&vertices.1), self.position(&vertices.2))
     }
 

@@ -28,7 +28,7 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 
 fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
 {
-    let vertices = mesh1.edge_vertices(halfedge_id);
+    let vertices = mesh1.ordered_edge_vertices(halfedge_id);
     if let Some(vertex_id1) = seam.get(&vertices.0) {
         if let Some(vertex_id2) = seam.get(&vertices.1) {
             return mesh2.connecting_edge(vertex_id1, vertex_id2).is_some()
@@ -68,7 +68,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                     let vertex_id = mesh1.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits1, mesh1, face_id.clone(), &vertex_id);
                     for walker in mesh1.vertex_halfedge_iterator(&vertex_id) {
-                        new_edges1.push(mesh1.edge_vertices(&walker.halfedge_id().unwrap()));
+                        new_edges1.push(mesh1.ordered_edge_vertices(&walker.halfedge_id().unwrap()));
                     }
                     new_intersections.insert((PrimitiveID::Vertex(vertex_id), id2.clone()), *point);
                 }
@@ -83,7 +83,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                     let vertex_id = mesh2.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits2, mesh2, face_id.clone(), &vertex_id);
                     for walker in mesh2.vertex_halfedge_iterator(&vertex_id) {
-                        new_edges2.push(mesh2.edge_vertices(&walker.halfedge_id().unwrap()));
+                        new_edges2.push(mesh2.ordered_edge_vertices(&walker.halfedge_id().unwrap()));
                     }
                     new_intersections.insert((id1.clone(), PrimitiveID::Vertex(vertex_id)), *point);
                 }
@@ -112,7 +112,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                             let vid = walker.vertex_id().unwrap();
                             if vid != split_edge.0 && vid != split_edge.1
                             {
-                                new_edges1.push(mesh1.edge_vertices(&walker.halfedge_id().unwrap()));
+                                new_edges1.push(mesh1.ordered_edge_vertices(&walker.halfedge_id().unwrap()));
                             }
                         }
                         vertex_id
@@ -135,7 +135,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                             let vid = walker.vertex_id().unwrap();
                             if vid != split_edge.0 && vid != split_edge.1
                             {
-                                new_edges2.push(mesh2.edge_vertices(&walker.halfedge_id().unwrap()));
+                                new_edges2.push(mesh2.ordered_edge_vertices(&walker.halfedge_id().unwrap()));
                             }
                         }
                         vertex_id
