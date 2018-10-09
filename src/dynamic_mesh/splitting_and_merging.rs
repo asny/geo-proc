@@ -202,4 +202,27 @@ mod tests {
         assert_eq!(stitched.no_vertices(), 4);
         stitched.test_is_valid().unwrap();
     }
+
+    #[test]
+    fn test_splitting()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
+        let mesh = DynamicMesh::create(indices, positions, None);
+
+        let mut id = None;
+        for halfedge_id in mesh.halfedge_iterator() {
+            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+            if walker.face_id().is_some() && walker.twin().face_id().is_some()
+            {
+                id = Some(halfedge_id);
+            }
+        }
+
+        let (m1, m2) = mesh.split(&|mesh, he_id| {Some(*he_id) == id});
+        
+        mesh.test_is_valid();
+        m1.test_is_valid();
+        m2.test_is_valid();
+    }
 }
