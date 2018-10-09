@@ -221,8 +221,8 @@ mod tests {
 
         let (m1, m2) = mesh.split(&|mesh, he_id| {Some(*he_id) == id});
         
-        mesh.test_is_valid();
-        m1.test_is_valid();
-        m2.test_is_valid();
+        mesh.test_is_valid().unwrap();
+        m1.test_is_valid().unwrap();
+        m2.test_is_valid().unwrap();
     }
 }
