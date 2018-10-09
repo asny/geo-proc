@@ -82,6 +82,25 @@ impl DynamicMesh
 
     pub fn merge_with(&mut self, other: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>)
     {
+        // Remove halfedges where the meshes should be stitched
+        let mut halfedges_to_remove = HashSet::new();
+        for (other_vertex_id1, self_vertex_id1) in stitches {
+            for (other_vertex_id2, self_vertex_id2) in stitches {
+                if let Some(mut self_halfedge_id) = self.connecting_edge(&self_vertex_id1, &self_vertex_id2)
+                {
+                    let mut walker = self.walker_from_halfedge(&self_halfedge_id);
+                    if walker.face_id().is_some() { walker.twin(); }
+                    if walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
+
+                    halfedges_to_remove.insert(walker.halfedge_id().unwrap());
+                }
+            }
+        }
+
+        for halfedge_id in halfedges_to_remove {
+            self.connectivity_info.remove_halfedge(&halfedge_id);
+        }
+
         let mut mapping = stitches.clone();
         let mut get_or_create_vertex = |mesh: &mut DynamicMesh, vertex_id| -> VertexID {
             if let Some(vid) = mapping.get(&vertex_id) {return vid.clone();}
@@ -92,46 +111,8 @@ impl DynamicMesh
             vid
         };
 
-        let stitch_edge = |mesh: &mut DynamicMesh, halfedge_id|
-        {
-            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
-            if walker.face_id().is_some() { walker.twin(); }
-            if walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
-
-            mesh.connectivity_info.remove_halfedge(&walker.halfedge_id().unwrap());
-        };
-
         for face_id in other.face_iterator() {
-
             let vertex_ids = other.face_vertices(&face_id);
-
-            if let Some(self_vertex_id0) = stitches.get(&vertex_ids.0)
-            {
-                if let Some(self_vertex_id1) = stitches.get(&vertex_ids.1)
-                {
-                    if let Some(halfedge_id) = self.find_edge(&self_vertex_id0, &self_vertex_id1)
-                    {
-                        stitch_edge(self, halfedge_id);
-                    }
-                }
-                if let Some(self_vertex_id2) = stitches.get(&vertex_ids.2)
-                {
-                    if let Some(halfedge_id) = self.find_edge(&self_vertex_id0, &self_vertex_id2)
-                    {
-                        stitch_edge(self, halfedge_id);
-                    }
-                }
-            }
-            if let Some(self_vertex_id1) = stitches.get(&vertex_ids.1)
-            {
-                if let Some(self_vertex_id2) = stitches.get(&vertex_ids.2)
-                {
-                    if let Some(halfedge_id) = self.find_edge(&self_vertex_id1, &self_vertex_id2)
-                    {
-                        stitch_edge(self, halfedge_id);
-                    }
-                }
-            }
 
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
             let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);

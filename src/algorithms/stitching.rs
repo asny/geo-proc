@@ -486,7 +486,7 @@ mod tests {
         for vertex_id in mesh2.vertex_iterator() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
-        let stitches = split_meshes(&mut mesh1, &mut mesh2);
+        split_meshes(&mut mesh1, &mut mesh2);
 
         mesh1.test_is_valid().unwrap();
         mesh2.test_is_valid().unwrap();
