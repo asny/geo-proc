@@ -90,32 +90,38 @@ impl DynamicMesh
         for face_id in other.face_iterator() {
 
             let vertex_ids = other.face_vertices(&face_id);
+
+            if let Some(self_vertex_id0) = stitches.get(&vertex_ids.0)
+            {
+                if let Some(self_vertex_id1) = stitches.get(&vertex_ids.1)
+                {
+                    if let Some(halfedge_id) = self.find_edge(&self_vertex_id0, &self_vertex_id1)
+                    {
+                        stitch_edge(self, halfedge_id);
+                    }
+                }
+                if let Some(self_vertex_id2) = stitches.get(&vertex_ids.2)
+                {
+                    if let Some(halfedge_id) = self.find_edge(&self_vertex_id0, &self_vertex_id2)
+                    {
+                        stitch_edge(self, halfedge_id);
+                    }
+                }
+            }
+            if let Some(self_vertex_id1) = stitches.get(&vertex_ids.1)
+            {
+                if let Some(self_vertex_id2) = stitches.get(&vertex_ids.2)
+                {
+                    if let Some(halfedge_id) = self.find_edge(&self_vertex_id1, &self_vertex_id2)
+                    {
+                        stitch_edge(self, halfedge_id);
+                    }
+                }
+            }
+
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
             let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);
             let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
-
-            if stitches.contains_key(&vertex_ids.0) && stitches.contains_key(&vertex_ids.1)
-            {
-                if let Some(halfedge_id) = self.find_edge(&vertex_id0, &vertex_id1)
-                {
-                    stitch_edge(self, halfedge_id);
-                }
-            }
-            if stitches.contains_key(&vertex_ids.1) && stitches.contains_key(&vertex_ids.2)
-            {
-                if let Some(halfedge_id) = self.find_edge(&vertex_id1, &vertex_id2)
-                {
-                    stitch_edge(self, halfedge_id);
-                }
-            }
-            if stitches.contains_key(&vertex_ids.2) && stitches.contains_key(&vertex_ids.0)
-            {
-                if let Some(halfedge_id) = self.find_edge(&vertex_id2, &vertex_id0)
-                {
-                    stitch_edge(self, halfedge_id);
-                }
-            }
-
             self.connectivity_info.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
         }
 
