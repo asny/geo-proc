@@ -34,6 +34,30 @@ pub fn create_cylinder() -> Result<StaticMesh, Error>
     Ok(mesh)
 }
 
+pub fn create_plane() -> Result<StaticMesh, Error>
+{
+    let positions: Vec<f32> = vec![
+        -1.0, 0.0, -1.0,
+        1.0, 0.0, -1.0,
+        1.0, 0.0, 1.0,
+        -1.0, 0.0, 1.0
+    ];
+    let normals: Vec<f32> = vec![
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 0.0
+    ];
+
+    let indices: Vec<u32> = vec![
+        0, 1, 2,
+        0, 2, 3,
+    ];
+
+    let mesh = StaticMesh::create(indices, att!["position" => (positions, 3), "normal" => (normals, 3)])?;
+    Ok(mesh)
+}
+
 pub fn create_connected_cube() -> Result<StaticMesh, Error>
 {
     let positions: Vec<f32> = vec![
