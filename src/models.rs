@@ -50,8 +50,8 @@ pub fn create_plane() -> Result<StaticMesh, Error>
     ];
 
     let indices: Vec<u32> = vec![
-        0, 1, 2,
-        0, 2, 3,
+        0, 2, 1,
+        0, 3, 2,
     ];
 
     let mesh = StaticMesh::create(indices, att!["position" => (positions, 3), "normal" => (normals, 3)])?;
