@@ -23,6 +23,13 @@ pub fn create_icosahedron() -> Result<StaticMesh, Error>
     Ok(mesh)
 }
 
+pub fn create_sphere(subdivisions: usize) -> Result<StaticMesh, Error>
+{
+    let mesh = create_icosahedron()?;
+    // TODO: Subdivide icosahedron
+    Ok(mesh)
+}
+
 pub fn create_cylinder(x_subdivisions: usize, angle_subdivisions: usize) -> Result<StaticMesh, Error>
 {
     let mut positions = Vec::new();
