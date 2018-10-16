@@ -80,13 +80,18 @@ pub fn create_plane() -> Result<StaticMesh, Error>
         0.0, 1.0, 0.0,
         0.0, 1.0, 0.0
     ];
-
+    let uvs: Vec<f32> = vec![
+        0.0, 0.0,
+        1.0, 0.0,
+        1.0, 1.0,
+        0.0, 1.0
+    ];
     let indices: Vec<u32> = vec![
         0, 2, 1,
         0, 3, 2,
     ];
 
-    let mesh = StaticMesh::create(indices, att!["position" => (positions, 3), "normal" => (normals, 3)])?;
+    let mesh = StaticMesh::create(indices, att!["position" => (positions, 3), "normal" => (normals, 3), "uv_coordinate" => (uvs, 2)])?;
     Ok(mesh)
 }
 
