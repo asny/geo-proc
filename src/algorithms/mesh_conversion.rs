@@ -3,24 +3,30 @@ use dynamic_mesh::*;
 use static_mesh::*;
 use mesh::Renderable;
 
-pub fn static_to_dynamic(mesh: &StaticMesh) -> DynamicMesh
+impl DynamicMesh
 {
-    let indices = mesh.indices();
-    let positions = mesh.get_attribute("position").unwrap().data;
-    let normals = mesh.get_attribute("normal").map(|att| att.data);
+    pub fn to_static(&self) -> StaticMesh
+    {
+        let indices = self.indices();
+        let positions = self.get_attribute("position").unwrap().data;
 
-    DynamicMesh::create(indices, positions, normals)
+        if let Some(normals) = self.get_attribute("normal") {
+            StaticMesh::create(indices, att!["position" => (positions, 3), "normal" => (normals.data, 3)]).unwrap()
+        }
+        else {
+            StaticMesh::create(indices, att!["position" => (positions, 3)]).unwrap()
+        }
+    }
 }
 
-pub fn dynamic_to_static(mesh: &DynamicMesh) -> StaticMesh
+impl StaticMesh
 {
-    let indices = mesh.indices();
-    let positions = mesh.get_attribute("position").unwrap().data;
+    pub fn to_dynamic(&self) -> DynamicMesh
+    {
+        let indices = self.indices();
+        let positions = self.get_attribute("position").unwrap().data;
+        let normals = self.get_attribute("normal").map(|att| att.data);
 
-    if let Some(normals) = mesh.get_attribute("normal") {
-        StaticMesh::create(indices, att!["position" => (positions, 3), "normal" => (normals.data, 3)]).unwrap()
-    }
-    else {
-        StaticMesh::create(indices, att!["position" => (positions, 3)]).unwrap()
+        DynamicMesh::create(indices, positions, normals)
     }
 }
