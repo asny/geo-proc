@@ -353,6 +353,14 @@ impl DynamicMesh
         self.positions.insert(vertex_id, p);
     }
 
+    pub fn scale(&mut self, scale: f32)
+    {
+        for vertex_id in self.vertex_iterator() {
+            let p = *self.position(&vertex_id);
+            self.set_position(vertex_id, p * scale);
+        }
+    }
+
     pub fn edge_positions(&self, halfedge_id: &HalfEdgeID) -> (&Vec3, &Vec3)
     {
         let vertices = self.ordered_edge_vertices(halfedge_id);
