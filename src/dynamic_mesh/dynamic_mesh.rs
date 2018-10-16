@@ -45,12 +45,16 @@ impl Renderable for DynamicMesh
                 Some(mesh::Attribute::new("position", 3, pos))
             },
             "normal" => {
-                if self.normals.is_empty() {
+                if self.normals.len() != self.no_vertices() {
                     return None;
                 }
                 let mut nor = Vec::with_capacity(self.no_vertices() * 3);
-                for v3 in self.vertex_iterator().map(|ref vertex_id| self.normals.get(vertex_id).unwrap()) {
-                    nor.push(v3.x); nor.push(v3.y); nor.push(v3.z);
+                for vertex_id in self.vertex_iterator() {
+                    if let Some(normal) = self.normals.get(&vertex_id)
+                    {
+                        nor.push(normal.x); nor.push(normal.y); nor.push(normal.z);
+                    }
+                    else { return None; }
                 }
                 Some(mesh::Attribute::new("normal", 3, nor))
             },
