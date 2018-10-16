@@ -122,37 +122,6 @@ pub fn create_cube() -> Result<StaticMesh, Error>
     Ok(mesh)
 }
 
-pub fn create_cube_as_dynamic_mesh() -> Result<DynamicMesh, Error>
-{
-    let positions: Vec<f32> = vec![
-        1.0, -1.0, -1.0,
-        1.0, -1.0, 1.0,
-        -1.0, -1.0, 1.0,
-        -1.0, -1.0, -1.0,
-        1.0, 1.0, -1.0,
-        1.0, 1.0, 1.0,
-        -1.0, 1.0, 1.0,
-        -1.0, 1.0, -1.0
-    ];
-
-    let indices: Vec<u32> = vec![
-        0, 1, 2,
-        0, 2, 3,
-        4, 7, 6,
-        4, 6, 5,
-        0, 4, 5,
-        0, 5, 1,
-        1, 5, 6,
-        1, 6, 2,
-        2, 6, 7,
-        2, 7, 3,
-        4, 0, 3,
-        4, 3, 7
-    ];
-
-    Ok(DynamicMesh::create(indices, positions, None))
-}
-
 pub fn create_unconnected_cube() -> Result<StaticMesh, Error>
 {
     let positions: Vec<f32> = vec![

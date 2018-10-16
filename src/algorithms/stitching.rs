@@ -481,8 +481,8 @@ mod tests {
     #[test]
     fn test_box_box_splitting()
     {
-        let mut mesh1 = ::models::create_cube_as_dynamic_mesh().unwrap();
-        let mut mesh2 = ::models::create_cube_as_dynamic_mesh().unwrap();
+        let mut mesh1 = ::models::create_cube().unwrap().to_dynamic();
+        let mut mesh2 = ::models::create_cube().unwrap().to_dynamic();
         for vertex_id in mesh2.vertex_iterator() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -537,8 +537,8 @@ mod tests {
     #[test]
     fn test_box_box_stitching()
     {
-        let mut mesh1 = ::models::create_cube_as_dynamic_mesh().unwrap();
-        let mut mesh2 = ::models::create_cube_as_dynamic_mesh().unwrap();
+        let mut mesh1 = ::models::create_cube().unwrap().to_dynamic();
+        let mut mesh2 = ::models::create_cube().unwrap().to_dynamic();
         for vertex_id in mesh2.vertex_iterator() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
