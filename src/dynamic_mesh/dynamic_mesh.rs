@@ -421,6 +421,18 @@ impl DynamicMesh
         v0.cross(&v1).norm()
     }
 
+    pub fn center(&self, face_id: &FaceID) -> Vec3
+    {
+        let mut walker = self.walker_from_face(face_id);
+        let p0 = *self.position(&walker.vertex_id().unwrap());
+        walker.next();
+        let p1 = *self.position(&walker.vertex_id().unwrap());
+        walker.next();
+        let p2 = *self.position(&walker.vertex_id().unwrap());
+
+        (p0 + p1 + p2)/3.0
+    }
+
     ///////////////////////////////////////////////////
     // *** Internal connectivity changing functions ***
     ///////////////////////////////////////////////////
