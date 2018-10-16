@@ -46,7 +46,7 @@ impl Renderable for DynamicMesh
             },
             "normal" => {
                 if self.normals.is_empty() {
-                    panic!("Normals are not computed");
+                    return None;
                 }
                 let mut nor = Vec::with_capacity(self.no_vertices() * 3);
                 for v3 in self.vertex_iterator().map(|ref vertex_id| self.normals.get(vertex_id).unwrap()) {
