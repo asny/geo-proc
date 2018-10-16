@@ -361,6 +361,13 @@ impl DynamicMesh
         }
     }
 
+    pub fn translate(&mut self, translation: &Vec3)
+    {
+        for vertex_id in self.vertex_iterator() {
+            self.move_vertex(vertex_id, *translation);
+        }
+    }
+
     pub fn edge_positions(&self, halfedge_id: &HalfEdgeID) -> (&Vec3, &Vec3)
     {
         let vertices = self.ordered_edge_vertices(halfedge_id);
