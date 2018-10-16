@@ -26,8 +26,14 @@ pub fn create_icosahedron() -> Result<StaticMesh, Error>
 pub fn create_sphere(subdivisions: usize) -> Result<StaticMesh, Error>
 {
     let mesh = create_icosahedron()?;
-    // TODO: Subdivide icosahedron
-    Ok(mesh)
+    let mut dyn_mesh = mesh.to_dynamic();
+    for _ in 0..subdivisions {
+        for face_id in dyn_mesh.face_iterator() {
+            let p = dyn_mesh.center(&face_id).normalize();
+            let vid = dyn_mesh.split_face(&face_id, p);
+        }
+    }
+    Ok(dyn_mesh.to_static())
 }
 
 pub fn create_cylinder(x_subdivisions: usize, angle_subdivisions: usize) -> Result<StaticMesh, Error>
