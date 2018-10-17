@@ -5,6 +5,7 @@ pub mod dynamic_mesh;
 pub mod splitting_and_merging;
 pub mod connectivity;
 pub mod basic_operations;
+pub mod quality;
 
 mod connectivity_info;
 
