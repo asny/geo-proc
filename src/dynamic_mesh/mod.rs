@@ -4,6 +4,7 @@ pub mod traversal;
 pub mod dynamic_mesh;
 pub mod splitting_and_merging;
 pub mod connectivity;
+pub mod basic_operations;
 
 mod connectivity_info;
 
