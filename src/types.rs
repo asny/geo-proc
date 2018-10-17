@@ -1,10 +1,12 @@
 
-use na::{Vector2, Vector3, Vector4, Matrix4};
+use na::{Vector2, Vector3, Vector4, Matrix2, Matrix3, Matrix4};
 pub use na::Unit;
 
 pub type Vec2 = Vector2<f32>;
 pub type Vec3 = Vector3<f32>;
 pub type Vec4 = Vector4<f32>;
+pub type Mat2 = Matrix2<f32>;
+pub type Mat3 = Matrix3<f32>;
 pub type Mat4 = Matrix4<f32>;
 
 pub fn vec2(x: f32, y: f32) -> Vec2
