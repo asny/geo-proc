@@ -302,15 +302,6 @@ mod tests {
     }
 
     #[test]
-    fn test_face_normal() {
-        let mesh = create_single_face();
-        let computed_normal = mesh.compute_face_normal(&FaceID::new(0));
-        assert_eq!(0.0, computed_normal.x);
-        assert_eq!(1.0, computed_normal.y);
-        assert_eq!(0.0, computed_normal.z);
-    }
-
-    #[test]
     fn test_vertex_normal() {
         let mesh = create_three_connected_faces();
         let computed_normal = mesh.compute_vertex_normal(&VertexID::new(0));

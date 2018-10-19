@@ -41,3 +41,20 @@ impl DynamicMesh
         (p0 + p1 + p2)/3.0
     }
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dynamic_mesh::test_utility::*;
+    
+    #[test]
+    fn test_face_normal() {
+        let mesh = create_single_face();
+        let computed_normal = mesh.compute_face_normal(&FaceID::new(0));
+        assert_eq!(0.0, computed_normal.x);
+        assert_eq!(1.0, computed_normal.y);
+        assert_eq!(0.0, computed_normal.z);
+    }
+}
