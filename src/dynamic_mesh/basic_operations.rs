@@ -58,6 +58,7 @@ mod tests {
     #[test]
     fn test_flip_edge()
     {
+        let mut no_flips = 0;
         let mut mesh = ::models::create_plane().unwrap().to_dynamic();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iterator() {
@@ -80,14 +81,17 @@ mod tests {
                 let twin = mesh.walker_from_halfedge(&edge).twin_id().unwrap();
                 assert!(edge == halfedge_id || twin == halfedge_id,
                         format!("Flipped edge {} or flipped edge twin {} should be equal to before flipped edge id {}", edge, twin, halfedge_id));
+                no_flips = no_flips + 1;
             }
         }
         assert_eq!(no_edges, mesh.no_halfedges());
+        assert_eq!(no_flips, 2);
     }
 
     #[test]
     fn test_flip_multiple_edges()
     {
+        let mut no_flips = 0;
         let mut mesh = ::models::create_icosahedron().unwrap().to_dynamic();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iterator() {
@@ -110,8 +114,10 @@ mod tests {
                 let twin = mesh.walker_from_halfedge(&edge).twin_id().unwrap();
                 assert!(edge == halfedge_id || twin == halfedge_id,
                         format!("Flipped edge {} or flipped edge twin {} should be equal to before flipped edge id {}", edge, twin, halfedge_id));
+                no_flips = no_flips + 1;
             }
         }
         assert_eq!(no_edges, mesh.no_halfedges());
+        assert!(no_flips > 0);
     }
 }
