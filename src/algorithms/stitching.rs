@@ -244,7 +244,7 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::internal::*;
+    use dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_finding_edge_edge_intersections()

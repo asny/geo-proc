@@ -175,7 +175,7 @@ impl DynamicMesh
 
 #[cfg(test)]
 mod tests {
-    use dynamic_mesh::internal::*;
+    use dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_flip_edge()

@@ -255,7 +255,9 @@ impl Walker
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::internal::*;#[test]
+    use dynamic_mesh::test_utility::*;
+
+    #[test]
     fn test_vertex_iterator() {
         let mesh = create_three_connected_faces();
 

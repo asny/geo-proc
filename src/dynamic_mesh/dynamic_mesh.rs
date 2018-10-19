@@ -247,7 +247,7 @@ impl DynamicMesh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::internal::*;
+    use dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_one_face_connectivity() {
