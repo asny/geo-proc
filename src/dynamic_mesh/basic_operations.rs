@@ -1,5 +1,5 @@
-
 use dynamic_mesh::*;
+use types::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -137,6 +137,38 @@ impl DynamicMesh
             }
         }
         new_vertex_id
+    }
+
+    fn split_one_face(&mut self, halfedge_id: &HalfEdgeID, twin_halfedge_id: HalfEdgeID, new_vertex_id: VertexID)
+    {
+        let mut walker = self.walker_from_halfedge(halfedge_id);
+        let vertex_id1 = walker.vertex_id().unwrap();
+
+        walker.next();
+        let vertex_id2 = walker.vertex_id().unwrap();
+        let halfedge_to_update1 = walker.twin_id().unwrap();
+        let halfedge_to_update2 = walker.halfedge_id().unwrap();
+
+        self.connectivity_info.set_halfedge_vertex(halfedge_id, new_vertex_id);
+        let new_face_id = self.connectivity_info.create_face(&vertex_id1, &vertex_id2, &new_vertex_id);
+
+        // Update twin information
+        for walker in self.face_halfedge_iterator(&new_face_id) {
+            let vid = walker.vertex_id().unwrap();
+            let hid = walker.halfedge_id().unwrap();
+            if vid == vertex_id1 {
+                self.connectivity_info.set_halfedge_twin(twin_halfedge_id, hid);
+            }
+            else if vid == vertex_id2 {
+                self.connectivity_info.set_halfedge_twin(halfedge_to_update1, hid);
+            }
+            else if vid == new_vertex_id {
+                self.connectivity_info.set_halfedge_twin(halfedge_to_update2, hid);
+            }
+            else {
+                panic!("Split one face failed")
+            }
+        }
     }
 }
 
