@@ -25,4 +25,10 @@ impl DynamicMesh
         }
         None
     }
+
+    pub fn on_boundary(&self, halfedge_id: &HalfEdgeID) -> bool
+    {
+        let mut walker = self.walker_from_halfedge(halfedge_id);
+        walker.face_id().is_none() || walker.twin().face_id().is_none()
+    }
 }

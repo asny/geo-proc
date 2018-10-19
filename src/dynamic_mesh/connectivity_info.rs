@@ -213,6 +213,11 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().vertex = Some(val);
     }
 
+    pub fn set_halfedge_face(&self, id: &HalfEdgeID, val: FaceID)
+    {
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().face = Some(val);
+    }
+
     pub fn set_face_halfedge(&self, id: &FaceID, val: HalfEdgeID)
     {
         RefCell::borrow_mut(&self.faces).get_mut(id).unwrap().halfedge = Some(val);
