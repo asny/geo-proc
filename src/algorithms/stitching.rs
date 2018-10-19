@@ -377,7 +377,7 @@ mod tests {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
         let mut mesh1 = DynamicMesh::create(indices1, positions1, None);
-        let area1 = mesh1.area(&mesh1.face_iterator().next().unwrap());
+        let area1 = mesh1.face_area(&mesh1.face_iterator().next().unwrap());
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
@@ -396,7 +396,7 @@ mod tests {
 
         let mut area_test1 = 0.0;
         for face_id in mesh1.face_iterator() {
-            area_test1 = area_test1 + mesh1.area(&face_id);
+            area_test1 = area_test1 + mesh1.face_area(&face_id);
         }
         assert!((area1 - area_test1).abs() < 0.001);
 

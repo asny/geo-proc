@@ -3,7 +3,7 @@ use types::*;
 
 impl DynamicMesh
 {
-    pub fn compute_face_normal(&self, face_id: &FaceID) -> Vec3
+    pub fn face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
@@ -17,7 +17,7 @@ impl DynamicMesh
         dir
     }
 
-    pub fn area(&self, face_id: &FaceID) -> f32
+    pub fn face_area(&self, face_id: &FaceID) -> f32
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
@@ -29,7 +29,7 @@ impl DynamicMesh
         v0.cross(&v1).norm()
     }
 
-    pub fn center(&self, face_id: &FaceID) -> Vec3
+    pub fn face_center(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
@@ -48,11 +48,11 @@ impl DynamicMesh
 mod tests {
     use super::*;
     use dynamic_mesh::test_utility::*;
-    
+
     #[test]
     fn test_face_normal() {
         let mesh = create_single_face();
-        let computed_normal = mesh.compute_face_normal(&FaceID::new(0));
+        let computed_normal = mesh.face_normal(&FaceID::new(0));
         assert_eq!(0.0, computed_normal.x);
         assert_eq!(1.0, computed_normal.y);
         assert_eq!(0.0, computed_normal.z);

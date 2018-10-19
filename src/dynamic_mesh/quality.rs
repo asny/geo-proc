@@ -43,7 +43,7 @@ impl DynamicMesh
         let mut walker = self.walker_from_halfedge(haledge_id);
         let face_id1 = walker.face_id().unwrap();
         let face_id2 = walker.twin().face_id().unwrap();
-        self.compute_face_normal(&face_id1).dot(&self.compute_face_normal(&face_id2))
+        self.face_normal(&face_id1).dot(&self.face_normal(&face_id2))
     }
 
     fn flip_will_improve_quality(&self, haledge_id: &HalfEdgeID) -> bool

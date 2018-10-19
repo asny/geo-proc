@@ -181,7 +181,7 @@ impl DynamicMesh
         let mut normal = vec3(0.0, 0.0, 0.0);
         for walker in self.vertex_halfedge_iterator(&vertex_id) {
             if let Some(face_id) = walker.face_id() {
-                normal = normal + self.compute_face_normal(&face_id)
+                normal = normal + self.face_normal(&face_id)
             }
         }
         normal.normalize_mut();

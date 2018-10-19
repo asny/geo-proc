@@ -22,7 +22,7 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     let p1 = mesh2.position(&edge.1);
 
     let p = mesh1.position(&mesh1.walker_from_face(face_id).vertex_id().unwrap());
-    let n = mesh1.compute_face_normal(face_id);
+    let n = mesh1.face_normal(face_id);
 
     match plane_line_piece_intersection(&p0, &p1, p, &n) {
         Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
