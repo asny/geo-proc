@@ -8,6 +8,7 @@ pub mod basic_operations;
 pub mod quality;
 pub mod face_measures;
 
+pub(super) mod internal;
 mod connectivity_info;
 
 pub use dynamic_mesh::dynamic_mesh::*;

@@ -137,6 +137,7 @@ pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<Vertex
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dynamic_mesh::internal::*;
 
     #[test]
     fn test_face_face_merging_at_edge()
@@ -160,12 +161,12 @@ mod tests {
 
         let stitched = merge(&mesh1, &mesh2, &mapping);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
 
         assert_eq!(stitched.no_faces(), 2);
         assert_eq!(stitched.no_vertices(), 4);
-        stitched.test_is_valid().unwrap();
+        test_is_valid(&stitched).unwrap();
     }
 
     #[test]
@@ -190,12 +191,12 @@ mod tests {
 
         let stitched = merge(&mesh1, &mesh2, &mapping);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
 
         assert_eq!(stitched.no_faces(), 2);
         assert_eq!(stitched.no_vertices(), 4);
-        stitched.test_is_valid().unwrap();
+        test_is_valid(&stitched).unwrap();
     }
 
     #[test]
@@ -213,8 +214,8 @@ mod tests {
 
         let sub_mesh = mesh.create_sub_mesh(&faces);
 
-        mesh.test_is_valid().unwrap();
-        sub_mesh.test_is_valid().unwrap();
+        test_is_valid(&mesh).unwrap();
+        test_is_valid(&sub_mesh).unwrap();
     }
 
     #[test]
@@ -235,8 +236,8 @@ mod tests {
 
         let (m1, m2) = mesh.split(&|mesh, he_id| {Some(*he_id) == id});
         
-        mesh.test_is_valid().unwrap();
-        m1.test_is_valid().unwrap();
-        m2.test_is_valid().unwrap();
+        test_is_valid(&mesh).unwrap();
+        test_is_valid(&m1).unwrap();
+        test_is_valid(&m2).unwrap();
     }
 }

@@ -6,7 +6,7 @@ impl DynamicMesh
 {
     pub fn flip_edges(&mut self, flatness_threshold: f32)
     {
-        let mut insert_or_remove = |mesh: &DynamicMesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
+        let insert_or_remove = |mesh: &DynamicMesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
             let twin_id = mesh.walker_from_halfedge(&halfedge_id).twin_id().unwrap();
             let id = if halfedge_id < twin_id {halfedge_id} else {twin_id};
             if mesh.should_flip(&id, flatness_threshold) { to_be_flipped.insert(id); } else { to_be_flipped.remove(&id); }

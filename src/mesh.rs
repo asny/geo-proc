@@ -6,8 +6,7 @@ pub enum Error {
     FailedToFindCustomAttribute {message: String},
     FailedToFindEntryForVertexID {message: String},
     WrongSizeOfAttribute {message: String},
-    NeedPositionAttributeToCreateMesh {message: String},
-    IsNotValid {message: String}
+    NeedPositionAttributeToCreateMesh {message: String}
 }
 
 #[derive(Clone, Debug)]

@@ -175,6 +175,8 @@ impl DynamicMesh
 
 #[cfg(test)]
 mod tests {
+    use dynamic_mesh::internal::*;
+
     #[test]
     fn test_flip_edge()
     {
@@ -186,7 +188,7 @@ mod tests {
 
             if mesh.flip_edge(&halfedge_id).is_ok()
             {
-                mesh.test_is_valid().unwrap();
+                test_is_valid(&mesh).unwrap();
 
                 let (v2, v3) = mesh.edge_vertices(&halfedge_id);
                 assert_ne!(v0, v2);
@@ -219,7 +221,7 @@ mod tests {
 
             if mesh.flip_edge(&halfedge_id).is_ok()
             {
-                mesh.test_is_valid().unwrap();
+                test_is_valid(&mesh).unwrap();
 
                 let (v2, v3) = mesh.edge_vertices(&halfedge_id);
                 assert_ne!(v0, v2);

@@ -244,6 +244,7 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dynamic_mesh::internal::*;
 
     #[test]
     fn test_finding_edge_edge_intersections()
@@ -336,8 +337,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 8);
         assert_eq!(new_edges2.len(), 8);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
     }
 
     #[test]
@@ -365,8 +366,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 19);
         assert_eq!(new_edges2.len(), 19);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
 
     }
 
@@ -407,8 +408,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 6);
         assert_eq!(new_edges2.len(), 2);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
     }
 
     #[test]
@@ -441,8 +442,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 2);
         assert_eq!(new_edges2.len(), 2);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
     }
 
     #[test]
@@ -460,8 +461,8 @@ mod tests {
 
         assert_eq!(stitches.len(), 2);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
     }
 
     #[test]
@@ -474,8 +475,8 @@ mod tests {
 
         assert_eq!(stitches.len(), 8);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
     }
 
     #[test]
@@ -488,8 +489,8 @@ mod tests {
         }
         split_meshes(&mut mesh1, &mut mesh2);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
     }
 
     #[test]
@@ -505,12 +506,12 @@ mod tests {
 
         let stitched = stitch(&mut mesh1, &mut mesh2);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
 
         assert_eq!(stitched.no_faces(), 2);
         assert_eq!(stitched.no_vertices(), 4);
-        stitched.test_is_valid().unwrap();
+        test_is_valid(&stitched).unwrap();
     }
 
     #[test]
@@ -526,12 +527,12 @@ mod tests {
 
         let stitched = stitch(&mut mesh1, &mut mesh2);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
 
         assert_eq!(stitched.no_faces(), 4);
         assert_eq!(stitched.no_vertices(), 6);
-        stitched.test_is_valid().unwrap();
+        test_is_valid(&stitched).unwrap();
     }
 
     #[test]
@@ -544,10 +545,10 @@ mod tests {
         }
         let stitched = stitch(&mut mesh1, &mut mesh2);
 
-        mesh1.test_is_valid().unwrap();
-        mesh2.test_is_valid().unwrap();
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
 
-        stitched.test_is_valid().unwrap();
+        test_is_valid(&stitched).unwrap();
     }
 
     fn create_simple_mesh_x_z() -> DynamicMesh
