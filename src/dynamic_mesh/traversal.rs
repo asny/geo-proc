@@ -252,3 +252,103 @@ impl Walker
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dynamic_mesh::internal::*;#[test]
+    fn test_vertex_iterator() {
+        let mesh = create_three_connected_faces();
+
+        let mut i = 0;
+        for _ in mesh.vertex_iterator() {
+            i = i+1;
+        }
+        assert_eq!(4, i);
+
+        // Test that two iterations return the same result
+        let vec: Vec<VertexID> = mesh.vertex_iterator().collect();
+        i = 0;
+        for vertex_id in mesh.vertex_iterator() {
+            assert_eq!(vertex_id, vec[i]);
+            i = i+1;
+        }
+    }
+
+    #[test]
+    fn test_halfedge_iterator() {
+        let mesh = create_three_connected_faces();
+
+        let mut i = 0;
+        for _ in mesh.halfedge_iterator() {
+            i = i+1;
+        }
+        assert_eq!(12, i);
+
+        // Test that two iterations return the same result
+        let vec: Vec<HalfEdgeID> = mesh.halfedge_iterator().collect();
+        i = 0;
+        for halfedge_id in mesh.halfedge_iterator() {
+            assert_eq!(halfedge_id, vec[i]);
+            i = i+1;
+        }
+    }
+
+    #[test]
+    fn test_face_iterator() {
+        let mesh = create_three_connected_faces();
+
+        let mut i = 0;
+        for _ in mesh.face_iterator() {
+            i = i+1;
+        }
+        assert_eq!(3, i);
+
+        // Test that two iterations return the same result
+        let vec: Vec<FaceID> = mesh.face_iterator().collect();
+        i = 0;
+        for face_id in mesh.face_iterator() {
+            assert_eq!(face_id, vec[i]);
+            i = i+1;
+        }
+    }
+
+    #[test]
+    fn test_vertex_halfedge_iterator() {
+        let mesh = create_three_connected_faces();
+
+        let mut i = 0;
+        let vertex_id = mesh.vertex_iterator().last().unwrap();
+        for edge in mesh.vertex_halfedge_iterator(&vertex_id) {
+            assert!(edge.vertex_id().is_some());
+            i = i + 1;
+        }
+        assert_eq!(i, 3, "All edges of a one-ring are not visited");
+    }
+
+    #[test]
+    fn test_vertex_halfedge_iterator_with_holes() {
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
+        let positions: Vec<f32> = vec![0.0; 5 * 3];
+        let mesh = DynamicMesh::create(indices, positions, None);
+
+        let mut i = 0;
+        for edge in mesh.vertex_halfedge_iterator(&VertexID::new(0)) {
+            assert!(edge.vertex_id().is_some());
+            i = i+1;
+        }
+        assert_eq!(i,4, "All edges of a one-ring are not visited");
+
+    }
+
+    #[test]
+    fn test_face_halfedge_iterator() {
+        let mesh = create_single_face();
+        let mut i = 0;
+        for mut edge in mesh.face_halfedge_iterator(&FaceID::new(0)) {
+            assert!(edge.halfedge_id().is_some());
+            assert!(edge.face_id().is_some());
+            i = i+1;
+        }
+        assert_eq!(i, 3, "All edges of a face are not visited");
+    }
+}

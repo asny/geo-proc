@@ -110,3 +110,24 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
     }
     Ok(())
 }
+
+pub fn create_single_face() -> DynamicMesh
+{
+    let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
+    DynamicMesh::create((0..3).collect(), positions, None)
+}
+
+pub fn create_two_connected_faces() -> DynamicMesh
+{
+    let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
+    let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
+    DynamicMesh::create(indices, positions, None)
+}
+
+pub fn create_three_connected_faces() -> DynamicMesh
+{
+    let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
+    let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
+    let normals: Vec<f32> = vec![0.0; 4 * 3];
+    DynamicMesh::create(indices, positions, Some(normals))
+}
