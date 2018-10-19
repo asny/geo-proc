@@ -6,13 +6,16 @@ impl DynamicMesh
 {
     pub fn flip_edges(&mut self)
     {
+        let mut insert_or_remove = |mesh: &DynamicMesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
+            let twin_id = mesh.walker_from_halfedge(&halfedge_id).twin_id().unwrap();
+            let id = if halfedge_id < twin_id {halfedge_id} else {twin_id};
+            if mesh.should_flip(&id) { to_be_flipped.insert(id); } else { to_be_flipped.remove(&id); }
+        };
+
         let mut to_be_flipped = HashSet::new();
         for halfedge_id in self.halfedge_iterator()
         {
-            if self.should_flip(&halfedge_id)
-            {
-                to_be_flipped.insert(halfedge_id);
-            }
+            insert_or_remove(&self,&mut to_be_flipped, halfedge_id);
         }
 
         while to_be_flipped.len() > 0
@@ -22,25 +25,17 @@ impl DynamicMesh
 
             if self.flip_edge(&halfedge_id).is_ok() {
                 let mut walker = self.walker_from_halfedge(&halfedge_id);
-                let mut id = walker.next().halfedge_id().unwrap();
-                if self.should_flip(&id) { to_be_flipped.insert(id.clone()); } else { to_be_flipped.remove(&id); }
-
-                id = walker.next().halfedge_id().unwrap();
-                if self.should_flip(&id) { to_be_flipped.insert(id.clone()); } else { to_be_flipped.remove(&id); }
-
-                id = walker.next().twin().next().halfedge_id().unwrap();
-                if self.should_flip(&id) { to_be_flipped.insert(id.clone()); } else { to_be_flipped.remove(&id); }
-
-                id = walker.next().halfedge_id().unwrap();
-                if self.should_flip(&id) { to_be_flipped.insert(id.clone()); } else { to_be_flipped.remove(&id); }
+                insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.next().twin().next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
             }
         }
     }
 
     fn should_flip(&self, halfedge_id: &HalfEdgeID) -> bool
     {
-        let twin_id = self.walker_from_halfedge(halfedge_id).twin_id().unwrap();
-        *halfedge_id < twin_id && !self.on_boundary(halfedge_id) && self.flatness(halfedge_id) < 0.1 && self.flip_will_improve_quality(halfedge_id)
+        !self.on_boundary(halfedge_id) && self.flatness(halfedge_id) < 0.1 && self.flip_will_improve_quality(halfedge_id)
     }
 
     fn flatness(&self, haledge_id: &HalfEdgeID) -> f32
