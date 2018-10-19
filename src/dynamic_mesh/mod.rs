@@ -6,6 +6,7 @@ pub mod splitting_and_merging;
 pub mod connectivity;
 pub mod basic_operations;
 pub mod quality;
+pub mod face_measures;
 
 mod connectivity_info;
 
