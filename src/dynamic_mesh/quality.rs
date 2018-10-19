@@ -54,7 +54,7 @@ impl DynamicMesh
         let p1 = self.position(&walker.previous().twin().vertex_id().unwrap());
         let p3 = self.position(&walker.next().vertex_id().unwrap());
 
-        triangle_quality(p0, p1, p2) + triangle_quality(p0, p1, p3) <
+        1.1 * (triangle_quality(p0, p1, p2) + triangle_quality(p0, p1, p3)) <
             triangle_quality(p0, p2, p3) + triangle_quality(p1, p2, p3)
     }
 }
