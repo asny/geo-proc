@@ -35,12 +35,15 @@ impl DynamicMesh
 
     fn should_flip(&self, halfedge_id: &HalfEdgeID) -> bool
     {
-        !self.on_boundary(halfedge_id) && self.flatness(halfedge_id) < 0.1 && self.flip_will_improve_quality(halfedge_id)
+        !self.on_boundary(halfedge_id) && self.flatness(halfedge_id) > 0.75 && self.flip_will_improve_quality(halfedge_id)
     }
 
     fn flatness(&self, haledge_id: &HalfEdgeID) -> f32
     {
-        0.0
+        let mut walker = self.walker_from_halfedge(haledge_id);
+        let face_id1 = walker.face_id().unwrap();
+        let face_id2 = walker.twin().face_id().unwrap();
+        self.compute_face_normal(&face_id1).dot(&self.compute_face_normal(&face_id2))
     }
 
     fn flip_will_improve_quality(&self, haledge_id: &HalfEdgeID) -> bool
