@@ -120,6 +120,10 @@ impl DynamicMesh
                 if !self.halfedge_iterator().any(|he_id| he_id == halfedge_id) {
                     return Err(mesh::Error::IsNotValid {message: format!("Vertex {} points to an invalid halfedge {}", vertex_id, halfedge_id)});
                 }
+                if self.walker_from_vertex(&vertex_id).twin().vertex_id().unwrap() != vertex_id
+                {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge pointed to by vertex {} does not start in that vertex", vertex_id)});
+                }
             }
             else {
                 return Err(mesh::Error::IsNotValid {message: format!("Vertex {} does not point to a halfedge", vertex_id)});
@@ -132,6 +136,10 @@ impl DynamicMesh
             {
                 if !self.halfedge_iterator().any(|he_id| he_id == twin_id) {
                     return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to an invalid twin halfedge {}", halfedge_id, twin_id)});
+                }
+                if self.walker_from_halfedge(&twin_id).twin_id().unwrap() != halfedge_id
+                {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge twin pointed to by halfedge {} does not point back to halfedge", halfedge_id)});
                 }
             }
             else {
@@ -166,6 +174,10 @@ impl DynamicMesh
                 if walker.face_id().is_none() {
                     return Err(mesh::Error::IsNotValid {message: format!("Halfedge {} points to a next halfedge but not a face", halfedge_id)});
                 }
+                if self.walker_from_halfedge(&next_id).previous_id().unwrap() != halfedge_id
+                {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge next pointed to by halfedge {} does not point back to halfedge", halfedge_id)});
+                }
             }
         }
         for face_id in self.face_iterator() {
@@ -173,6 +185,10 @@ impl DynamicMesh
             {
                 if !self.halfedge_iterator().any(|he_id| he_id == halfedge_id) {
                     return Err(mesh::Error::IsNotValid {message: format!("Face {} points to an invalid halfedge {}", face_id, halfedge_id)});
+                }
+                if self.walker_from_face(&face_id).face_id().unwrap() != face_id
+                {
+                    return Err(mesh::Error::IsNotValid {message: format!("Halfedge pointed to by face {} does not point to back to face", face_id)});
                 }
             }
             else {
@@ -187,6 +203,15 @@ impl DynamicMesh
                 if self.connecting_edge(&vertex_id1, &vertex_id2).is_some() != self.connecting_edge(&vertex_id2, &vertex_id1).is_some()
                 {
                     return Err(mesh::Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected one way, but not the other way", vertex_id1, vertex_id2)});
+                }
+                let mut found = false;
+                for mut halfedge in self.vertex_halfedge_iterator(&vertex_id1) {
+                    if halfedge.vertex_id().unwrap() == vertex_id2 {
+                        if found {
+                            return Err(mesh::Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected by multiple edges", vertex_id1, vertex_id2)})
+                        }
+                        found = true;
+                    }
                 }
             }
         }
