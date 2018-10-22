@@ -82,6 +82,7 @@ impl DynamicMesh
 
     pub fn merge_with(&mut self, other: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>)
     {
+        let mut is_same_orientation = None;
         // Remove halfedges where the meshes should be stitched
         let mut halfedges_to_remove = HashSet::new();
         for (other_vertex_id1, self_vertex_id1) in stitches {
@@ -92,10 +93,24 @@ impl DynamicMesh
                     if walker.face_id().is_some() { walker.twin(); }
                     if walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
 
-                    halfedges_to_remove.insert(walker.halfedge_id().unwrap());
+                    let halfedge_id_to_remove = walker.halfedge_id().unwrap();
+                    halfedges_to_remove.insert(halfedge_id_to_remove);
+
+                    // Check if orientation is correct
+                    if is_same_orientation.is_none()
+                    {
+                        let other_halfedge_id = other.connecting_edge(&other_vertex_id1, &other_vertex_id2).unwrap();
+                        let mut other_walker = other.walker_from_halfedge(&other_halfedge_id);
+                        if other_walker.face_id().is_some() { other_walker.twin(); }
+                        if other_walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
+
+                        is_same_orientation = Some(*stitches.get(&other_walker.vertex_id().unwrap()).unwrap() != walker.vertex_id().unwrap())
+                    }
                 }
             }
         }
+
+        if let Some(same_orientation) = is_same_orientation { if !same_orientation { self.flip_orientation() } };
 
         for halfedge_id in halfedges_to_remove {
             self.connectivity_info.remove_halfedge(&halfedge_id);
