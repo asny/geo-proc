@@ -1,4 +1,3 @@
-use mesh::{self, Renderable};
 use dynamic_mesh::connectivity_info::ConnectivityInfo;
 use dynamic_mesh::*;
 use types::*;
@@ -15,57 +14,6 @@ pub struct DynamicMesh {
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,
     pub(super) connectivity_info: Rc<ConnectivityInfo>
-}
-
-impl Renderable for DynamicMesh
-{
-    fn indices(&self) -> Vec<u32>
-    {
-        let vertices: Vec<VertexID> = self.vertex_iterator().collect();
-        let mut indices = Vec::with_capacity(self.no_faces() * 3);
-        for face_id in self.face_iterator()
-        {
-            for walker in self.face_halfedge_iterator(&face_id) {
-                let vertex_id = walker.vertex_id().unwrap();
-                let index = vertices.iter().position(|v| v == &vertex_id).unwrap();
-                indices.push(index as u32);
-            }
-        }
-        indices
-    }
-
-    fn get_attribute(&self, name: &str) -> Option<mesh::Attribute>
-    {
-        match name {
-            "position" => {
-                let mut pos = Vec::with_capacity(self.no_vertices() * 3);
-                for v3 in self.vertex_iterator().map(|ref vertex_id| self.positions.get(vertex_id).unwrap()) {
-                    pos.push(v3.x); pos.push(v3.y); pos.push(v3.z);
-                }
-                Some(mesh::Attribute::new("position", 3, pos))
-            },
-            "normal" => {
-                if self.normals.len() != self.no_vertices() {
-                    return None;
-                }
-                let mut nor = Vec::with_capacity(self.no_vertices() * 3);
-                for vertex_id in self.vertex_iterator() {
-                    if let Some(normal) = self.normals.get(&vertex_id)
-                    {
-                        nor.push(normal.x); nor.push(normal.y); nor.push(normal.z);
-                    }
-                    else { return None; }
-                }
-                Some(mesh::Attribute::new("normal", 3, nor))
-            },
-            _ => None
-        }
-    }
-
-    fn no_vertices(&self) -> usize
-    {
-        self.no_vertices()
-    }
 }
 
 impl DynamicMesh
@@ -342,20 +290,6 @@ mod tests {
             assert_eq!(0.0, normal.x);
             assert_eq!(1.0, normal.y);
             assert_eq!(0.0, normal.z);
-        }
-    }
-
-    #[test]
-    fn test_get_attribute() {
-        let mut mesh = create_three_connected_faces();
-        mesh.update_vertex_normals();
-
-        let data = mesh.get_attribute("normal").unwrap().data;
-        assert_eq!(data.len(), mesh.no_vertices() * 3);
-        for i in 0..mesh.no_vertices() {
-            assert_eq!(0.0, data[i * 3]);
-            assert_eq!(1.0, data[i * 3+1]);
-            assert_eq!(0.0, data[i * 3+2]);
         }
     }
 
