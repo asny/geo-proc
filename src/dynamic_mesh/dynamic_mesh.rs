@@ -112,6 +112,28 @@ impl DynamicMesh
         self.connectivity_info.no_faces()
     }
 
+    pub fn flip_orientation(&mut self)
+    {
+        for vertex_id in self.vertex_iterator() {
+            let twin_id = self.walker_from_vertex(&vertex_id).twin_id().unwrap();
+            self.connectivity_info.set_vertex_halfedge(&vertex_id, twin_id);
+        }
+
+        let mut map = HashMap::new();
+        for halfedge_id in self.halfedge_iterator() {
+            let mut walker = self.walker_from_halfedge(&halfedge_id);
+            let new_next_id = walker.previous_id();
+            let new_vertex_id = walker.twin().vertex_id().unwrap();
+            map.insert(halfedge_id, (new_vertex_id, new_next_id));
+        }
+        for (halfedge_id, (new_vertex_id, new_next_id)) in map {
+            self.connectivity_info.set_halfedge_vertex(&halfedge_id, new_vertex_id);
+            if let Some(next_id) = new_next_id {
+                self.connectivity_info.set_halfedge_next(&halfedge_id, next_id);
+            }
+        }
+    }
+
     ////////////////////////////////////////////
     // *** Functions related to the position ***
     ////////////////////////////////////////////
