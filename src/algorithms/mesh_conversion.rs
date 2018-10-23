@@ -5,8 +5,8 @@ impl StaticMesh
     pub fn to_dynamic(&self) -> DynamicMesh
     {
         let indices = self.indices().clone();
-        let positions = self.attribute("position").unwrap().data;
-        let normals = self.attribute("normal").map(|att| att.data);
+        let positions = self.attribute("position").unwrap().data.clone();
+        let normals = self.attribute("normal").map(|att| att.data.clone());
 
         DynamicMesh::create(indices, positions, normals)
     }

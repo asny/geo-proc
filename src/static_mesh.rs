@@ -36,9 +36,9 @@ impl StaticMesh
         &self.indices
     }
 
-    pub fn attribute(&self, name: &str) -> Option<Attribute>
+    pub fn attribute(&self, name: &str) -> Option<&Attribute>
     {
-        self.attributes.iter().find(|att| att.name == name).and_then(|att| Some(att.clone()))
+        self.attributes.iter().find(|att| att.name == name).and_then(|att| Some(att))
     }
 
     pub fn no_vertices(&self) -> usize
