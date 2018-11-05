@@ -1,11 +1,6 @@
 
-extern crate ncollide3d;
-
 use types::*;
 use dynamic_mesh::*;
-
-use algorithms::collision::ncollide3d::query::{proximity, Proximity};
-use na::{Isometry3, Point3};
 
 const MARGIN: f32 = 0.0001;
 
@@ -177,26 +172,6 @@ fn barycentric(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32, f32)
     let w = (d00 * d21 - d01 * d20) / denom;
     let u = 1.0 - v - w;
     (u, v, w)
-}
-
-pub fn is_intersecting(mesh1: &DynamicMesh, face_id1: &FaceID, mesh2: &DynamicMesh, face_id2: &FaceID) -> bool
-{
-    let triangle1 = face_id_to_triangle(mesh1, face_id1);
-    let triangle2 = face_id_to_triangle(mesh2, face_id2);
-
-    let prox = proximity(&Isometry3::identity(), &triangle1,&Isometry3::identity(), &triangle2, 0.1);
-    prox == Proximity::Intersecting
-}
-
-fn face_id_to_triangle(mesh: &DynamicMesh, face_id: &FaceID) -> ncollide3d::shape::Triangle<f32>
-{
-    let mut walker = mesh.walker_from_face(face_id);
-    let p1 = Point3::<f32>::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
-    walker.next();
-    let p2 = Point3::<f32>::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
-    walker.next();
-    let p3 = Point3::<f32>::from_coordinates(*mesh.position(&walker.vertex_id().unwrap()));
-    ncollide3d::shape::Triangle::<f32>::new(p1, p2, p3)
 }
 
 fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32

@@ -5,5 +5,4 @@ authors = ["Asger Nyman Christiansen <asgernyman@gmail.com>"]
 
 [dependencies]
 nalgebra = "0.16.1"
-ncollide3d = "0.17.1"
 tobj = "0.1.6"
