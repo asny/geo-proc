@@ -107,7 +107,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                     PrimitiveID::Edge(ref split_edge) => {
                         let halfedge_id = mesh1.connecting_edge(&split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh1.split_edge(&halfedge_id, point);
-                        insert_edges(&mut edge_splits1, edge, &vertex_id);
+                        insert_edges(&mut edge_splits1, edge, split_edge, &vertex_id);
                         for walker in mesh1.vertex_halfedge_iterator(&vertex_id) {
                             let vid = walker.vertex_id().unwrap();
                             if vid != split_edge.0 && vid != split_edge.1
@@ -130,7 +130,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
                     PrimitiveID::Edge(ref split_edge) => {
                         let halfedge_id = mesh2.connecting_edge(&split_edge.0, &split_edge.1).unwrap();
                         let vertex_id = mesh2.split_edge(&halfedge_id, point);
-                        insert_edges(&mut edge_splits2, edge, &vertex_id);
+                        insert_edges(&mut edge_splits2, edge, split_edge, &vertex_id);
                         for walker in mesh2.vertex_halfedge_iterator(&vertex_id) {
                             let vid = walker.vertex_id().unwrap();
                             if vid != split_edge.0 && vid != split_edge.1
@@ -179,12 +179,13 @@ fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), Hash
     PrimitiveID::Edge(edge)
 }
 
-fn insert_edges(edge_list: &mut HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, edge: (VertexID, VertexID), vertex_id: &VertexID)
+fn insert_edges(edge_list: &mut HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, edge: (VertexID, VertexID), split_edge: &(VertexID, VertexID), vertex_id: &VertexID)
 {
     if !edge_list.contains_key(&edge) { edge_list.insert(edge.clone(), HashSet::new()); }
     let list = edge_list.get_mut(&edge).unwrap();
-    list.insert((edge.0, vertex_id.clone()));
-    list.insert((edge.1, vertex_id.clone()));
+    list.remove(split_edge);
+    list.insert((split_edge.0, vertex_id.clone()));
+    list.insert((split_edge.1, vertex_id.clone()));
 }
 
 fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, vertex_id: &VertexID)
