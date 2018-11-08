@@ -32,6 +32,11 @@ pub fn create_sphere(subdivisions: usize) -> Result<StaticMesh, Error>
             let p = dyn_mesh.face_center(&face_id).normalize();
             let vid = dyn_mesh.split_face(&face_id, p);
         }
+        dyn_mesh.smooth_vertices(1.0);
+        for vertex_id in dyn_mesh.vertex_iterator() {
+            let p = dyn_mesh.position(&vertex_id).normalize();
+            dyn_mesh.set_position(vertex_id, p)
+        }
     }
     Ok(dyn_mesh.to_static())
 }
