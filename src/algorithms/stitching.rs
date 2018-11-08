@@ -552,6 +552,27 @@ mod tests {
         test_is_valid(&stitched).unwrap();
     }
 
+    #[test]
+    fn test_sphere_box_stitching()
+    {
+        let mut mesh1 = ::models::create_sphere(1).unwrap().to_dynamic();
+        mesh1.translate(&vec3(0.0, 1.5, 0.0));
+        mesh1.update_vertex_normals();
+        let mut mesh2 = ::models::create_cube().unwrap().to_dynamic();
+        mesh2.translate(&vec3(0.5, 2.0, 0.5));
+        mesh2.update_vertex_normals();
+
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
+
+        let stitched = stitch(&mut mesh1, &mut mesh2);
+
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
+
+        test_is_valid(&stitched).unwrap();
+    }
+
     fn create_simple_mesh_x_z() -> DynamicMesh
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
