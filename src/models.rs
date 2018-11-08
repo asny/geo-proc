@@ -37,6 +37,7 @@ pub fn create_sphere(subdivisions: usize) -> Result<StaticMesh, Error>
             let p = dyn_mesh.position(&vertex_id).normalize();
             dyn_mesh.set_position(vertex_id, p)
         }
+        dyn_mesh.flip_edges(0.5);
     }
     Ok(dyn_mesh.to_static())
 }
