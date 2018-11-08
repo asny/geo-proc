@@ -74,11 +74,12 @@ impl DynamicMesh
         let p1 = self.position(&walker.previous().twin().vertex_id().unwrap());
         let p3 = self.position(&walker.next().vertex_id().unwrap());
 
-        1.1 * (triangle_quality(p0, p1, p2) + triangle_quality(p0, p1, p3)) <
-            triangle_quality(p0, p2, p3) + triangle_quality(p1, p2, p3)
+        triangle_quality(p0, p2, p1) + triangle_quality(p0, p1, p3) >
+            1.1 * (triangle_quality(p0, p2, p3) + triangle_quality(p1, p3, p2))
     }
 }
 
+// Quality measure of 1 = good (equilateral) and >> 1 = bad (needle or flattened)
 fn triangle_quality(p0: &Vec3, p1: &Vec3, p2: &Vec3) -> f32
 {
     let length01 = (p0-p1).norm();
