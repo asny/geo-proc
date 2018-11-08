@@ -55,15 +55,30 @@ impl DynamicMesh
 
     fn should_flip(&self, halfedge_id: &HalfEdgeID, flatness_threshold: f32) -> bool
     {
-        !self.on_boundary(halfedge_id) && self.flatness(halfedge_id) > flatness_threshold && self.flip_will_improve_quality(halfedge_id)
+        !self.on_boundary(halfedge_id)
+            && self.flatness(halfedge_id) > flatness_threshold
+            && !self.flip_will_invert_triangle(halfedge_id)
+            && self.flip_will_improve_quality(halfedge_id)
     }
 
+    // 1 = Completely flat, 0 = 90 degrees angle between normals
     fn flatness(&self, haledge_id: &HalfEdgeID) -> f32
     {
         let mut walker = self.walker_from_halfedge(haledge_id);
         let face_id1 = walker.face_id().unwrap();
         let face_id2 = walker.twin().face_id().unwrap();
         self.face_normal(&face_id1).dot(&self.face_normal(&face_id2))
+    }
+
+    fn flip_will_invert_triangle(&self, haledge_id: &HalfEdgeID) -> bool
+    {
+        let mut walker = self.walker_from_halfedge(haledge_id);
+        let p0 = self.position(&walker.vertex_id().unwrap());
+        let p2 = self.position(&walker.next().vertex_id().unwrap());
+        let p1 = self.position(&walker.previous().twin().vertex_id().unwrap());
+        let p3 = self.position(&walker.next().vertex_id().unwrap());
+
+        (p2 - p0).cross(&(p3 - p0)).dot(&(p3 - p1).cross(&(p2 - p1))) < 0.0001
     }
 
     fn flip_will_improve_quality(&self, haledge_id: &HalfEdgeID) -> bool
