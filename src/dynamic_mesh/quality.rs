@@ -1,9 +1,29 @@
 use dynamic_mesh::*;
 use types::*;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 impl DynamicMesh
 {
+    pub fn smooth_vertices(&mut self, factor: f32)
+    {
+        let mut map = HashMap::new();
+        for vertex_id in self.vertex_iterator() {
+            let mut avg_pos = vec3(0.0, 0.0, 0.0);
+            let mut i = 0;
+            for walker in self.vertex_halfedge_iterator(&vertex_id) {
+                avg_pos = avg_pos + *self.position(&walker.vertex_id().unwrap());
+                i = i + 1;
+            }
+            avg_pos = avg_pos / i as f32;
+            let p = self.position(&vertex_id);
+            map.insert(vertex_id, p + factor * (avg_pos - p));
+        }
+
+        for vertex_id in self.vertex_iterator() {
+            self.set_position(vertex_id, *map.get(&vertex_id).unwrap());
+        }
+    }
+
     pub fn flip_edges(&mut self, flatness_threshold: f32)
     {
         let insert_or_remove = |mesh: &DynamicMesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
