@@ -1,5 +1,5 @@
 [package]
-name = "gust"
+name = "geo-proc"
 version = "0.1.0"
 authors = ["Asger Nyman Christiansen <asgernyman@gmail.com>"]
 
