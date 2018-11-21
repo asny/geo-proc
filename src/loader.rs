@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::path::PathBuf;
 use tobj;
 use mesh;
@@ -26,8 +25,7 @@ pub fn load_obj(name: &str) -> Result<Vec<mesh::StaticMesh>, Error>
 {
     let mut result = Vec::new();
 
-    let root_path: PathBuf = PathBuf::from("");
-    let (models, _materials) = tobj::load_obj(&resource_name_to_path(&root_path,name))?;
+    let (models, _materials) = tobj::load_obj(&PathBuf::from(name))?;
     if models.is_empty()
     {
         return Err(Error::FileDoesntContainModel {message: format!("The file {} doesn't contain a model", name)})
@@ -47,14 +45,4 @@ pub fn load_obj(name: &str) -> Result<Vec<mesh::StaticMesh>, Error>
         result.push(mesh);
     }
     Ok(result)
-}
-
-fn resource_name_to_path(root_dir: &Path, location: &str) -> PathBuf {
-    let mut path: PathBuf = root_dir.into();
-
-    for part in location.split("/") {
-        path = path.join(part);
-    }
-
-    path
 }
