@@ -6,7 +6,10 @@ use std;
 #[derive(Debug)]
 pub enum Error {
     IO(std::io::Error),
-    Mesh(mesh::Error)
+    Mesh(mesh::Error),
+    FileTypeNotSupported {message: String},
+    ExtensionNotSpecified {message: String},
+    FileNameNotSpecified {message: String}
 }
 
 impl From<std::io::Error> for Error {
@@ -21,7 +24,32 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn save_as_obj(mesh: &mesh::StaticMesh, name: &str) -> Result<(), Error>
+pub fn save(mesh: &mesh::StaticMesh, filename: &str) -> Result<(), Error>
+{
+    if filename == ""
+    {
+        return Err(Error::FileNameNotSpecified {message: format!("Filename is not specified!")})
+    }
+    let splitted: Vec<&str> = filename.split('.').collect();
+    if splitted.len() == 1
+    {
+        return Err(Error::ExtensionNotSpecified {message: format!("Extension for file {} is not specified!", splitted[0])})
+    }
+
+    let extension = splitted[1];
+    let mut data = String::new();
+    if extension == "obj" {
+        data = parse_as_obj(mesh);
+    }
+    else if extension == "poly" {
+        data = parse_as_poly(mesh);
+    }
+    else { return Err(Error::FileTypeNotSupported {message: format!("Extension {} of file {} is not supported!", extension, splitted[0])}) }
+    save_model(&data, filename)?;
+    Ok(())
+}
+
+fn save_as_obj(mesh: &mesh::StaticMesh, name: &str) -> Result<(), Error>
 {
     let data = parse_as_obj(mesh);
     save_model(&data, name)?;
@@ -58,7 +86,7 @@ fn parse_as_obj(mesh: &mesh::StaticMesh) -> String
     output
 }
 
-pub fn save_as_poly(mesh: &mesh::StaticMesh, name: &str) -> Result<(), Error>
+fn save_as_poly(mesh: &mesh::StaticMesh, name: &str) -> Result<(), Error>
 {
     let data = parse_as_poly(mesh);
     save_model(&data, name)?;
