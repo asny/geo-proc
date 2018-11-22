@@ -11,6 +11,7 @@ pub mod static_mesh;
 pub mod dynamic_mesh;
 
 pub mod loader;
+pub mod exporter;
 pub mod models;
 pub mod algorithms;
 
