@@ -21,10 +21,31 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn save_as_obj(name: &str) -> Result<(), Error>
+pub fn save_as_obj(mesh: &mesh::StaticMesh, name: &str) -> Result<(), Error>
 {
-    unimplemented!();
-    let output = "";
+    let mut output = String::from("o object\n");
+
+    let positions = &mesh.attribute("position").unwrap().data;
+    for i in 0..mesh.no_vertices()
+    {
+        output = format!("{}v {} {} {}\n", output, positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
+    }
+
+    if let Some(ref normals) = mesh.attribute("normal")
+    {
+        for i in 0..mesh.no_vertices()
+        {
+            output = format!("{}vn {} {} {}\n", output, normals.data[i*3], normals.data[i*3 + 1], normals.data[i*3 + 2]);
+        }
+    }
+
+    let indices = mesh.indices();
+    for i in 0..mesh.no_faces() {
+        for j in 0..3 {
+            output = format!("{}{}//{}\n", output, indices[i*3 + j] + 1, indices[i*3 + j] + 1);
+        }
+    }
+
     save_model(&output, name)?;
     Ok(())
 }
