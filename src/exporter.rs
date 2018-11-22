@@ -33,10 +33,10 @@ pub fn save(mesh: &mesh::StaticMesh, filename: &str) -> Result<(), Error>
     let splitted: Vec<&str> = filename.split('.').collect();
     if splitted.len() == 1
     {
-        return Err(Error::ExtensionNotSpecified {message: format!("Extension for file {} is not specified!", splitted[0])})
+        return Err(Error::ExtensionNotSpecified {message: format!("Extension for file {} is not specified!", splitted[1])})
     }
 
-    let extension = splitted[1];
+    let extension = splitted[2];
     let mut data = String::new();
     if extension == "obj" {
         data = parse_as_obj(mesh);
@@ -44,7 +44,7 @@ pub fn save(mesh: &mesh::StaticMesh, filename: &str) -> Result<(), Error>
     else if extension == "poly" {
         data = parse_as_poly(mesh);
     }
-    else { return Err(Error::FileTypeNotSupported {message: format!("Extension {} of file {} is not supported!", extension, splitted[0])}) }
+    else { return Err(Error::FileTypeNotSupported {message: format!("Extension {} of file {} is not supported!", extension, splitted[1])}) }
     save_model(&data, filename)?;
     Ok(())
 }
