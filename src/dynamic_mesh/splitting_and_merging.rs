@@ -6,7 +6,8 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub enum Error {
-    MergeWillCreateNonManifoldMesh {message: String}
+    MergeWillCreateNonManifoldMesh {message: String},
+    CannotCheckOrientationOfMesh {message: String},
 }
 
 impl DynamicMesh
@@ -106,7 +107,9 @@ impl DynamicMesh
                     // Check if orientation is correct
                     if is_same_orientation.is_none()
                     {
-                        let other_halfedge_id = other.connecting_edge(&other_vertex_id1, &other_vertex_id2).unwrap();
+                        let other_halfedge_id = other.connecting_edge(&other_vertex_id1, &other_vertex_id2).ok_or(
+                            Error::CannotCheckOrientationOfMesh {message: format!("No edge connecting ({}, {}) exists", other_vertex_id1, other_vertex_id2)}
+                        )?;
                         let mut other_walker = other.walker_from_halfedge(&other_halfedge_id);
                         if other_walker.face_id().is_some() { other_walker.twin(); }
                         if other_walker.face_id().is_some() {
@@ -150,11 +153,11 @@ impl DynamicMesh
 }
 
 // Stitches is a map of vertex id in the other mesh to vertex id in self where the two meshes should be connected.
-pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>) -> DynamicMesh
+pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>) -> Result<DynamicMesh, Error>
 {
     let mut mesh = mesh1.clone();
-    mesh.merge_with(mesh2, stitches);
-    mesh
+    mesh.merge_with(mesh2, stitches)?;
+    Ok(mesh)
 }
 
 
@@ -184,7 +187,7 @@ mod tests {
             }
         }
 
-        let stitched = merge(&mesh1, &mesh2, &mapping);
+        let stitched = merge(&mesh1, &mesh2, &mapping).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
@@ -214,7 +217,7 @@ mod tests {
             }
         }
 
-        let stitched = merge(&mesh1, &mesh2, &mapping);
+        let stitched = merge(&mesh1, &mesh2, &mapping).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
