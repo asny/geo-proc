@@ -5,7 +5,18 @@ use types::*;
 use dynamic_mesh::*;
 use collision::*;
 
-pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
+#[derive(Debug)]
+pub enum Error {
+    SplittingAndMerging(splitting_and_merging::Error)
+}
+
+impl From<splitting_and_merging::Error> for Error {
+    fn from(other: splitting_and_merging::Error) -> Self {
+        Error::SplittingAndMerging(other)
+    }
+}
+
+pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Result<DynamicMesh, Error>
 {
     let stitches = split_meshes(mesh1, mesh2);
 
@@ -21,9 +32,9 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> DynamicMesh
 
     let mut m1 = if mesh11.no_faces() > mesh12.no_faces() { mesh11 } else { mesh12 };
     let m2 = if mesh21.no_faces() > mesh22.no_faces() { mesh21 } else { mesh22 };
-    m1.merge_with(&m2, &seam2);
+    m1.merge_with(&m2, &seam2)?;
 
-    m1
+    Ok(m1)
 }
 
 fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
@@ -160,9 +171,8 @@ fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, 
         {
             if let Some(id) = find_face_intersection(mesh, new_face_id, point) { return id; }
         }
-        panic!("Cannot find face primitive to split")
+        unreachable!()
     }
-    assert_eq!(find_face_intersection(mesh, &face_id, point), Some(PrimitiveID::Face(face_id)));
     PrimitiveID::Face(face_id)
 }
 
@@ -174,7 +184,7 @@ fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), Hash
         {
             if let Some(id) = find_edge_intersection(mesh, new_edge, point) { return id; }
         }
-        panic!("Cannot find edge primitive to split")
+        unreachable!()
     }
     PrimitiveID::Edge(edge)
 }
@@ -505,7 +515,7 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
 
-        let stitched = stitch(&mut mesh1, &mut mesh2);
+        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
@@ -526,7 +536,7 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 1.0,  -2.0, 0.0, -1.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = DynamicMesh::create(indices2, positions2, None);
 
-        let stitched = stitch(&mut mesh1, &mut mesh2);
+        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
@@ -544,7 +554,7 @@ mod tests {
         for vertex_id in mesh2.vertex_iterator() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
-        let stitched = stitch(&mut mesh1, &mut mesh2);
+        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
@@ -565,7 +575,7 @@ mod tests {
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
 
-        let stitched = stitch(&mut mesh1, &mut mesh2);
+        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();

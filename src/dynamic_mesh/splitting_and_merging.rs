@@ -4,6 +4,11 @@ use connected_components::*;
 use std::collections::{HashSet, HashMap};
 use std::rc::Rc;
 
+#[derive(Debug)]
+pub enum Error {
+    MergeWillCreateNonManifoldMesh {message: String}
+}
+
 impl DynamicMesh
 {
     pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
@@ -80,7 +85,7 @@ impl DynamicMesh
         (sub_mesh1, sub_mesh2)
     }
 
-    pub fn merge_with(&mut self, other: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>)
+    pub fn merge_with(&mut self, other: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>) -> Result<(), Error>
     {
         let mut is_same_orientation = None;
         // Remove halfedges where the meshes should be stitched
@@ -91,7 +96,9 @@ impl DynamicMesh
                 {
                     let mut walker = self.walker_from_halfedge(&self_halfedge_id);
                     if walker.face_id().is_some() { walker.twin(); }
-                    if walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
+                    if walker.face_id().is_some() {
+                        return Err(Error::MergeWillCreateNonManifoldMesh {message: format!("Merge at edge ({}, {}) will create non manifold mesh", self_vertex_id1, self_vertex_id2)});
+                    }
 
                     let halfedge_id_to_remove = walker.halfedge_id().unwrap();
                     halfedges_to_remove.insert(halfedge_id_to_remove);
@@ -102,7 +109,9 @@ impl DynamicMesh
                         let other_halfedge_id = other.connecting_edge(&other_vertex_id1, &other_vertex_id2).unwrap();
                         let mut other_walker = other.walker_from_halfedge(&other_halfedge_id);
                         if other_walker.face_id().is_some() { other_walker.twin(); }
-                        if other_walker.face_id().is_some() { panic!("Merge will create non manifold mesh") }
+                        if other_walker.face_id().is_some() {
+                            return Err(Error::MergeWillCreateNonManifoldMesh {message: format!("Merge at edge ({}, {}) will create non manifold mesh", other_vertex_id1, other_vertex_id2)});
+                        }
 
                         is_same_orientation = Some(*stitches.get(&other_walker.vertex_id().unwrap()).unwrap() != walker.vertex_id().unwrap())
                     }
@@ -136,6 +145,7 @@ impl DynamicMesh
         }
 
         self.create_twin_connectivity();
+        Ok(())
     }
 }
 
