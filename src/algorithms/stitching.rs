@@ -19,6 +19,7 @@ impl From<splitting_and_merging::Error> for Error {
 pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Result<DynamicMesh, Error>
 {
     let stitches = split_meshes(mesh1, mesh2);
+    if stitches.iter().len() == 0 { return Ok(mesh1.clone()) }
 
     let mut seam1 = HashMap::new();
     stitches.iter().for_each(|pair| {seam1.insert(pair.0.clone(), pair.1.clone());});
