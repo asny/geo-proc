@@ -71,7 +71,10 @@ impl DynamicMesh
                 let mut walker = self.walker_from_halfedge(&halfedge_id);
                 face_id1 = walker.face_id();
                 face_id2 = walker.twin().face_id();
-                break;
+                if(face_id1.is_some() && face_id2.is_some())
+                {
+                    break;
+                }
             }
         }
 
