@@ -267,7 +267,7 @@ mod tests {
             }
         }
 
-        let (m1, m2) = mesh.split(&|mesh, he_id| {Some(*he_id) == id});
+        let (m1, m2) = mesh.split(&|mesh, he_id| {Some(*he_id) == id}).unwrap();
         
         test_is_valid(&mesh).unwrap();
         test_is_valid(&m1).unwrap();
