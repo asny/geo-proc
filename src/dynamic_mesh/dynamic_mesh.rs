@@ -9,7 +9,7 @@ pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
 pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct DynamicMesh {
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,
@@ -211,6 +211,12 @@ impl DynamicMesh
 
             }
         }
+    }
+}
+
+impl Clone for DynamicMesh {
+    fn clone(&self) -> DynamicMesh {
+        DynamicMesh::create_internal(self.positions.clone(), self.normals.clone(), Rc::new((*self.connectivity_info).clone()))
     }
 }
 
