@@ -72,6 +72,11 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
                 return Err(Error::IsNotValid {message: format!("Halfedge next pointed to by halfedge {} does not point back to halfedge", halfedge_id)});
             }
         }
+
+        if mesh.edge_length(&halfedge_id) < 0.00001
+        {
+            return Err(Error::IsNotValid {message: format!("Length of edge {} is too small ({})", halfedge_id, mesh.edge_length(&halfedge_id))})
+        }
     }
     for face_id in mesh.face_iterator() {
         if let Some(halfedge_id) = mesh.walker_from_face(&face_id).halfedge_id()
@@ -86,6 +91,11 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
         }
         else {
             return Err(Error::IsNotValid {message: format!("Face {} does not point to a halfedge", face_id)});
+        }
+
+        if mesh.face_area(&face_id) < 0.00001
+        {
+            return Err(Error::IsNotValid {message: format!("Area of face {} is too small ({})", face_id, mesh.face_area(&face_id))})
         }
     }
 
