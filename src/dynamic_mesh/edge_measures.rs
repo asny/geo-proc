@@ -1,5 +1,4 @@
 use dynamic_mesh::*;
-use types::*;
 
 impl DynamicMesh
 {

@@ -37,15 +37,14 @@ pub fn save(mesh: &mesh::StaticMesh, filename: &str) -> Result<(), Error>
     }
     let extension = splitted[1];
 
-    let mut data = String::new();
-    if extension == "obj" {
-        data = parse_as_obj(mesh);
+    let data = if extension == "obj" {
+        Ok(parse_as_obj(mesh))
     }
     else if extension == "poly" {
-        data = parse_as_poly(mesh);
+        Ok(parse_as_poly(mesh))
     }
-    else { return Err(Error::FileTypeNotSupported {message: format!("Extension {} of file {} is not supported!", extension, splitted[0])}) }
-    save_model(&data, filename)?;
+    else { Err(Error::FileTypeNotSupported {message: format!("Extension {} of file {} is not supported!", extension, splitted[0])}) };
+    save_model(&data?, filename)?;
     Ok(())
 }
 
