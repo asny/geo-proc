@@ -25,12 +25,12 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Result<Dynami
     let mut seam1 = HashMap::new();
     stitches.iter().for_each(|pair| {seam1.insert(pair.0.clone(), pair.1.clone());});
     let (mesh11, mesh12) = mesh1.split(
-                                 &|mesh, halfedge_id| { is_at_seam(mesh, mesh2, &seam1, halfedge_id) });
+                                 &|mesh, halfedge_id| { is_at_seam(mesh, mesh2, &seam1, halfedge_id) })?;
 
     let mut seam2 = HashMap::new();
     stitches.iter().for_each(|pair| {seam2.insert(pair.1, pair.0);});
     let (mesh21, mesh22) = mesh2.split(
-                                 &|mesh, halfedge_id| { is_at_seam(mesh, mesh1, &seam2, halfedge_id) });
+                                 &|mesh, halfedge_id| { is_at_seam(mesh, mesh1, &seam2, halfedge_id) })?;
 
     let mut m1 = if mesh11.no_faces() > mesh12.no_faces() { mesh11 } else { mesh12 };
     let m2 = if mesh21.no_faces() > mesh22.no_faces() { mesh21 } else { mesh22 };

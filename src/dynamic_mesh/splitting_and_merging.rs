@@ -8,6 +8,7 @@ use std::rc::Rc;
 pub enum Error {
     MergeWillCreateNonManifoldMesh {message: String},
     CannotCheckOrientationOfMesh {message: String},
+    SplittingEdgesDidNotFormAClosesCurve {message: String}
 }
 
 impl DynamicMesh
@@ -61,7 +62,7 @@ impl DynamicMesh
         DynamicMesh::create_internal(positions, normals, Rc::new(info))
     }
 
-    pub fn split(&self, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> (DynamicMesh, DynamicMesh)
+    pub fn split(&self, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> Result<(DynamicMesh, DynamicMesh), Error>
     {
         let mut face_id1 = None;
         let mut face_id2 = None;
@@ -81,9 +82,13 @@ impl DynamicMesh
             connected_component_with_limit(self, &face_id, &|halfedge_id| is_at_split(self, &halfedge_id))
         } else { HashSet::new() };
 
+        if cc1.len() == cc2.len() {
+            return Err(Error::SplittingEdgesDidNotFormAClosesCurve {message: format!("It was not possible to split a mesh in two parts, the splitting edges did not form a closed curve.")})
+        }
+
         let sub_mesh1 = self.create_sub_mesh(&cc1);
         let sub_mesh2 = self.create_sub_mesh(&cc2);
-        (sub_mesh1, sub_mesh2)
+        Ok((sub_mesh1, sub_mesh2))
     }
 
     pub fn merge_with(&mut self, other: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>) -> Result<(), Error>
