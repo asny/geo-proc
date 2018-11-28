@@ -2,7 +2,7 @@
 use types::*;
 use dynamic_mesh::*;
 
-const MARGIN: f32 = 0.001;
+const MARGIN: f32 = 0.00001;
 const SQR_MARGIN: f32 = MARGIN * MARGIN;
 
 #[derive(Debug)]
