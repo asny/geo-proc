@@ -201,10 +201,10 @@ mod tests {
         assert_eq!(result, Some(PrimitiveID::Vertex(v0)));
 
         let dir_away_from_p0 = -(0.5 * (p1 + p2) - p0).normalize();
-        result = find_face_intersection(&mesh, &face_id, &(p0 + 0.9999 * MARGIN * dir_away_from_p0));
+        result = find_face_intersection(&mesh, &face_id, &(p0 + 0.99 * MARGIN * dir_away_from_p0));
         assert_eq!(result, Some(PrimitiveID::Vertex(v0)));
 
-        result = find_face_intersection(&mesh, &face_id, &(p0 + MARGIN * dir_away_from_p0));
+        result = find_face_intersection(&mesh, &face_id, &(p0 + 1.01 * MARGIN * dir_away_from_p0));
         assert_eq!(result, None);
 
         // Edge intersection
@@ -212,10 +212,10 @@ mod tests {
         assert_eq!(result, Some(PrimitiveID::Edge((v1, v2))));
 
         let dir_away_from_edge = vec3(0.0, 1.0, 0.0);
-        result = find_face_intersection(&mesh, &face_id, &(edge_midpoint + 0.9999 * MARGIN * dir_away_from_edge));
+        result = find_face_intersection(&mesh, &face_id, &(edge_midpoint + 0.99 * MARGIN * dir_away_from_edge));
         assert_eq!(result, Some(PrimitiveID::Edge((v1, v2))));
 
-        result = find_face_intersection(&mesh, &face_id, &(edge_midpoint + MARGIN * dir_away_from_edge));
+        result = find_face_intersection(&mesh, &face_id, &(edge_midpoint + 1.01 * MARGIN * dir_away_from_edge));
         assert_eq!(result, None);
 
         // Face intersection
@@ -238,10 +238,10 @@ mod tests {
         assert_eq!(result, Some(PrimitiveID::Vertex(v0)));
 
         let dir_away_from_p0 = -(p1 - p0).normalize();
-        result = find_edge_intersection(&mesh, &(v0, v1), &(p0 + 0.9999 * MARGIN * dir_away_from_p0));
+        result = find_edge_intersection(&mesh, &(v0, v1), &(p0 + 0.99 * MARGIN * dir_away_from_p0));
         assert_eq!(result, Some(PrimitiveID::Vertex(v0)));
 
-        result = find_edge_intersection(&mesh, &(v0, v1), &(p0 + MARGIN * dir_away_from_p0));
+        result = find_edge_intersection(&mesh, &(v0, v1), &(p0 + 1.01 * MARGIN * dir_away_from_p0));
         assert_eq!(result, None);
 
         // Edge intersection
@@ -250,10 +250,10 @@ mod tests {
         assert_eq!(result, Some(PrimitiveID::Edge((v0, v1))));
 
         let dir_away_from_edge = dir_away_from_p0.cross(&vec3(1.0, 1.0, 1.0)).normalize();
-        result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + 0.9999 * MARGIN * dir_away_from_edge));
+        result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + 0.99 * MARGIN * dir_away_from_edge));
         assert_eq!(result, Some(PrimitiveID::Edge((v0, v1))));
 
-        result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + MARGIN * dir_away_from_edge));
+        result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + 1.01 * MARGIN * dir_away_from_edge));
         assert_eq!(result, None);
     }
 }
