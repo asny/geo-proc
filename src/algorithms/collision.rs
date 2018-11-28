@@ -60,15 +60,13 @@ pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), p
 {
     let p0 = mesh.position(&edge.0);
     let p1 = mesh.position(&edge.1);
-    let l0 = (point - p0).norm_squared();
-    if l0 < SQR_MARGIN {
+    if (point - p0).norm_squared() < SQR_MARGIN {
         return Some(PrimitiveID::Vertex(edge.0));
     }
-    let l1 = (point - p1).norm_squared();
-    if l1 < SQR_MARGIN {
+    if (point - p1).norm_squared() < SQR_MARGIN {
         return Some(PrimitiveID::Vertex(edge.1));
     }
-    if l0 + l1 < (p1 - p0).norm_squared() + SQR_MARGIN
+    if point_line_segment_distance(point, p0, p1) < MARGIN
     {
         return Some(PrimitiveID::Edge(edge.clone()));
     }
@@ -215,7 +213,6 @@ mod tests {
         result = find_face_intersection(&mesh, &face_id, &(edge_midpoint + 0.99 * MARGIN * dir_away_from_edge));
         assert_eq!(result, Some(PrimitiveID::Edge((v1, v2))));
 
-        let dir_away_from_edge = -(mesh.face_center(&face_id) - edge_midpoint).normalize();
         result = find_face_intersection(&mesh, &face_id, &(edge_midpoint + MARGIN * dir_away_from_edge));
         assert_eq!(result, None);
 
@@ -223,5 +220,39 @@ mod tests {
         let face_midpoint = mesh.face_center(&face_id);
         result = find_face_intersection(&mesh, &face_id, &face_midpoint);
         assert_eq!(result, Some(PrimitiveID::Face(face_id)));
+    }
+
+    #[test]
+    fn test_find_edge_intersection()
+    {
+        let mut mesh = create_single_face();
+        mesh.scale(3.0);
+        let edge_id = mesh.halfedge_iterator().next().unwrap();
+        let (v0, v1) = mesh.ordered_edge_vertices(&edge_id);
+        let p0 = mesh.position(&v0);
+        let p1 = mesh.position(&v1);
+
+        // Vertex intersection
+        let mut result = find_edge_intersection(&mesh, &(v0, v1), p0);
+        assert_eq!(result, Some(PrimitiveID::Vertex(v0)));
+
+        let dir_away_from_p0 = -(p1 - p0).normalize();
+        result = find_edge_intersection(&mesh, &(v0, v1), &(p0 + 0.99 * MARGIN * dir_away_from_p0));
+        assert_eq!(result, Some(PrimitiveID::Vertex(v0)));
+
+        result = find_edge_intersection(&mesh, &(v0, v1), &(p0 + MARGIN * dir_away_from_p0));
+        assert_eq!(result, None);
+
+        // Edge intersection
+        let edge_midpoint = (p0 + p1) * 0.5;
+        result = find_edge_intersection(&mesh, &(v0, v1), &edge_midpoint);
+        assert_eq!(result, Some(PrimitiveID::Edge((v0, v1))));
+
+        let dir_away_from_edge = dir_away_from_p0.cross(&vec3(1.0, 1.0, 1.0)).normalize();
+        result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + 0.99 * MARGIN * dir_away_from_edge));
+        assert_eq!(result, Some(PrimitiveID::Edge((v0, v1))));
+
+        result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + MARGIN * dir_away_from_edge));
+        assert_eq!(result, None);
     }
 }
