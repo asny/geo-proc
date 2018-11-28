@@ -82,8 +82,8 @@ impl DynamicMesh
             connected_component_with_limit(self, &face_id, &|halfedge_id| is_at_split(self, &halfedge_id))
         } else { HashSet::new() };
 
-        if cc1.len() == cc2.len() {
             return Err(Error::SplittingEdgesDidNotFormAClosesCurve {message: format!("It was not possible to split a mesh in two parts, the splitting edges did not form a closed curve.")})
+        if self.no_faces() != cc1.len() + cc2.len() {
         }
 
         let sub_mesh1 = self.create_sub_mesh(&cc1);
