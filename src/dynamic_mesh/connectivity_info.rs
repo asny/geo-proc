@@ -119,11 +119,26 @@ impl ConnectivityInfo {
         faces.insert(face_id, face);
     }
 
+    pub fn remove_vertex(&self, vertex_id: &VertexID)
+    {
+        let vertices = &mut *RefCell::borrow_mut(&self.vertices);
+        vertices.remove(vertex_id).unwrap();
+    }
+
     pub fn remove_halfedge(&self, halfedge_id: &HalfEdgeID)
     {
         let halfedges = &mut *RefCell::borrow_mut(&self.halfedges);
         let halfedge = halfedges.remove(halfedge_id).unwrap();
-        halfedges.get_mut(&halfedge.twin.unwrap()).unwrap().twin = None;
+        if halfedge.twin.is_some()
+        {
+            halfedges.get_mut(&halfedge.twin.unwrap()).unwrap().twin = None;
+        }
+    }
+
+    pub fn remove_face(&self, face_id: &FaceID)
+    {
+        let faces = &mut *RefCell::borrow_mut(&self.faces);
+        faces.remove(face_id).unwrap();
     }
 
     /*fn remove_vertex_if_lonely(&self, vertex_id: &VertexID)
