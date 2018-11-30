@@ -170,6 +170,13 @@ impl DynamicMesh
             }
         }
     }
+
+    pub fn collapse_edge(&mut self, halfedge_id: &HalfEdgeID) -> VertexID
+    {
+        let walker = self.walker_from_halfedge(halfedge_id);
+
+        walker.vertex_id().unwrap()
+    }
 }
 
 
@@ -345,5 +352,45 @@ mod tests {
         assert!(walker.face_id().is_none());
 
         test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_collapse_edge_on_boundary()
+    {
+        let mut mesh = create_two_connected_faces();
+        for halfedge_id in mesh.halfedge_iterator()
+        {
+            if mesh.on_boundary(&halfedge_id)
+            {
+                let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+
+                assert_eq!(mesh.no_vertices(), 3);
+                assert_eq!(mesh.no_halfedges(), 6);
+                assert_eq!(mesh.no_faces(), 1);
+
+                test_is_valid(&mesh).unwrap();
+
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn test_collapse_edge()
+    {
+        let mut mesh = create_three_connected_faces();
+        for halfedge_id in mesh.halfedge_iterator() {
+            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+            if !mesh.on_boundary(&halfedge_id)
+            {
+                let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+                assert_eq!(mesh.no_vertices(), 3);
+                assert_eq!(mesh.no_halfedges(), 6);
+                assert_eq!(mesh.no_faces(), 1);
+
+                test_is_valid(&mesh).unwrap();
+                break;
+            }
+        }
     }
 }
