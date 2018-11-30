@@ -24,6 +24,16 @@ impl DynamicMesh
         }
     }
 
+    pub fn remove_lonely_vertices(&mut self)
+    {
+        for vertex_id in self.vertex_iterator() {
+            if self.walker_from_vertex(&vertex_id).halfedge_id().is_none()
+            {
+                self.connectivity_info.remove_vertex(&vertex_id);
+            }
+        }
+    }
+
     pub fn flip_edges(&mut self, flatness_threshold: f32)
     {
         let insert_or_remove = |mesh: &DynamicMesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
