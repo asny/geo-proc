@@ -298,31 +298,4 @@ mod tests {
             assert_eq!(0.0, normal.z);
         }
     }
-
-    /*#[test]
-    fn test_remove_face()
-    {
-        let mut mesh = ::models::create_cube_as_dynamic_mesh().unwrap();
-        let face_id = mesh.face_iterator().next().unwrap();
-        mesh.connectivity_info.remove_face(&face_id);
-
-        //mesh.test_is_valid().unwrap(); Is not valid!
-
-        assert_eq!(8, mesh.no_vertices());
-        assert_eq!(36, mesh.no_halfedges());
-        assert_eq!(11, mesh.no_faces());
-
-        let mut i = 0;
-        for face_id in mesh.face_iterator()
-        {
-            mesh.connectivity_info.remove_face(&face_id);
-            i = i+1;
-        }
-        assert_eq!(i, 11);
-        assert_eq!(0, mesh.no_vertices());
-        assert_eq!(0, mesh.no_halfedges());
-        assert_eq!(0, mesh.no_faces());
-
-        mesh.test_is_valid().unwrap();
-    }*/
 }
