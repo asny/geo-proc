@@ -182,18 +182,14 @@ impl DynamicMesh
         for walker1 in self.vertex_halfedge_iterator(&dying_vertex_id) {
             self.connectivity_info.set_halfedge_vertex(&walker1.twin_id().unwrap(), surviving_vertex_id);
         }
-        for walker2 in self.vertex_halfedge_iterator(&surviving_vertex_id) {
-            if walker2.halfedge_id().unwrap() != walker.halfedge_id().unwrap()
-            {
-                self.connectivity_info.set_vertex_halfedge( &surviving_vertex_id, walker2.halfedge_id().unwrap());
-
-            }
-        }
 
         // Remove first face + halfedges
         let he_id1 = walker.halfedge_id().unwrap();
         if walker.face_id().is_some() {
-            self.remove_one_face(&he_id1)
+            walker.previous();
+            self.connectivity_info.set_vertex_halfedge( &surviving_vertex_id, walker.twin_id().unwrap());
+            walker.next();
+            self.remove_one_face(&he_id1);
         }
         else {
             self.connectivity_info.remove_halfedge(&he_id1);
@@ -203,7 +199,10 @@ impl DynamicMesh
         walker.twin();
         let he_id2 = walker.halfedge_id().unwrap();
         if walker.face_id().is_some() {
-            self.remove_one_face(&he_id2)
+            walker.previous();
+            self.connectivity_info.set_vertex_halfedge( &surviving_vertex_id, walker.twin_id().unwrap());
+            walker.next();
+            self.remove_one_face(&he_id2);
         }
         else {
             self.connectivity_info.remove_halfedge(&he_id2);
@@ -223,15 +222,17 @@ impl DynamicMesh
         walker.next();
         let halfedge_id1 = walker.halfedge_id().unwrap();
         let twin_id1 = walker.twin_id().unwrap();
+        let vertex_id = walker.vertex_id().unwrap();
         walker.next();
         let halfedge_id2 = walker.halfedge_id().unwrap();
         let twin_id2 = walker.twin_id().unwrap();
 
-        self.connectivity_info.set_halfedge_twin(twin_id1, twin_id2);
         self.connectivity_info.remove_face(&face_id);
         self.connectivity_info.remove_halfedge(halfedge_id);
         self.connectivity_info.remove_halfedge(&halfedge_id1);
         self.connectivity_info.remove_halfedge(&halfedge_id2);
+        self.connectivity_info.set_halfedge_twin(twin_id1, twin_id2);
+        self.connectivity_info.set_vertex_halfedge(&vertex_id, twin_id1);
 
         walker.twin();
 
