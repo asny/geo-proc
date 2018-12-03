@@ -415,7 +415,32 @@ mod tests {
     }
 
     #[test]
-    fn test_collapse_edge_on_boundary()
+    fn test_collapse_edge_on_boundary1()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
+        let mut mesh = DynamicMesh::create(indices, positions, None);
+
+        for halfedge_id in mesh.halfedge_iterator()
+        {
+            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
+            if walker.face_id().is_none() && walker.twin().next().twin().face_id().is_some() && walker.twin().next().twin().face_id().is_some()
+            {
+                let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+
+                assert_eq!(mesh.no_vertices(), 4);
+                assert_eq!(mesh.no_halfedges(), 10);
+                assert_eq!(mesh.no_faces(), 2);
+
+                test_is_valid(&mesh).unwrap();
+
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn test_collapse_edge_on_boundary2()
     {
         let mut mesh = create_two_connected_faces();
         for halfedge_id in mesh.halfedge_iterator()
@@ -452,5 +477,27 @@ mod tests {
                 break;
             }
         }
+    }
+
+    #[test]
+    fn test_recursive_collapse_edge()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
+        let mut mesh = DynamicMesh::create(indices, positions, None);
+
+        while mesh.no_faces() > 1 {
+            for halfedge_id in mesh.halfedge_iterator() {
+                if mesh.on_boundary(&halfedge_id)
+                {
+                    let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+                    break;
+                }
+            }
+        }
+        assert_eq!(mesh.no_vertices(), 3);
+        assert_eq!(mesh.no_halfedges(), 6);
+        assert_eq!(mesh.no_faces(), 1);
+        test_is_valid(&mesh).unwrap();
     }
 }
