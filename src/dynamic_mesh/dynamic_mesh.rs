@@ -2,7 +2,7 @@ use dynamic_mesh::connectivity_info::ConnectivityInfo;
 use dynamic_mesh::*;
 use types::*;
 use std::rc::Rc;
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
@@ -45,7 +45,7 @@ impl DynamicMesh
                 indices[i] = current_index;
                 for j in i+1..positions.len()/3 {
                     let p2 = vec3(positions[3 * j], positions[3 * j + 1], positions[3 * j + 2]);
-                    if (p1 - p2).norm() < 0.001 {
+                    if (p1 - p2).norm() < 0.00001 {
                         indices[j] = current_index;
                     }
                 }
@@ -80,6 +80,47 @@ impl DynamicMesh
     pub(super) fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> DynamicMesh
     {
         DynamicMesh {positions, normals, connectivity_info}
+    }
+
+    pub fn merge_overlapping_primitives(&mut self) -> Result<(), basic_operations::Error>
+    {
+        let mut vertices_to_check = HashSet::new();
+        self.vertex_iterator().for_each(|v| { vertices_to_check.insert(v); } );
+
+        let mut vertices_to_merge = Vec::new();
+
+        while !vertices_to_check.is_empty() {
+            let vertex_id1 = *vertices_to_check.iter().next().unwrap();
+            vertices_to_check.remove(&vertex_id1);
+
+            let mut coll = Vec::new();
+            for vertex_id2 in vertices_to_check.iter()
+            {
+                if (self.position(&vertex_id1) - self.position(vertex_id2)).norm() < 0.00001
+                {
+                    coll.push(*vertex_id2);
+                }
+            }
+            if !coll.is_empty()
+            {
+                for vertex_id in coll.iter()
+                {
+                    vertices_to_check.remove(vertex_id);
+                }
+                coll.push(vertex_id1);
+                vertices_to_merge.push(coll);
+            }
+        }
+
+        for coll in vertices_to_merge {
+            let mut iter = coll.iter();
+            let mut vertex_id1 = *iter.next().unwrap();
+            for vertex_id2 in iter {
+                vertex_id1 = self.merge_vertices(&vertex_id1, vertex_id2)?;
+            }
+        }
+
+        Ok(())
     }
 
     pub fn no_vertices(&self) -> usize
@@ -346,6 +387,22 @@ mod tests {
         let mesh = DynamicMesh::new(positions, None);
 
         assert_eq!(4, mesh.no_vertices());
+        assert_eq!(3, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_merge_overlapping_primitives()
+    {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
+                                       0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
+                                       0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
+
+        let mut mesh = DynamicMesh::new_with_connectivity((0..9).collect(), positions, None);
+        mesh.merge_overlapping_primitives().unwrap();
+
+        assert_eq!(4, mesh.no_vertices());
+        assert_eq!(12, mesh.no_halfedges());
         assert_eq!(3, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
     }
