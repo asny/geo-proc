@@ -419,7 +419,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = DynamicMesh::create(indices, positions, None);
+        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
 
         for halfedge_id in mesh.halfedge_iterator()
         {
@@ -484,7 +484,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = DynamicMesh::create(indices, positions, None);
+        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
 
         while mesh.no_faces() > 1 {
             for halfedge_id in mesh.halfedge_iterator() {

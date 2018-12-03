@@ -52,10 +52,10 @@ impl DynamicMesh
             }
         }
 
-        DynamicMesh::create(indices.iter().map(|x| x.unwrap()).collect(), positions_out, normals_out)
+        DynamicMesh::new_with_connectivity(indices.iter().map(|x| x.unwrap()).collect(), positions_out, normals_out)
     }
 
-    pub fn create(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
+    pub fn new_with_connectivity(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
@@ -77,7 +77,7 @@ impl DynamicMesh
         mesh
     }
 
-    pub(super) fn create_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> DynamicMesh
+    pub(super) fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> DynamicMesh
     {
         DynamicMesh {positions, normals, connectivity_info}
     }
@@ -253,7 +253,7 @@ impl DynamicMesh
 
 impl Clone for DynamicMesh {
     fn clone(&self) -> DynamicMesh {
-        DynamicMesh::create_internal(self.positions.clone(), self.normals.clone(), Rc::new((*self.connectivity_info).clone()))
+        DynamicMesh::new_internal(self.positions.clone(), self.normals.clone(), Rc::new((*self.connectivity_info).clone()))
     }
 }
 
@@ -264,7 +264,7 @@ mod tests {
 
     #[test]
     fn test_one_face_connectivity() {
-        let mut mesh = DynamicMesh::create(vec![], vec![], None);
+        let mut mesh = DynamicMesh::new_with_connectivity(vec![], vec![], None);
 
         let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
         let v2 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);

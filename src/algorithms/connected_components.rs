@@ -111,7 +111,7 @@ mod tests {
             4, 0, 3,
             4, 3, 7
         ];
-        DynamicMesh::create(indices, positions, None)
+        DynamicMesh::new_with_connectivity(indices, positions, None)
     }
 
     fn create_unconnected_test_object() -> DynamicMesh
@@ -156,6 +156,6 @@ mod tests {
             12, 13, 14
         ];
 
-        DynamicMesh::create(indices, positions, None)
+        DynamicMesh::new_with_connectivity(indices, positions, None)
     }
 }

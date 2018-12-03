@@ -8,7 +8,7 @@ impl StaticMesh
         let positions = self.attribute("position").unwrap().data.clone();
         let normals = self.attribute("normal").map(|att| att.data.clone());
 
-        DynamicMesh::create(indices, positions, normals)
+        DynamicMesh::new_with_connectivity(indices, positions, normals)
     }
 }
 

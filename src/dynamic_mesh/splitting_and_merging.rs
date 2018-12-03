@@ -59,7 +59,7 @@ impl DynamicMesh
             }
         }
 
-        DynamicMesh::create_internal(positions, normals, Rc::new(info))
+        DynamicMesh::new_internal(positions, normals, Rc::new(info))
     }
 
     pub fn split(&self, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> Result<(DynamicMesh, DynamicMesh), Error>
@@ -180,11 +180,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mesh1 = DynamicMesh::create(indices1, positions1, None);
+        let mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.0, -2.0, -2.0, 0.5, 0.0];
-        let mesh2 = DynamicMesh::create(indices2, positions2, None);
+        let mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
 
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iterator() {
@@ -210,11 +210,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mesh1 = DynamicMesh::create(indices1, positions1, None);
+        let mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.5, 0.0, -2.0, 0.0, -2.0];
-        let mesh2 = DynamicMesh::create(indices2, positions2, None);
+        let mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
 
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iterator() {
@@ -240,7 +240,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = DynamicMesh::create(indices, positions, None);
+        let mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
 
         let mut faces = HashSet::new();
         for face_id in mesh.face_iterator() {
@@ -259,7 +259,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = DynamicMesh::create(indices, positions, None);
+        let mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
 
         let (m1, m2) = mesh.split(&|mesh,
             he_id| {
