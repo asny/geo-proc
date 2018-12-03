@@ -4,6 +4,7 @@ use types::*;
 #[derive(Debug)]
 pub enum Error {
     FailedToFlipEdge {message: String},
+    FailedToMergeVertices {message: String},
 }
 
 impl DynamicMesh
@@ -236,6 +237,53 @@ impl DynamicMesh
 
         walker.twin();
 
+    }
+
+    pub fn merge_vertices(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Result<VertexID, Error>
+    {
+        let mut edges_to_remove = Vec::new();
+        for mut walker1 in self.vertex_halfedge_iterator(vertex_id1) {
+            for mut walker2 in self.vertex_halfedge_iterator(vertex_id2) {
+                if walker1.vertex_id() == walker2.vertex_id() {
+                    if walker1.face_id().is_some() { walker1.twin(); }
+                    if walker1.face_id().is_some() {
+                        return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+                    }
+                    if walker2.face_id().is_some() { walker2.twin(); }
+                    if walker2.face_id().is_some() {
+                        return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+                    }
+                    edges_to_remove.push((walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap()));
+                }
+            }
+        }
+
+        if edges_to_remove.len() > 2 {
+            return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+        }
+
+        for walker in self.vertex_halfedge_iterator(vertex_id2) {
+            self.connectivity_info.set_halfedge_vertex(&walker.twin_id().unwrap(), *vertex_id1);
+        }
+        self.connectivity_info.remove_vertex(vertex_id2);
+
+        for (halfedge_to_remove1, halfedge_to_remove2) in edges_to_remove {
+            let mut walker = self.walker_from_halfedge(&halfedge_to_remove1);
+            walker.twin();
+            let twin_halfedge_id1 = walker.halfedge_id().unwrap();
+            self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.next_id().unwrap());
+
+            walker.jump_to_edge(&halfedge_to_remove2);
+            walker.twin();
+            let twin_halfedge_id2 = walker.halfedge_id().unwrap();
+            self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.next_id().unwrap());
+
+            self.connectivity_info.remove_halfedge(&halfedge_to_remove1);
+            self.connectivity_info.remove_halfedge(&halfedge_to_remove2);
+            self.connectivity_info.set_halfedge_twin(twin_halfedge_id1, twin_halfedge_id2);
+        }
+
+        Ok(vertex_id1.clone())
     }
 }
 
