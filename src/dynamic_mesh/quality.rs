@@ -24,6 +24,21 @@ impl DynamicMesh
         }
     }
 
+    pub fn collapse_small_faces(&mut self, area_threshold: f32)
+    {
+        let mut faces_to_test = HashSet::new();
+        self.face_iterator().for_each(|f| { faces_to_test.insert(f); } );
+        while !faces_to_test.is_empty() {
+            let face_id = *faces_to_test.iter().next().unwrap();
+            faces_to_test.remove(&face_id);
+            if self.face_area(&face_id) < area_threshold {
+                let mut walker = self.walker_from_face(&face_id);
+                if let Some(twin_face_id) = walker.twin().face_id() { faces_to_test.remove(&twin_face_id); }
+                let surviving_vertex = self.collapse_edge(&walker.twin_id().unwrap());
+            }
+        }
+    }
+
     pub fn remove_lonely_vertices(&mut self)
     {
         for vertex_id in self.vertex_iterator() {
@@ -115,4 +130,21 @@ fn triangle_quality(p0: &Vec3, p1: &Vec3, p2: &Vec3) -> f32
     let inscribed_radius = 2.0 * area / perimiter;
     let circumscribed_radius = length01 * length02 * length12 / (4.0 * area);
     circumscribed_radius / inscribed_radius
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_collapse_small_faces()
+    {
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 0.1,  0.1, 0.0, -0.1,  -1.0, 0.0, -0.5];
+        let mut mesh = DynamicMesh::create(indices, positions, None);
+        test_utility::test_is_valid(&mesh).unwrap();
+
+        mesh.collapse_small_faces(0.2);
+        test_utility::test_is_valid(&mesh).unwrap();
+    }
 }
