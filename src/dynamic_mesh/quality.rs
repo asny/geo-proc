@@ -34,7 +34,7 @@ impl DynamicMesh
             if self.face_area(&face_id) < area_threshold {
                 let mut walker = self.walker_from_face(&face_id);
                 if let Some(twin_face_id) = walker.twin().face_id() { faces_to_test.remove(&twin_face_id); }
-                let surviving_vertex = self.collapse_edge(&walker.twin_id().unwrap());
+                self.collapse_edge(&walker.twin_id().unwrap());
             }
         }
     }

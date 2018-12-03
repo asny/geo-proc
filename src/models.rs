@@ -30,7 +30,7 @@ pub fn create_sphere(subdivisions: usize) -> Result<StaticMesh, Error>
     for _ in 0..subdivisions {
         for face_id in dyn_mesh.face_iterator() {
             let p = dyn_mesh.face_center(&face_id).normalize();
-            let vid = dyn_mesh.split_face(&face_id, p);
+            dyn_mesh.split_face(&face_id, p);
         }
         dyn_mesh.smooth_vertices(1.0);
         for vertex_id in dyn_mesh.vertex_iterator() {
