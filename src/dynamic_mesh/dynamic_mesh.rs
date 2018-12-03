@@ -18,6 +18,43 @@ pub struct DynamicMesh {
 
 impl DynamicMesh
 {
+    pub fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
+    {
+        let mut indices = vec![None; positions.len()/3];
+        let mut positions_out = Vec::new();
+        let mut normals_out = if normals.is_some() { Some(Vec::new()) } else { None };
+
+        for i in 0..positions.len()/3 {
+            if indices[i].is_none()
+            {
+                let p1 = vec3(positions[3 * i], positions[3 * i + 1], positions[3 * i + 2]);
+                positions_out.push(p1.x);
+                positions_out.push(p1.y);
+                positions_out.push(p1.z);
+
+                if let Some(ref n_in) = normals {
+                    if let Some(ref mut n_out) = normals_out {
+                        let n = vec3(n_in[3 * i], n_in[3 * i + 1], n_in[3 * i + 2]);
+                        n_out.push(n.x);
+                        n_out.push(n.y);
+                        n_out.push(n.z);
+                    }
+                }
+
+                let current_index = Some((positions_out.len() / 3 - 1) as u32);
+                indices[i] = current_index;
+                for j in i+1..positions.len()/3 {
+                    let p2 = vec3(positions[3 * j], positions[3 * j + 1], positions[3 * j + 2]);
+                    if (p1 - p2).norm() < 0.001 {
+                        indices[j] = current_index;
+                    }
+                }
+            }
+        }
+
+        DynamicMesh::create(indices.iter().map(|x| x.unwrap()).collect(), positions_out, normals_out)
+    }
+
     pub fn create(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
     {
         let no_vertices = positions.len()/3;
@@ -297,5 +334,19 @@ mod tests {
             assert_eq!(1.0, normal.y);
             assert_eq!(0.0, normal.z);
         }
+    }
+
+    #[test]
+    fn test_new_from_positions()
+    {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
+                                       0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
+                                       0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
+
+        let mesh = DynamicMesh::new(positions, None);
+
+        assert_eq!(4, mesh.no_vertices());
+        assert_eq!(3, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
     }
 }
