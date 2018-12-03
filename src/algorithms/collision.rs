@@ -104,6 +104,7 @@ pub fn find_face_intersection(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3
     None
 }
 
+#[derive(Debug, PartialEq)]
 enum PlaneLinepieceIntersectionResult
 {
     P0InPlane,
@@ -255,5 +256,57 @@ mod tests {
 
         result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + 1.01 * MARGIN * dir_away_from_edge));
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_plane_line_piece_intersection_no_intersection()
+    {
+        let p = vec3(1.0, 1.0, 1.0);
+        let n = vec3(0.0, 0.0, -1.0);
+
+        let p0 = vec3(0.0, 0.0, 0.0);
+        let p1 = vec3(0.0, 1.0, 1.0 - MARGIN);
+
+        let result = plane_line_piece_intersection(&p0, &p1, &p, &n);
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_plane_line_piece_intersection_point_in_plane()
+    {
+        let p = vec3(1.0, 1.0, 1.0);
+        let n = vec3(0.0, 0.0, -1.0);
+
+        let p0 = vec3(0.0, 0.0, 0.0);
+        let p1 = vec3(0.0, 1.0,1.0);
+
+        let result = plane_line_piece_intersection(&p0, &p1, &p, &n);
+        assert_eq!(result, Some(PlaneLinepieceIntersectionResult::P1InPlane));
+    }
+
+    #[test]
+    fn test_plane_line_piece_intersection_intersection()
+    {
+        let p = vec3(1.0, 1.0, 1.0);
+        let n = vec3(0.0, 0.0, -1.0);
+
+        let p0 = vec3(0.0, 1.0, 0.0);
+        let p1 = vec3(0.0, 1.0,1.0 + MARGIN);
+
+        let result = plane_line_piece_intersection(&p0, &p1, &p, &n);
+        assert_eq!(result, Some(PlaneLinepieceIntersectionResult::Intersection(vec3(0.0, 1.0, 1.0))));
+    }
+
+    #[test]
+    fn test_plane_line_piece_intersection_line_in_plane()
+    {
+        let p = vec3(1.0, 1.0, 1.0);
+        let n = vec3(0.0, 0.0, -1.0);
+
+        let p0 = vec3(-1.0, 1.0, 1.0);
+        let p1 = vec3(0.0, 1.0,1.0);
+
+        let result = plane_line_piece_intersection(&p0, &p1, &p, &n);
+        assert_eq!(result, Some(PlaneLinepieceIntersectionResult::LineInPlane));
     }
 }
