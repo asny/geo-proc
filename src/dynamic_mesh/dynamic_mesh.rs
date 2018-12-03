@@ -406,4 +406,16 @@ mod tests {
         assert_eq!(3, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
     }
+
+    #[test]
+    fn test_merge_overlapping_of_cube()
+    {
+        let mut mesh = ::models::create_unconnected_cube().unwrap().to_dynamic();
+        mesh.merge_overlapping_primitives().unwrap();
+
+        assert_eq!(8, mesh.no_vertices());
+        assert_eq!(36, mesh.no_halfedges());
+        assert_eq!(12, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
 }
