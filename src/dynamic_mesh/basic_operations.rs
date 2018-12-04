@@ -242,18 +242,28 @@ impl DynamicMesh
     pub fn merge_vertices(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Result<VertexID, Error>
     {
         let mut edges_to_remove = Vec::new();
-        for mut walker1 in self.vertex_halfedge_iterator(vertex_id1) {
-            for mut walker2 in self.vertex_halfedge_iterator(vertex_id2) {
-                if walker1.vertex_id() == walker2.vertex_id() {
-                    if walker1.face_id().is_some() { walker1.twin(); }
-                    if walker1.face_id().is_some() {
-                        return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+        let mut walker1 = Walker::create(&self.connectivity_info);
+        let mut walker2 = Walker::create(&self.connectivity_info);
+        for mut halfedge_id1 in self.halfedge_iterator() {
+            walker1.jump_to_edge(&halfedge_id1);
+            if walker1.vertex_id().unwrap() == *vertex_id1
+            {
+                let vertex_id_to_test = walker1.twin().vertex_id().unwrap();
+
+                for mut halfedge_id2 in self.halfedge_iterator() {
+                    walker2.jump_to_edge(&halfedge_id2);
+                    if walker2.vertex_id().unwrap() == *vertex_id2 && walker2.twin().vertex_id().unwrap() == vertex_id_to_test
+                    {
+                        if walker1.face_id().is_some() { walker1.twin(); }
+                        if walker1.face_id().is_some() {
+                            return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+                        }
+                        if walker2.face_id().is_some() { walker2.twin(); }
+                        if walker2.face_id().is_some() {
+                            return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+                        }
+                        edges_to_remove.push((walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap()));
                     }
-                    if walker2.face_id().is_some() { walker2.twin(); }
-                    if walker2.face_id().is_some() {
-                        return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
-                    }
-                    edges_to_remove.push((walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap()));
                 }
             }
         }
