@@ -5,9 +5,9 @@ impl DynamicMesh
 {
     pub fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
-        for mut halfedge in self.vertex_halfedge_iterator(vertex_id1) {
-            if &halfedge.vertex_id().unwrap() == vertex_id2 {
-                return halfedge.halfedge_id()
+        for mut walker in self.vertex_halfedge_iterator(vertex_id1) {
+            if &walker.vertex_id().unwrap() == vertex_id2 {
+                return walker.halfedge_id()
             }
         }
         None
@@ -24,6 +24,17 @@ impl DynamicMesh
             }
         }
         None
+    }
+
+    pub fn vertex_on_boundary(&self, vertex_id: &VertexID) -> bool
+    {
+        for mut walker in self.vertex_halfedge_iterator(vertex_id) {
+            if walker.face_id().is_none() || walker.twin().face_id().is_none()
+            {
+                return true;
+            }
+        }
+        false
     }
 
     pub fn on_boundary(&self, halfedge_id: &HalfEdgeID) -> bool
