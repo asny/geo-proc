@@ -254,14 +254,6 @@ impl DynamicMesh
                     walker2.jump_to_edge(&halfedge_id2);
                     if walker2.vertex_id().unwrap() == *vertex_id2 && walker2.twin().vertex_id().unwrap() == vertex_id_to_test
                     {
-                        if walker1.face_id().is_some() { walker1.twin(); }
-                        if walker1.face_id().is_some() {
-                            return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
-                        }
-                        if walker2.face_id().is_some() { walker2.twin(); }
-                        if walker2.face_id().is_some() {
-                            return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
-                        }
                         edges_to_remove.push((walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap()));
                     }
                 }
@@ -272,18 +264,28 @@ impl DynamicMesh
             return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
         }
 
+        for (halfedge1, halfedge2) in edges_to_remove.iter() {
+            if !self.on_boundary(halfedge1) || !self.on_boundary(halfedge2) {
+                return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+            }
+        }
+        
         for walker in self.vertex_halfedge_iterator(vertex_id2) {
             self.connectivity_info.set_halfedge_vertex(&walker.twin_id().unwrap(), *vertex_id1);
         }
         self.connectivity_info.remove_vertex(vertex_id2);
 
-        for (halfedge_to_remove1, halfedge_to_remove2) in edges_to_remove {
-            let mut walker = self.walker_from_halfedge(&halfedge_to_remove1);
+        for (halfedge1, halfedge2) in edges_to_remove.iter() {
+            let mut walker = self.walker_from_halfedge(halfedge1);
+            if walker.face_id().is_some() { walker.twin(); }
+            let halfedge_to_remove1 = walker.halfedge_id().unwrap();
             walker.twin();
             let twin_halfedge_id1 = walker.halfedge_id().unwrap();
             self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.next_id().unwrap());
 
-            walker.jump_to_edge(&halfedge_to_remove2);
+            walker.jump_to_edge(halfedge2);
+            if walker.face_id().is_some() { walker.twin(); }
+            let halfedge_to_remove2 = walker.halfedge_id().unwrap();
             walker.twin();
             let twin_halfedge_id2 = walker.halfedge_id().unwrap();
             self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.next_id().unwrap());
