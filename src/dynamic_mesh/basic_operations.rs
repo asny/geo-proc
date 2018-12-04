@@ -260,8 +260,42 @@ impl DynamicMesh
             }
         }
 
-        if edges_to_remove.len() > 2 {
-            return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+        let mut faces_to_remove = Vec::new();
+        if edges_to_remove.len() > 1 {
+            for (halfedge_id11, halfedge_id12) in edges_to_remove.iter() {
+                for (halfedge_id21, halfedge_id22) in edges_to_remove.iter() {
+
+                    if halfedge_id11 < halfedge_id21
+                    {
+                        let find_face_to_remove = |halfedge_id1, halfedge_id2|
+                        {
+                            let mut walker1 = self.walker_from_halfedge(halfedge_id1);
+                            let mut walker2 = self.walker_from_halfedge(halfedge_id2);
+                            let mut face_id_to_remove = None;
+                            let test_face_equality = |face1, face2|
+                            {
+                                if let Some(face_id1) = face1 {
+                                    if let Some(face_id2) = face2 {
+                                        if face_id1 == face_id2 {return Some(face_id1)}
+                                    }
+                                }
+                                return None;
+                            };
+                            face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());
+                            if face_id_to_remove.is_none() {walker1.twin(); face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());}
+                            if face_id_to_remove.is_none() {walker2.twin(); face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());}
+                            if face_id_to_remove.is_none() {walker1.twin(); face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());}
+                            face_id_to_remove
+                        };
+                        if let Some(face_id1) = find_face_to_remove(halfedge_id11, halfedge_id21) {
+                            if let Some(face_id2) = find_face_to_remove(halfedge_id12, halfedge_id22) {
+                                faces_to_remove.push(face_id1);
+                            }
+                        }
+                    }
+                }
+
+            }
         }
 
         for (halfedge1, halfedge2) in edges_to_remove.iter() {
@@ -269,7 +303,7 @@ impl DynamicMesh
                 return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
             }
         }
-        
+
         for walker in self.vertex_halfedge_iterator(vertex_id2) {
             self.connectivity_info.set_halfedge_vertex(&walker.twin_id().unwrap(), *vertex_id1);
         }
