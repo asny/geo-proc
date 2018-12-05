@@ -289,13 +289,21 @@ impl DynamicMesh
                         };
                         if let Some(face_id1) = find_face_to_remove(halfedge_id11, halfedge_id21) {
                             if let Some(face_id2) = find_face_to_remove(halfedge_id12, halfedge_id22) {
-                                faces_to_remove.push(face_id1);
+                                faces_to_remove.push((face_id1, face_id2));
                             }
                         }
                     }
                 }
 
             }
+        }
+
+        for (face_id1, face_id2) in faces_to_remove.iter() {
+            for walker in self.face_halfedge_iterator(face_id1) {
+                self.connectivity_info.set_halfedge_face(&walker.halfedge_id().unwrap(), None);
+                self.connectivity_info.set_halfedge_next(&walker.halfedge_id().unwrap(), None);
+            }
+            self.connectivity_info.remove_face(face_id1);
         }
 
         for (halfedge1, halfedge2) in edges_to_remove.iter() {
