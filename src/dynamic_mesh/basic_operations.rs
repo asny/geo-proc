@@ -254,6 +254,8 @@ impl DynamicMesh
                     walker2.jump_to_edge(&halfedge_id2);
                     if walker2.vertex_id().unwrap() == *vertex_id2 && walker2.twin().vertex_id().unwrap() == vertex_id_to_test
                     {
+                        if walker1.face_id().is_some() { walker1.twin(); };
+                        if walker2.face_id().is_some() { walker2.twin(); };
                         edges_to_remove.push((walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap()));
                     }
                 }
@@ -344,14 +346,12 @@ impl DynamicMesh
 
         for (halfedge1, halfedge2) in edges_to_remove.iter() {
             let mut walker = self.walker_from_halfedge(halfedge1);
-            if walker.face_id().is_some() { walker.twin(); }
             let halfedge_to_remove1 = walker.halfedge_id().unwrap();
             walker.twin();
             let twin_halfedge_id1 = walker.halfedge_id().unwrap();
             let vid1 = walker.vertex_id().unwrap();
 
             walker.jump_to_edge(halfedge2);
-            if walker.face_id().is_some() { walker.twin(); }
             let halfedge_to_remove2 = walker.halfedge_id().unwrap();
             walker.twin();
             let twin_halfedge_id2 = walker.halfedge_id().unwrap();
