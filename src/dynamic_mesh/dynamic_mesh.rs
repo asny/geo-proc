@@ -526,8 +526,8 @@ mod tests {
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(4, mesh.no_vertices());
-        assert_eq!(12, mesh.no_halfedges());
-        assert_eq!(3, mesh.no_faces());
+        assert_eq!(10, mesh.no_halfedges());
+        assert_eq!(2, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
     }
 }
