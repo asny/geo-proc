@@ -328,6 +328,16 @@ impl DynamicMesh
             }
         }
 
+        for (halfedge_id, _) in edges_to_remove.iter_mut() {
+            let mut walker = self.walker_from_halfedge(halfedge_id);
+            walker.twin();
+            let test_face_id = walker.face_id().unwrap();
+            if faces_to_remove.iter().any(|(face_id, _)| *face_id == test_face_id)
+            {
+                *halfedge_id = walker.halfedge_id().unwrap();
+            }
+        }
+
         for halfedge_id in self.halfedge_iterator() {
             let mut walker = self.walker_from_halfedge(&halfedge_id);
             if walker.vertex_id().unwrap() == *vertex_id2 {
