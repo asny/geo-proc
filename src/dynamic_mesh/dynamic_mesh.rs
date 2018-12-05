@@ -168,7 +168,9 @@ impl DynamicMesh
                     let mut edges_to_merge = Vec::new();
                     edges_to_merge.push(halfedge_id1);
                     for (v2, v3) in self.edge_iterator() {
-                        if v0 < v2 && v1 < v3 && vertices_to_merge0.contains(&v2) && vertices_to_merge1.contains(&v3) {
+                        if (v0 < v2 || v0 == v2 && v1 < v3)
+                            && (vertices_to_merge0.contains(&v2) && vertices_to_merge1.contains(&v3)
+                            || vertices_to_merge1.contains(&v2) && vertices_to_merge0.contains(&v3)){
                             let halfedge_id2 = self.connecting_edge(&v2, &v3).unwrap();
                             edges_to_merge.push(halfedge_id2);
                         }
