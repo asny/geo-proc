@@ -304,8 +304,11 @@ impl DynamicMesh
             }
         }
 
-        for walker in self.vertex_halfedge_iterator(vertex_id2) {
-            self.connectivity_info.set_halfedge_vertex(&walker.twin_id().unwrap(), *vertex_id1);
+        for halfedge_id in self.halfedge_iterator() {
+            let mut walker = self.walker_from_halfedge(&halfedge_id);
+            if walker.vertex_id().unwrap() == *vertex_id2 {
+                self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), *vertex_id1);
+            }
         }
         self.connectivity_info.remove_vertex(vertex_id2);
 
