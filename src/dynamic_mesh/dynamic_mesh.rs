@@ -82,7 +82,7 @@ impl DynamicMesh
         DynamicMesh {positions, normals, connectivity_info}
     }
 
-    pub fn merge_overlapping_primitives(&mut self) -> Result<(), basic_operations::Error>
+    fn find_overlapping_vertices(&self) -> Vec<Vec<VertexID>>
     {
         let mut vertices_to_check = HashSet::new();
         self.vertex_iterator().for_each(|v| { vertices_to_check.insert(v); } );
@@ -111,7 +111,103 @@ impl DynamicMesh
                 set_of_vertices_to_merge.push(vertices_to_merge);
             }
         }
+        println!("Vertices to merge: {:?}", set_of_vertices_to_merge);
+        set_of_vertices_to_merge
+    }
 
+    fn find_overlapping_faces(&self, set_of_vertices_to_merge: &Vec<Vec<VertexID>>) -> Vec<Vec<FaceID>>
+    {
+        let vertices_to_merge = |vertex_id| {set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))};
+
+        let mut set_of_faces_to_merge = Vec::new();
+        for face_id1 in self.face_iterator() {
+            let (v0, v1, v2) = self.face_vertices(&face_id1);
+            if let Some(vertices_to_merge0) = vertices_to_merge(v0)
+            {
+                if let Some(vertices_to_merge1) = vertices_to_merge(v1)
+                {
+                    if let Some(vertices_to_merge2) = vertices_to_merge(v2)
+                    {
+                        let mut faces_to_merge = Vec::new();
+                        faces_to_merge.push(face_id1);
+                        for face_id2 in self.face_iterator() {
+                            if face_id1 < face_id2 {
+                                let mut is_overlapping = true;
+                                for walker in self.face_halfedge_iterator(&face_id2) {
+                                    let vid = walker.vertex_id().unwrap();
+                                    if !vertices_to_merge0.contains(&vid) && !vertices_to_merge1.contains(&vid) && !vertices_to_merge2.contains(&vid)
+                                    {
+                                        is_overlapping = false;
+                                    }
+                                }
+                                if is_overlapping { faces_to_merge.push(face_id2) }
+                            }
+                        }
+                        if faces_to_merge.len() > 1 {
+                            set_of_faces_to_merge.push(faces_to_merge);
+                        }
+                    }
+                }
+            }
+        }
+        println!("Faces to merge: {:?}", set_of_faces_to_merge);
+        set_of_faces_to_merge
+    }
+
+    fn find_overlapping_edges(&self, set_of_vertices_to_merge: &Vec<Vec<VertexID>>) -> Vec<Vec<HalfEdgeID>>
+    {
+        let vertices_to_merge = |vertex_id| {set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))};
+
+        let mut set_of_edges_to_merge = Vec::new();
+        for (v0, v1) in self.edge_iterator() {
+            if let Some(vertices_to_merge0) = vertices_to_merge(v0)
+            {
+                if let Some(vertices_to_merge1) = vertices_to_merge(v1)
+                {
+                    let halfedge_id1 = self.connecting_edge(&v0, &v1).unwrap();
+                    let mut edges_to_merge = Vec::new();
+                    edges_to_merge.push(halfedge_id1);
+                    for (v2, v3) in self.edge_iterator() {
+                        if v0 < v2 && v1 < v3 && vertices_to_merge0.contains(&v2) && vertices_to_merge1.contains(&v3) {
+                            let halfedge_id2 = self.connecting_edge(&v2, &v3).unwrap();
+                            edges_to_merge.push(halfedge_id2);
+                        }
+                    }
+                    if edges_to_merge.len() > 1 {
+                        set_of_edges_to_merge.push(edges_to_merge);
+                    }
+                }
+            }
+        }
+        println!("Edges to merge: {:?}", set_of_edges_to_merge);
+        set_of_edges_to_merge
+    }
+
+    pub fn merge_overlapping_primitives(&mut self) -> Result<(), basic_operations::Error>
+    {
+        let mut set_of_vertices_to_merge = self.find_overlapping_vertices();
+        let set_of_faces_to_merge = self.find_overlapping_faces(&set_of_vertices_to_merge);
+        for faces_to_merge in set_of_faces_to_merge {
+            let mut iter = faces_to_merge.iter();
+            let mut face_id1 = *iter.next().unwrap();
+            for face_id2 in iter {
+                //println!("Merging: {} and {}", face_id1, face_id2);
+                face_id1 = self.merge_faces(&face_id1, face_id2)?;
+            }
+        }
+
+        set_of_vertices_to_merge = self.find_overlapping_vertices();
+        let set_of_edges_to_merge = self.find_overlapping_edges(&set_of_vertices_to_merge);
+        for edges_to_merge in set_of_edges_to_merge {
+            let mut iter = edges_to_merge.iter();
+            let mut edge_id1 = *iter.next().unwrap();
+            for edge_id2 in iter {
+                println!("Merging: {} and {}", edge_id1, edge_id2);
+                edge_id1 = self.merge_halfedges(&edge_id1, edge_id2)?;
+            }
+        }
+
+        set_of_vertices_to_merge = self.find_overlapping_vertices();
         for vertices_to_merge in set_of_vertices_to_merge {
             let mut iter = vertices_to_merge.iter();
             let mut vertex_id1 = *iter.next().unwrap();

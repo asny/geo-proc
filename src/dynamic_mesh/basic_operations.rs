@@ -570,7 +570,6 @@ mod tests {
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-
         let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
 
         let mut vertex_id1 = None;
@@ -596,9 +595,7 @@ mod tests {
     {
         let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0];
-
         let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
-        test_is_valid(&mesh).unwrap();
 
         let mut heid1 = None;
         for (v0, v1) in mesh.edge_iterator() {
@@ -619,32 +616,19 @@ mod tests {
         test_is_valid(&mesh).unwrap();
     }
 
-    /*#[test]
+    #[test]
     fn test_merge_faces()
     {
-        let indices: Vec<u32> = vec![0, 1, 2,  1, 2, 3  ];
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
-                                       0.0, 0.0, 0.0];
+        let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
+                                       1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0];
+        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
 
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
-        test_is_valid(&mesh).unwrap();
-
-        let mut vertex_id1 = None;
-        for vertex_id in mesh.vertex_iterator() {
-            if *mesh.position(&vertex_id) == vec3(0.0, 0.0, 0.0)
-            {
-                if vertex_id1.is_none() { vertex_id1 = Some(vertex_id); }
-                else {
-                    println!("Merging: {} and {}", vertex_id1.unwrap(), vertex_id);
-                    mesh.merge_vertices(&vertex_id1.unwrap(), &vertex_id).unwrap();
-                    break;
-                }
-            }
-        }
+        let faces: Vec<FaceID> = mesh.face_iterator().into_iter().collect();
+        mesh.merge_faces(&faces[0], &faces[1]).unwrap();
 
         assert_eq!(3, mesh.no_vertices());
         assert_eq!(6, mesh.no_halfedges());
         assert_eq!(1, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
-    }*/
+    }
 }
