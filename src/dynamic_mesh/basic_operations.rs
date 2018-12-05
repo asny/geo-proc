@@ -338,6 +338,7 @@ impl DynamicMesh
             }
         }
 
+        // Merge vertices
         for halfedge_id in self.halfedge_iterator() {
             let mut walker = self.walker_from_halfedge(&halfedge_id);
             if walker.vertex_id().unwrap() == *vertex_id2 {
@@ -346,6 +347,7 @@ impl DynamicMesh
         }
         self.connectivity_info.remove_vertex(vertex_id2);
 
+        // Merge faces
         for (face_id1, face_id2) in faces_to_remove.iter() {
             for walker in self.face_halfedge_iterator(face_id1) {
                 self.connectivity_info.set_halfedge_face(&walker.halfedge_id().unwrap(), None);
@@ -354,6 +356,7 @@ impl DynamicMesh
             self.connectivity_info.remove_face(face_id1);
         }
 
+        // Merge halfedges
         for (halfedge1, halfedge2) in edges_to_remove.iter() {
             let mut walker = self.walker_from_halfedge(halfedge1);
             let halfedge_to_remove1 = walker.halfedge_id().unwrap();
