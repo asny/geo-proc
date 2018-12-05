@@ -315,20 +315,20 @@ impl DynamicMesh
             let halfedge_to_remove1 = walker.halfedge_id().unwrap();
             walker.twin();
             let twin_halfedge_id1 = walker.halfedge_id().unwrap();
-            let vertex_id1 = walker.vertex_id().unwrap();
+            let vid1 = walker.vertex_id().unwrap();
 
             walker.jump_to_edge(halfedge2);
             if walker.face_id().is_some() { walker.twin(); }
             let halfedge_to_remove2 = walker.halfedge_id().unwrap();
             walker.twin();
             let twin_halfedge_id2 = walker.halfedge_id().unwrap();
-            let vertex_id2 = walker.vertex_id().unwrap();
+            let vid2 = walker.vertex_id().unwrap();
 
             self.connectivity_info.remove_halfedge(&halfedge_to_remove1);
             self.connectivity_info.remove_halfedge(&halfedge_to_remove2);
             self.connectivity_info.set_halfedge_twin(twin_halfedge_id1, twin_halfedge_id2);
-            self.connectivity_info.set_vertex_halfedge(&vertex_id1, twin_halfedge_id2);
-            self.connectivity_info.set_vertex_halfedge(&vertex_id2, twin_halfedge_id1);
+            self.connectivity_info.set_vertex_halfedge(&vid1, twin_halfedge_id2);
+            self.connectivity_info.set_vertex_halfedge(&vid2, twin_halfedge_id1);
         }
 
         Ok(vertex_id1.clone())
