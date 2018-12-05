@@ -596,4 +596,59 @@ mod tests {
         assert_eq!(mesh.no_faces(), 1);
         test_is_valid(&mesh).unwrap();
     }
+
+    #[test]
+    fn test_merge_vertices_at_one_vertex()
+    {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
+                                       0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
+
+        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
+
+        let mut vertex_id1 = None;
+        for vertex_id in mesh.vertex_iterator() {
+            if *mesh.position(&vertex_id) == vec3(0.0, 0.0, 0.0)
+            {
+                if vertex_id1.is_none() { vertex_id1 = Some(vertex_id); }
+                else {
+                    mesh.merge_vertices(&vertex_id1.unwrap(), &vertex_id).unwrap();
+                    break;
+                }
+            }
+        }
+
+        assert_eq!(5, mesh.no_vertices());
+        assert_eq!(12, mesh.no_halfedges());
+        assert_eq!(2, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_merge_vertices_at_one_edge()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 4  ];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
+                                       0.0, 0.0, 0.0,  0.0, 0.0, 1.0];
+
+        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        test_is_valid(&mesh).unwrap();
+
+        let mut vertex_id1 = None;
+        for vertex_id in mesh.vertex_iterator() {
+            if *mesh.position(&vertex_id) == vec3(0.0, 0.0, 0.0)
+            {
+                if vertex_id1.is_none() { vertex_id1 = Some(vertex_id); }
+                else {
+                    println!("Merging: {} and {}", vertex_id1.unwrap(), vertex_id);
+                    mesh.merge_vertices(&vertex_id1.unwrap(), &vertex_id).unwrap();
+                    break;
+                }
+            }
+        }
+
+        assert_eq!(4, mesh.no_vertices());
+        assert_eq!(10, mesh.no_halfedges());
+        assert_eq!(2, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
 }
