@@ -155,7 +155,7 @@ impl DynamicMesh
         for (halfedge_id, (new_vertex_id, new_next_id)) in map {
             self.connectivity_info.set_halfedge_vertex(&halfedge_id, new_vertex_id);
             if let Some(next_id) = new_next_id {
-                self.connectivity_info.set_halfedge_next(&halfedge_id, next_id);
+                self.connectivity_info.set_halfedge_next(&halfedge_id, Some(next_id));
             }
         }
     }

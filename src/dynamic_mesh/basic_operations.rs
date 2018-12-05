@@ -36,18 +36,18 @@ impl DynamicMesh
         self.connectivity_info.set_vertex_halfedge(&v0, next_id);
         self.connectivity_info.set_vertex_halfedge(&v1, twin_next_id);
 
-        self.connectivity_info.set_halfedge_next(&halfedge_id, previous_id);
-        self.connectivity_info.set_halfedge_next(&next_id, twin_id);
-        self.connectivity_info.set_halfedge_next(&previous_id, twin_next_id);
-        self.connectivity_info.set_halfedge_next(&twin_id, twin_previous_id);
-        self.connectivity_info.set_halfedge_next(&twin_next_id, halfedge_id.clone());
-        self.connectivity_info.set_halfedge_next(&twin_previous_id, next_id);
+        self.connectivity_info.set_halfedge_next(&halfedge_id, Some(previous_id));
+        self.connectivity_info.set_halfedge_next(&next_id, Some(twin_id));
+        self.connectivity_info.set_halfedge_next(&previous_id, Some(twin_next_id));
+        self.connectivity_info.set_halfedge_next(&twin_id, Some(twin_previous_id));
+        self.connectivity_info.set_halfedge_next(&twin_next_id, Some(halfedge_id.clone()));
+        self.connectivity_info.set_halfedge_next(&twin_previous_id, Some(next_id));
 
         self.connectivity_info.set_halfedge_vertex(&halfedge_id, v3);
         self.connectivity_info.set_halfedge_vertex(&twin_id, v2);
 
-        self.connectivity_info.set_halfedge_face(&next_id, twin_face_id);
-        self.connectivity_info.set_halfedge_face(&twin_next_id, face_id);
+        self.connectivity_info.set_halfedge_face(&next_id, Some(twin_face_id));
+        self.connectivity_info.set_halfedge_face(&twin_next_id, Some(face_id));
 
         Ok(())
     }

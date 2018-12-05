@@ -45,7 +45,7 @@ impl ConnectivityInfo {
         let halfedge3 = self.new_halfedge(Some(vertex_id1.clone()), Some(halfedge1.clone()), Some(id.clone()));
         let halfedge2 = self.new_halfedge(Some(vertex_id3.clone()), Some(halfedge3.clone()), Some(id.clone()));
 
-        self.set_halfedge_next(&halfedge1, halfedge2.clone());
+        self.set_halfedge_next(&halfedge1, Some(halfedge2.clone()));
 
         self.set_vertex_halfedge(&vertex_id1, halfedge1.clone());
         self.set_vertex_halfedge(&vertex_id2, halfedge2);
@@ -146,9 +146,9 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.vertices).get_mut(id).unwrap().halfedge = Some(val);
     }
 
-    pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: HalfEdgeID)
+    pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: Option<HalfEdgeID>)
     {
-        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().next = Some(val);
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().next = val;
     }
 
     pub fn set_halfedge_twin(&self, id1: HalfEdgeID, id2: HalfEdgeID)
@@ -163,9 +163,9 @@ impl ConnectivityInfo {
         RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().vertex = Some(val);
     }
 
-    pub fn set_halfedge_face(&self, id: &HalfEdgeID, val: FaceID)
+    pub fn set_halfedge_face(&self, id: &HalfEdgeID, val: Option<FaceID>)
     {
-        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().face = Some(val);
+        RefCell::borrow_mut(&self.halfedges).get_mut(id).unwrap().face = val;
     }
 
     pub fn set_face_halfedge(&self, id: &FaceID, val: HalfEdgeID)
