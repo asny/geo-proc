@@ -298,17 +298,31 @@ impl DynamicMesh
             }
         }
 
-        for (face_id1, face_id2) in faces_to_remove.iter() {
-            for walker in self.face_halfedge_iterator(face_id1) {
-                self.connectivity_info.set_halfedge_face(&walker.halfedge_id().unwrap(), None);
-                self.connectivity_info.set_halfedge_next(&walker.halfedge_id().unwrap(), None);
-            }
-            self.connectivity_info.remove_face(face_id1);
-        }
 
         for (halfedge1, halfedge2) in edges_to_remove.iter() {
-            if !self.on_boundary(halfedge1) || !self.on_boundary(halfedge2) {
-                return Err(Error::FailedToMergeVertices {message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2)});
+            if !self.on_boundary(halfedge1)
+            {
+                let mut walker = self.walker_from_halfedge(halfedge1);
+                if !faces_to_remove.iter().any(|(face_id, _)| *face_id == walker.face_id().unwrap())
+                {
+                    walker.twin();
+                    if !faces_to_remove.iter().any(|(face_id, _)| *face_id == walker.face_id().unwrap())
+                    {
+                        return Err(Error::FailedToMergeVertices { message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2) });
+                    }
+                }
+            }
+            if !self.on_boundary(halfedge2)
+            {
+                let mut walker = self.walker_from_halfedge(halfedge2);
+                if !faces_to_remove.iter().any(|(_, face_id)| *face_id == walker.face_id().unwrap())
+                {
+                    walker.twin();
+                    if !faces_to_remove.iter().any(|(_, face_id)| *face_id == walker.face_id().unwrap())
+                    {
+                        return Err(Error::FailedToMergeVertices { message: format!("Merging vertices {} and {} will create a non-manifold mesh", vertex_id1, vertex_id2) });
+                    }
+                }
             }
         }
 
@@ -319,6 +333,14 @@ impl DynamicMesh
             }
         }
         self.connectivity_info.remove_vertex(vertex_id2);
+
+        for (face_id1, face_id2) in faces_to_remove.iter() {
+            for walker in self.face_halfedge_iterator(face_id1) {
+                self.connectivity_info.set_halfedge_face(&walker.halfedge_id().unwrap(), None);
+                self.connectivity_info.set_halfedge_next(&walker.halfedge_id().unwrap(), None);
+            }
+            self.connectivity_info.remove_face(face_id1);
+        }
 
         for (halfedge1, halfedge2) in edges_to_remove.iter() {
             let mut walker = self.walker_from_halfedge(halfedge1);
