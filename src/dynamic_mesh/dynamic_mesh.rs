@@ -88,7 +88,6 @@ impl DynamicMesh
         self.vertex_iterator().for_each(|v| { to_check.insert(v); } );
 
         let mut set_to_merge = Vec::new();
-
         while !to_check.is_empty() {
             let id1 = *to_check.iter().next().unwrap();
             to_check.remove(&id1);
@@ -103,9 +102,9 @@ impl DynamicMesh
             }
             if !to_merge.is_empty()
             {
-                for vertex_id in to_merge.iter()
+                for id in to_merge.iter()
                 {
-                    to_check.remove(vertex_id);
+                    to_check.remove(id);
                 }
                 to_merge.push(id1);
                 set_to_merge.push(to_merge);
@@ -157,31 +156,40 @@ impl DynamicMesh
         let vertices_to_merge = |vertex_id| {
             set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))
         };
+        let mut to_check = HashSet::new();
+        self.edge_iterator().for_each(|e| { to_check.insert(e); } );
 
-        let mut set_of_edges_to_merge = Vec::new();
-        for (v0, v1) in self.edge_iterator() {
-            if let Some(vertices_to_merge0) = vertices_to_merge(v0)
+        let mut set_to_merge = Vec::new();
+        while !to_check.is_empty() {
+            let id1 = *to_check.iter().next().unwrap();
+            to_check.remove(&id1);
+
+            if let Some(vertices_to_merge0) = vertices_to_merge(id1.0)
             {
-                if let Some(vertices_to_merge1) = vertices_to_merge(v1)
+                if let Some(vertices_to_merge1) = vertices_to_merge(id1.1)
                 {
-                    let halfedge_id1 = self.connecting_edge(&v0, &v1).unwrap();
-                    let mut edges_to_merge = Vec::new();
-                    edges_to_merge.push(halfedge_id1);
-                    for (v2, v3) in self.edge_iterator() {
-                        if (v0 < v2 || v0 == v2 && v1 < v3)
-                            && (vertices_to_merge0.contains(&v2) && vertices_to_merge1.contains(&v3)
-                            || vertices_to_merge1.contains(&v2) && vertices_to_merge0.contains(&v3)){
-                            let halfedge_id2 = self.connecting_edge(&v2, &v3).unwrap();
-                            edges_to_merge.push(halfedge_id2);
+                    let mut to_merge = Vec::new();
+                    for id2 in to_check.iter()
+                    {
+                        if vertices_to_merge0.contains(&id2.0) && vertices_to_merge1.contains(&id2.1)
+                            || vertices_to_merge1.contains(&id2.0) && vertices_to_merge0.contains(&id2.1)
+                        {
+                            to_merge.push(self.connecting_edge(&id2.0, &id2.1).unwrap());
                         }
                     }
-                    if edges_to_merge.len() > 1 {
-                        set_of_edges_to_merge.push(edges_to_merge);
+                    if !to_merge.is_empty()
+                    {
+                        for id in to_merge.iter()
+                        {
+                            to_check.remove(&self.ordered_edge_vertices(id));
+                        }
+                        to_merge.push(self.connecting_edge(&id1.0, &id1.1).unwrap());
+                        set_to_merge.push(to_merge);
                     }
                 }
             }
         }
-        set_of_edges_to_merge
+        set_to_merge
     }
 
     pub fn merge_overlapping_primitives(&mut self) -> Result<(), basic_operations::Error>
