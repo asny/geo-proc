@@ -84,35 +84,34 @@ impl DynamicMesh
 
     fn find_overlapping_vertices(&self) -> Vec<Vec<VertexID>>
     {
-        let mut vertices_to_check = HashSet::new();
-        self.vertex_iterator().for_each(|v| { vertices_to_check.insert(v); } );
+        let mut to_check = HashSet::new();
+        self.vertex_iterator().for_each(|v| { to_check.insert(v); } );
 
-        let mut set_of_vertices_to_merge = Vec::new();
+        let mut set_to_merge = Vec::new();
 
-        while !vertices_to_check.is_empty() {
-            let vertex_id1 = *vertices_to_check.iter().next().unwrap();
-            vertices_to_check.remove(&vertex_id1);
+        while !to_check.is_empty() {
+            let id1 = *to_check.iter().next().unwrap();
+            to_check.remove(&id1);
 
-            let mut vertices_to_merge = Vec::new();
-            for vertex_id2 in vertices_to_check.iter()
+            let mut to_merge = Vec::new();
+            for id2 in to_check.iter()
             {
-                if (self.position(&vertex_id1) - self.position(vertex_id2)).norm() < 0.00001
+                if (self.position(&id1) - self.position(id2)).norm() < 0.00001
                 {
-                    vertices_to_merge.push(*vertex_id2);
+                    to_merge.push(*id2);
                 }
             }
-            if !vertices_to_merge.is_empty()
+            if !to_merge.is_empty()
             {
-                for vertex_id in vertices_to_merge.iter()
+                for vertex_id in to_merge.iter()
                 {
-                    vertices_to_check.remove(vertex_id);
+                    to_check.remove(vertex_id);
                 }
-                vertices_to_merge.push(vertex_id1);
-                set_of_vertices_to_merge.push(vertices_to_merge);
+                to_merge.push(id1);
+                set_to_merge.push(to_merge);
             }
         }
-        println!("Vertices to merge: {:?}", set_of_vertices_to_merge);
-        set_of_vertices_to_merge
+        set_to_merge
     }
 
     fn find_overlapping_faces(&self, set_of_vertices_to_merge: &Vec<Vec<VertexID>>) -> Vec<Vec<FaceID>>
@@ -150,13 +149,14 @@ impl DynamicMesh
                 }
             }
         }
-        println!("Faces to merge: {:?}", set_of_faces_to_merge);
         set_of_faces_to_merge
     }
 
     fn find_overlapping_edges(&self, set_of_vertices_to_merge: &Vec<Vec<VertexID>>) -> Vec<Vec<HalfEdgeID>>
     {
-        let vertices_to_merge = |vertex_id| {set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))};
+        let vertices_to_merge = |vertex_id| {
+            set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))
+        };
 
         let mut set_of_edges_to_merge = Vec::new();
         for (v0, v1) in self.edge_iterator() {
@@ -181,7 +181,6 @@ impl DynamicMesh
                 }
             }
         }
-        println!("Edges to merge: {:?}", set_of_edges_to_merge);
         set_of_edges_to_merge
     }
 
