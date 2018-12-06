@@ -196,7 +196,7 @@ impl DynamicMesh
             let mut face_id1 = *iter.next().unwrap();
             for face_id2 in iter {
                 //println!("Merging: {} and {}", face_id1, face_id2);
-                face_id1 = self.merge_faces(&face_id1, face_id2)?;
+                self.remove_face(&face_id2);
             }
         }
 

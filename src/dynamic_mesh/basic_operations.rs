@@ -239,10 +239,24 @@ impl DynamicMesh
 
     }
 
-    pub fn merge_faces(&mut self, face_id1: &FaceID, face_id2: &FaceID) -> Result<FaceID, Error>
+    pub fn remove_face(&mut self, face_id: &FaceID)
     {
+        let mut walker = self.walker_from_face(face_id);
+        let he_id1 = walker.halfedge_id().unwrap();
+        walker.next();
+        let he_id2 = walker.halfedge_id().unwrap();
+        walker.next();
+        let he_id3 = walker.halfedge_id().unwrap();
 
-        Ok(face_id1.clone())
+        self.connectivity_info.set_halfedge_face(&he_id1, None);
+        self.connectivity_info.set_halfedge_face(&he_id2, None);
+        self.connectivity_info.set_halfedge_face(&he_id3, None);
+
+        self.connectivity_info.set_halfedge_next(&he_id1, None);
+        self.connectivity_info.set_halfedge_next(&he_id2, None);
+        self.connectivity_info.set_halfedge_next(&he_id3, None);
+
+        self.connectivity_info.remove_face(face_id);
     }
 
     pub fn merge_halfedges(&mut self, halfedge_id1: &HalfEdgeID, halfedge_id2: &HalfEdgeID) -> Result<HalfEdgeID, Error>
@@ -598,8 +612,8 @@ mod tests {
                 if heid1.is_none() { heid1 = Some((halfedge_id, v0, v1)); }
                 else {
                     let (halfedge_id1, v10, v11) = heid1.unwrap();
-                    mesh.merge_vertices(&v0, &v11);
-                    mesh.merge_vertices(&v1, &v10);
+                    mesh.merge_vertices(&v0, &v11).unwrap();
+                    mesh.merge_vertices(&v1, &v10).unwrap();
                     mesh.merge_halfedges(&halfedge_id1, &halfedge_id).unwrap();
                     break;
                 }
@@ -620,10 +634,11 @@ mod tests {
         let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
 
         let faces: Vec<FaceID> = mesh.face_iterator().into_iter().collect();
-        mesh.merge_faces(&faces[0], &faces[1]).unwrap();
 
-        assert_eq!(3, mesh.no_vertices());
-        assert_eq!(6, mesh.no_halfedges());
+        mesh.remove_face(&faces[0]);
+
+        assert_eq!(6, mesh.no_vertices());
+        assert_eq!(12, mesh.no_halfedges());
         assert_eq!(1, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
     }
