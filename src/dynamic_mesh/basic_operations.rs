@@ -177,6 +177,8 @@ impl DynamicMesh
         let surviving_vertex_id = walker.vertex_id().unwrap();
         walker.twin();
         let dying_vertex_id = walker.vertex_id().unwrap();
+        let new_position = 0.5 * (self.position(&surviving_vertex_id) + self.position(&dying_vertex_id));
+        self.set_position(surviving_vertex_id, new_position);
 
         // Update halfedges pointing to dying vertex
         for walker1 in self.vertex_halfedge_iterator(&dying_vertex_id) {
@@ -521,7 +523,9 @@ mod tests {
     #[test]
     fn test_collapse_edge_on_boundary2()
     {
-        let mut mesh = create_two_connected_faces();
+        let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0];
+        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
         for halfedge_id in mesh.halfedge_iterator()
         {
             if mesh.on_boundary(&halfedge_id)
