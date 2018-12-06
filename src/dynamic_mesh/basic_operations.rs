@@ -544,7 +544,7 @@ mod tests {
             let mut walker = mesh.walker_from_halfedge(&halfedge_id);
             if walker.face_id().is_none() && walker.twin().next().twin().face_id().is_some() && walker.twin().next().twin().face_id().is_some()
             {
-                let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+                mesh.collapse_edge(&halfedge_id);
 
                 assert_eq!(mesh.no_vertices(), 4);
                 assert_eq!(mesh.no_halfedges(), 10);
@@ -565,7 +565,7 @@ mod tests {
         {
             if mesh.on_boundary(&halfedge_id)
             {
-                let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+                mesh.collapse_edge(&halfedge_id);
 
                 assert_eq!(mesh.no_vertices(), 3);
                 assert_eq!(mesh.no_halfedges(), 6);
@@ -583,10 +583,9 @@ mod tests {
     {
         let mut mesh = create_three_connected_faces();
         for halfedge_id in mesh.halfedge_iterator() {
-            let mut walker = mesh.walker_from_halfedge(&halfedge_id);
             if !mesh.on_boundary(&halfedge_id)
             {
-                let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+                mesh.collapse_edge(&halfedge_id);
                 assert_eq!(mesh.no_vertices(), 3);
                 assert_eq!(mesh.no_halfedges(), 6);
                 assert_eq!(mesh.no_faces(), 1);
@@ -608,7 +607,7 @@ mod tests {
             for halfedge_id in mesh.halfedge_iterator() {
                 if mesh.on_boundary(&halfedge_id)
                 {
-                    let surviving_vertex_id = mesh.collapse_edge(&halfedge_id);
+                    mesh.collapse_edge(&halfedge_id);
                     break;
                 }
             }

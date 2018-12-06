@@ -277,7 +277,7 @@ mod tests {
         let mesh2 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.0, 1.0, 0.0, 0.1, 0.0, 0.1, 1.0, 1.0, 0.0], None);
         let intersection_point = vec3(0.1, 0.0, 0.1);
         let face_id = mesh1.face_iterator().next().unwrap();
-        let edge_id = mesh2.edge_iterator().find(|(v1, v2)| *mesh2.position(v1) == intersection_point).unwrap();
+        let edge_id = mesh2.edge_iterator().find(|(v1, _)| *mesh2.position(v1) == intersection_point).unwrap();
 
         let result = find_face_edge_intersections(&mesh1, &face_id, &mesh2, &edge_id);
         let vertex_id = mesh2.vertex_iterator().find(|v| *mesh2.position(v) == intersection_point).unwrap();
