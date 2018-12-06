@@ -264,6 +264,25 @@ impl DynamicMesh
         let mut walker = self.walker_from_halfedge(halfedge_id1);
         if walker.face_id().is_some() { walker.twin(); };
         if walker.face_id().is_some() {
+            walker.jump_to_edge(halfedge_id2);
+            if walker.face_id().is_none() && walker.twin().face_id().is_none() {
+                let halfedge_to_remove1 = walker.halfedge_id().unwrap();
+                let halfedge_to_remove2 = walker.twin().halfedge_id().unwrap();
+                self.connectivity_info.remove_halfedge(&halfedge_to_remove1);
+                self.connectivity_info.remove_halfedge(&halfedge_to_remove2);
+
+                walker.jump_to_edge(halfedge_id1);
+                let vertex_id1 = walker.vertex_id().unwrap();
+                let surviving_halfedge_id1 = walker.halfedge_id().unwrap();
+
+                walker.twin();
+                let vertex_id2 = walker.vertex_id().unwrap();
+                let surviving_halfedge_id2 = walker.halfedge_id().unwrap();
+
+                self.connectivity_info.set_vertex_halfedge(&vertex_id1, surviving_halfedge_id2);
+                self.connectivity_info.set_vertex_halfedge(&vertex_id2, surviving_halfedge_id1);
+                return Ok(surviving_halfedge_id1);
+            }
             return Err(Error::FailedToMergeVertices { message: format!("Merging halfedges {} and {} will create a non-manifold mesh", halfedge_id1, halfedge_id2) });
         }
         let halfedge_to_remove1 = walker.halfedge_id().unwrap();
@@ -274,6 +293,25 @@ impl DynamicMesh
         walker.jump_to_edge(halfedge_id2);
         if walker.face_id().is_some() { walker.twin(); };
         if walker.face_id().is_some() {
+            walker.jump_to_edge(halfedge_id1);
+            if walker.face_id().is_none() && walker.twin().face_id().is_none() {
+                let halfedge_to_remove1 = walker.halfedge_id().unwrap();
+                let halfedge_to_remove2 = walker.twin().halfedge_id().unwrap();
+                self.connectivity_info.remove_halfedge(&halfedge_to_remove1);
+                self.connectivity_info.remove_halfedge(&halfedge_to_remove2);
+
+                walker.jump_to_edge(halfedge_id2);
+                let vertex_id1 = walker.vertex_id().unwrap();
+                let surviving_halfedge_id1 = walker.halfedge_id().unwrap();
+
+                walker.twin();
+                let vertex_id2 = walker.vertex_id().unwrap();
+                let surviving_halfedge_id2 = walker.halfedge_id().unwrap();
+
+                self.connectivity_info.set_vertex_halfedge(&vertex_id1, surviving_halfedge_id2);
+                self.connectivity_info.set_vertex_halfedge(&vertex_id2, surviving_halfedge_id1);
+                return Ok(surviving_halfedge_id1);
+            }
             return Err(Error::FailedToMergeVertices { message: format!("Merging halfedges {} and {} will create a non-manifold mesh", halfedge_id1, halfedge_id2) });
         }
         let halfedge_to_remove2 = walker.halfedge_id().unwrap();
