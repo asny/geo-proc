@@ -301,11 +301,11 @@ impl DynamicMesh
             {
                 halfedge_to_remove1 = walker1.twin_id();
                 halfedge_to_remove2 = walker1.halfedge_id();
-                vertex_id1 = walker1.vertex_id();
 
-                if vertex_id1 == walker2.vertex_id() { walker2.twin(); }
                 halfedge_to_survive1 = walker2.halfedge_id();
-                halfedge_to_survive2 = walker2.twin_id();
+                vertex_id1 = walker2.vertex_id();
+                walker2.twin();
+                halfedge_to_survive2 = walker2.halfedge_id();
                 vertex_id2 = walker2.vertex_id();
             }
             else {
@@ -320,11 +320,11 @@ impl DynamicMesh
             if edge1_interior {
                 halfedge_to_remove1 = walker2.twin_id();
                 halfedge_to_remove2 = walker2.halfedge_id();
-                vertex_id1 = walker2.vertex_id();
 
-                if vertex_id1 == walker1.vertex_id() { walker1.twin(); }
                 halfedge_to_survive1 = walker1.halfedge_id();
-                halfedge_to_survive2 = walker1.twin_id();
+                vertex_id1 = walker1.vertex_id();
+                walker1.twin();
+                halfedge_to_survive2 = walker1.halfedge_id();
                 vertex_id2 = walker1.vertex_id();
             }
             else {
