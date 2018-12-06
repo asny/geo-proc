@@ -32,8 +32,8 @@ impl DynamicMesh
         self.connectivity_info.set_face_halfedge(&face_id, previous_id);
         self.connectivity_info.set_face_halfedge(&twin_face_id, twin_previous_id);
 
-        self.connectivity_info.set_vertex_halfedge(&v0, next_id);
-        self.connectivity_info.set_vertex_halfedge(&v1, twin_next_id);
+        self.connectivity_info.set_vertex_halfedge(&v0, Some(next_id));
+        self.connectivity_info.set_vertex_halfedge(&v1, Some(twin_next_id));
 
         self.connectivity_info.set_halfedge_next(&halfedge_id, Some(previous_id));
         self.connectivity_info.set_halfedge_next(&next_id, Some(twin_id));
@@ -187,7 +187,7 @@ impl DynamicMesh
         let he_id1 = walker.halfedge_id().unwrap();
         if walker.face_id().is_some() {
             walker.previous();
-            self.connectivity_info.set_vertex_halfedge( &surviving_vertex_id, walker.twin_id().unwrap());
+            self.connectivity_info.set_vertex_halfedge( &surviving_vertex_id, walker.twin_id());
             walker.next();
             self.remove_one_face(&he_id1);
         }
@@ -200,7 +200,7 @@ impl DynamicMesh
         let he_id2 = walker.halfedge_id().unwrap();
         if walker.face_id().is_some() {
             walker.previous();
-            self.connectivity_info.set_vertex_halfedge( &surviving_vertex_id, walker.twin_id().unwrap());
+            self.connectivity_info.set_vertex_halfedge( &surviving_vertex_id, walker.twin_id());
             walker.next();
             self.remove_one_face(&he_id2);
         }
@@ -232,7 +232,7 @@ impl DynamicMesh
         self.connectivity_info.remove_halfedge(&halfedge_id1);
         self.connectivity_info.remove_halfedge(&halfedge_id2);
         self.connectivity_info.set_halfedge_twin(twin_id1, twin_id2);
-        self.connectivity_info.set_vertex_halfedge(&vertex_id, twin_id1);
+        self.connectivity_info.set_vertex_halfedge(&vertex_id, Some(twin_id1));
 
         walker.twin();
 
@@ -531,8 +531,9 @@ mod tests {
 
         mesh.remove_face(&faces[0]);
 
-        assert_eq!(6, mesh.no_vertices());
-        assert_eq!(12, mesh.no_halfedges());
+        assert_eq!(3, mesh.no_vertices());
+        assert_eq!(6, mesh.no_halfedges());
         assert_eq!(1, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
     }
 }

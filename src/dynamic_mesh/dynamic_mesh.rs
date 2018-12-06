@@ -101,7 +101,7 @@ impl DynamicMesh
     {
         for vertex_id in self.vertex_iterator() {
             let twin_id = self.walker_from_vertex(&vertex_id).twin_id().unwrap();
-            self.connectivity_info.set_vertex_halfedge(&vertex_id, twin_id);
+            self.connectivity_info.set_vertex_halfedge(&vertex_id, Some(twin_id));
         }
 
         let mut map = HashMap::new();

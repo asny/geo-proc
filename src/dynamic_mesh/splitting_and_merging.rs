@@ -27,7 +27,7 @@ impl DynamicMesh
                 let vertex_id = walker.vertex_id().unwrap();
                 let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
                 info.add_vertex(vertex_id, vertex);
-                info.set_vertex_halfedge(&vertex_id, walker.next_id().unwrap());
+                info.set_vertex_halfedge(&vertex_id, walker.next_id());
 
                 walker.twin();
                 if walker.face_id().is_none()
@@ -272,8 +272,8 @@ impl DynamicMesh
         self.connectivity_info.remove_halfedge(&halfedge_to_remove1.unwrap());
         self.connectivity_info.remove_halfedge(&halfedge_to_remove2.unwrap());
         self.connectivity_info.set_halfedge_twin(halfedge_to_survive1.unwrap(), halfedge_to_survive2.unwrap());
-        self.connectivity_info.set_vertex_halfedge(&vertex_id1.unwrap(), halfedge_to_survive2.unwrap());
-        self.connectivity_info.set_vertex_halfedge(&vertex_id2.unwrap(), halfedge_to_survive1.unwrap());
+        self.connectivity_info.set_vertex_halfedge(&vertex_id1.unwrap(), halfedge_to_survive2);
+        self.connectivity_info.set_vertex_halfedge(&vertex_id2.unwrap(), halfedge_to_survive1);
         Ok(halfedge_to_survive1.unwrap())
     }
 
