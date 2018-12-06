@@ -202,7 +202,6 @@ impl DynamicMesh
             let mut iter = faces_to_merge.iter();
             let mut face_id1 = *iter.next().unwrap();
             for face_id2 in iter {
-                //println!("Merging: {} and {}", face_id1, face_id2);
                 self.remove_face(&face_id2);
             }
         }
@@ -219,7 +218,6 @@ impl DynamicMesh
             let mut iter = edges_to_merge.iter();
             let mut edge_id1 = *iter.next().unwrap();
             for edge_id2 in iter {
-                println!("Merging: {} and {}", edge_id1, edge_id2);
                 edge_id1 = self.merge_halfedges(&edge_id1, edge_id2)?;
             }
         }
@@ -540,7 +538,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_overlapping_face()
+    fn test_merge_overlapping_faces()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  4, 6, 5,  6, 7, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,
