@@ -641,7 +641,6 @@ mod tests {
         assert_eq!(5, mesh.no_vertices());
         assert_eq!(12, mesh.no_halfedges());
         assert_eq!(2, mesh.no_faces());
-        test_is_valid(&mesh).unwrap();
     }
 
     #[test]
@@ -670,11 +669,10 @@ mod tests {
         assert_eq!(4, mesh.no_vertices());
         assert_eq!(10, mesh.no_halfedges());
         assert_eq!(2, mesh.no_faces());
-        test_is_valid(&mesh).unwrap();
     }
 
     #[test]
-    fn test_merge_faces()
+    fn test_remove_face()
     {
         let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0];
@@ -687,6 +685,5 @@ mod tests {
         assert_eq!(6, mesh.no_vertices());
         assert_eq!(12, mesh.no_halfedges());
         assert_eq!(1, mesh.no_faces());
-        test_is_valid(&mesh).unwrap();
     }
 }
