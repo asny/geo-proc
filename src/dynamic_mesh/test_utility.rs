@@ -15,7 +15,7 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
             }
             if mesh.walker_from_vertex(&vertex_id).twin().vertex_id().unwrap() != vertex_id
             {
-                return Err(Error::IsNotValid {message: format!("Halfedge pointed to by vertex {} does not start in that vertex", vertex_id)});
+                return Err(Error::IsNotValid {message: format!("Halfedge {} pointed to by vertex {} does not start in that vertex, but instead in {}", mesh.walker_from_vertex(&vertex_id).halfedge_id().unwrap(), vertex_id, mesh.walker_from_vertex(&vertex_id).twin().vertex_id().unwrap())});
             }
         }
         else {
