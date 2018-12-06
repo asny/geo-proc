@@ -253,10 +253,9 @@ impl DynamicMesh
             return Err(Error::FailedToMergeVertices { message: format!("Merging halfedges {} and {} will create a non-manifold mesh", halfedge_id1, halfedge_id2) });
         }
         let halfedge_to_remove1 = walker.halfedge_id().unwrap();
-        let vid11 = walker.vertex_id().unwrap();
         walker.twin();
         let twin_halfedge_id1 = walker.halfedge_id().unwrap();
-        let vid12 = walker.vertex_id().unwrap();
+        let vertex_id1 = walker.vertex_id().unwrap();
 
         walker.jump_to_edge(halfedge_id2);
         if walker.face_id().is_some() { walker.twin(); };
@@ -264,28 +263,22 @@ impl DynamicMesh
             return Err(Error::FailedToMergeVertices { message: format!("Merging halfedges {} and {} will create a non-manifold mesh", halfedge_id1, halfedge_id2) });
         }
         let halfedge_to_remove2 = walker.halfedge_id().unwrap();
-        let vid21 = walker.vertex_id().unwrap();
         walker.twin();
         let twin_halfedge_id2 = walker.halfedge_id().unwrap();
-        let vid22 = walker.vertex_id().unwrap();
+        let vertex_id2 = walker.vertex_id().unwrap();
 
-        println!("vid11: {:?}", vid11);
-        println!("vid12: {:?}", vid12);
-        println!("vid21: {:?}", vid21);
-        println!("vid22: {:?}", vid22);
+        println!("vid1: {:?}", vertex_id1);
+        println!("vid2: {:?}", vertex_id2);
         println!("halfedge_to_remove1: {:?}", halfedge_to_remove1);
         println!("halfedge_to_remove2: {:?}", halfedge_to_remove2);
         println!("twin_halfedge_id1: {:?}", twin_halfedge_id1);
         println!("twin_halfedge_id2: {:?}", twin_halfedge_id2);
 
-        let surviving_vertex_id1 = self.merge_vertices(&vid11, &vid22)?;
-        let surviving_vertex_id2 = self.merge_vertices(&vid12, &vid21)?;
-
         self.connectivity_info.remove_halfedge(&halfedge_to_remove1);
         self.connectivity_info.remove_halfedge(&halfedge_to_remove2);
         self.connectivity_info.set_halfedge_twin(twin_halfedge_id1, twin_halfedge_id2);
-        self.connectivity_info.set_vertex_halfedge(&surviving_vertex_id1, twin_halfedge_id1);
-        self.connectivity_info.set_vertex_halfedge(&surviving_vertex_id2, twin_halfedge_id2);
+        self.connectivity_info.set_vertex_halfedge(&vertex_id1, twin_halfedge_id2);
+        self.connectivity_info.set_vertex_halfedge(&vertex_id2, twin_halfedge_id1);
         Ok(twin_halfedge_id1)
     }
 
@@ -602,9 +595,12 @@ mod tests {
             if mesh.position(&v0)[2] == 0.0 && mesh.position(&v1)[2] == 0.0
             {
                 let halfedge_id = mesh.connecting_edge(&v0, &v1).unwrap();
-                if heid1.is_none() { heid1 = Some(halfedge_id); }
+                if heid1.is_none() { heid1 = Some((halfedge_id, v0, v1)); }
                 else {
-                    mesh.merge_halfedges(&heid1.unwrap(), &halfedge_id).unwrap();
+                    let (halfedge_id1, v10, v11) = heid1.unwrap();
+                    mesh.merge_vertices(&v0, &v11);
+                    mesh.merge_vertices(&v1, &v10);
+                    mesh.merge_halfedges(&halfedge_id1, &halfedge_id).unwrap();
                     break;
                 }
             }

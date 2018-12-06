@@ -187,8 +187,10 @@ impl DynamicMesh
 
     pub fn merge_overlapping_primitives(&mut self) -> Result<(), basic_operations::Error>
     {
-        let mut set_of_vertices_to_merge = self.find_overlapping_vertices();
+        let set_of_vertices_to_merge = self.find_overlapping_vertices();
+        let set_of_edges_to_merge = self.find_overlapping_edges(&set_of_vertices_to_merge);
         let set_of_faces_to_merge = self.find_overlapping_faces(&set_of_vertices_to_merge);
+
         for faces_to_merge in set_of_faces_to_merge {
             let mut iter = faces_to_merge.iter();
             let mut face_id1 = *iter.next().unwrap();
@@ -198,23 +200,20 @@ impl DynamicMesh
             }
         }
 
-        set_of_vertices_to_merge = self.find_overlapping_vertices();
-        let set_of_edges_to_merge = self.find_overlapping_edges(&set_of_vertices_to_merge);
+        for vertices_to_merge in set_of_vertices_to_merge {
+            let mut iter = vertices_to_merge.iter();
+            let mut vertex_id1 = *iter.next().unwrap();
+            for vertex_id2 in iter {
+                vertex_id1 = self.merge_vertices(&vertex_id1, vertex_id2)?;
+            }
+        }
+
         for edges_to_merge in set_of_edges_to_merge {
             let mut iter = edges_to_merge.iter();
             let mut edge_id1 = *iter.next().unwrap();
             for edge_id2 in iter {
                 println!("Merging: {} and {}", edge_id1, edge_id2);
                 edge_id1 = self.merge_halfedges(&edge_id1, edge_id2)?;
-            }
-        }
-
-        set_of_vertices_to_merge = self.find_overlapping_vertices();
-        for vertices_to_merge in set_of_vertices_to_merge {
-            let mut iter = vertices_to_merge.iter();
-            let mut vertex_id1 = *iter.next().unwrap();
-            for vertex_id2 in iter {
-                vertex_id1 = self.merge_vertices(&vertex_id1, vertex_id2)?;
             }
         }
 
