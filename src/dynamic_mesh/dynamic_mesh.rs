@@ -524,7 +524,7 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_overlapping_face()
+    fn test_merge_overlapping_individual_faces()
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
@@ -536,6 +536,22 @@ mod tests {
         assert_eq!(4, mesh.no_vertices());
         assert_eq!(10, mesh.no_halfedges());
         assert_eq!(2, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_merge_overlapping_face()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  4, 6, 5,  6, 7, 5];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,
+                                       -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5];
+
+        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        mesh.merge_overlapping_primitives().unwrap();
+
+        assert_eq!(5, mesh.no_vertices());
+        assert_eq!(14, mesh.no_halfedges());
+        assert_eq!(3, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
     }
 }
