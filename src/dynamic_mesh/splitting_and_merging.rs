@@ -7,6 +7,7 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub enum Error {
     MergeWillCreateNonManifoldMesh {message: String},
+    FailedToMergeVertices {message: String},
     CannotCheckOrientationOfMesh {message: String},
     SplittingEdgesDidNotFormAClosesCurve {message: String}
 }
@@ -159,7 +160,7 @@ impl DynamicMesh
         Ok(())
     }
 
-    pub fn merge_overlapping_primitives(&mut self) -> Result<(), basic_operations::Error>
+    pub fn merge_overlapping_primitives(&mut self) -> Result<(), Error>
     {
         let set_of_vertices_to_merge = self.find_overlapping_vertices();
         let set_of_edges_to_merge = self.find_overlapping_edges(&set_of_vertices_to_merge);
@@ -190,6 +191,103 @@ impl DynamicMesh
         }
 
         Ok(())
+    }
+
+    fn merge_halfedges(&mut self, halfedge_id1: &HalfEdgeID, halfedge_id2: &HalfEdgeID) -> Result<HalfEdgeID, Error>
+    {
+        let mut walker1 = self.walker_from_halfedge(halfedge_id1);
+        let mut walker2 = self.walker_from_halfedge(halfedge_id2);
+
+        let edge1_alone =  walker1.face_id().is_none() && walker1.twin().face_id().is_none();
+        let edge1_interior =  walker1.face_id().is_some() && walker1.twin().face_id().is_some();
+        let edge1_boundary = !edge1_alone && !edge1_interior;
+
+        let edge2_alone =  walker2.face_id().is_none() && walker2.twin().face_id().is_none();
+        let edge2_interior =  walker2.face_id().is_some() && walker2.twin().face_id().is_some();
+        let edge2_boundary = !edge2_alone && !edge2_interior;
+
+        if edge1_interior && !edge2_alone || edge2_interior && !edge1_alone {
+            return Err(Error::FailedToMergeVertices { message: format!("Merging halfedges {} and {} will create a non-manifold mesh", halfedge_id1, halfedge_id2) });
+        }
+
+        let mut halfedge_to_remove1 = None;
+        let mut halfedge_to_remove2 = None;
+        let mut halfedge_to_survive1 = None;
+        let mut halfedge_to_survive2 = None;
+        let mut vertex_id1 = None;
+        let mut vertex_id2 = None;
+
+        if edge1_boundary {
+            if walker1.face_id().is_none() { walker1.twin(); };
+            halfedge_to_remove1 = walker1.twin_id();
+            halfedge_to_survive1 = walker1.halfedge_id();
+            vertex_id1 = walker1.vertex_id();
+        }
+        if edge2_boundary {
+            if walker2.face_id().is_none() { walker2.twin(); };
+            halfedge_to_remove2 = walker2.twin_id();
+            halfedge_to_survive2 = walker2.halfedge_id();
+            vertex_id2 = walker2.vertex_id();
+        }
+        if edge1_alone
+        {
+            if edge2_interior
+            {
+                halfedge_to_remove1 = walker1.twin_id();
+                halfedge_to_remove2 = walker1.halfedge_id();
+
+                halfedge_to_survive1 = walker2.halfedge_id();
+                vertex_id1 = walker2.vertex_id();
+                walker2.twin();
+                halfedge_to_survive2 = walker2.halfedge_id();
+                vertex_id2 = walker2.vertex_id();
+            }
+            else {
+                if vertex_id2 == walker1.vertex_id() { walker1.twin(); }
+                halfedge_to_remove1 = walker1.twin_id();
+                halfedge_to_survive1 = walker1.halfedge_id();
+                vertex_id1 = walker1.vertex_id();
+            }
+        }
+        if edge2_alone
+        {
+            if edge1_interior {
+                halfedge_to_remove1 = walker2.twin_id();
+                halfedge_to_remove2 = walker2.halfedge_id();
+
+                halfedge_to_survive1 = walker1.halfedge_id();
+                vertex_id1 = walker1.vertex_id();
+                walker1.twin();
+                halfedge_to_survive2 = walker1.halfedge_id();
+                vertex_id2 = walker1.vertex_id();
+            }
+            else {
+                if vertex_id1 == walker2.vertex_id() { walker2.twin(); }
+                halfedge_to_remove2 = walker2.twin_id();
+                halfedge_to_survive2 = walker2.halfedge_id();
+                vertex_id2 = walker2.vertex_id();
+            }
+        }
+
+        self.connectivity_info.remove_halfedge(&halfedge_to_remove1.unwrap());
+        self.connectivity_info.remove_halfedge(&halfedge_to_remove2.unwrap());
+        self.connectivity_info.set_halfedge_twin(halfedge_to_survive1.unwrap(), halfedge_to_survive2.unwrap());
+        self.connectivity_info.set_vertex_halfedge(&vertex_id1.unwrap(), halfedge_to_survive2.unwrap());
+        self.connectivity_info.set_vertex_halfedge(&vertex_id2.unwrap(), halfedge_to_survive1.unwrap());
+        Ok(halfedge_to_survive1.unwrap())
+    }
+
+    fn merge_vertices(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Result<VertexID, Error>
+    {
+        for halfedge_id in self.halfedge_iterator() {
+            let mut walker = self.walker_from_halfedge(&halfedge_id);
+            if walker.vertex_id().unwrap() == *vertex_id2 {
+                self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), *vertex_id1);
+            }
+        }
+        self.connectivity_info.remove_vertex(vertex_id2);
+
+        Ok(vertex_id1.clone())
     }
 
     fn find_overlapping_vertices(&self) -> Vec<Vec<VertexID>>
@@ -316,6 +414,7 @@ pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<Vertex
 #[cfg(test)]
 mod tests {
     use super::*;
+    use types::*;
     use dynamic_mesh::test_utility::*;
 
     #[test]
@@ -476,5 +575,57 @@ mod tests {
         assert_eq!(14, mesh.no_halfedges());
         assert_eq!(3, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_merge_vertices()
+    {
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
+                                       0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
+        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
+
+        let mut vertex_id1 = None;
+        for vertex_id in mesh.vertex_iterator() {
+            if *mesh.position(&vertex_id) == vec3(0.0, 0.0, 0.0)
+            {
+                if vertex_id1.is_none() { vertex_id1 = Some(vertex_id); }
+                else {
+                    mesh.merge_vertices(&vertex_id1.unwrap(), &vertex_id).unwrap();
+                    break;
+                }
+            }
+        }
+
+        assert_eq!(5, mesh.no_vertices());
+        assert_eq!(12, mesh.no_halfedges());
+        assert_eq!(2, mesh.no_faces());
+    }
+
+    #[test]
+    fn test_merge_halfedges()
+    {
+        let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
+                                       0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0];
+        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
+
+        let mut heid1 = None;
+        for (v0, v1) in mesh.edge_iterator() {
+            if mesh.position(&v0)[2] == 0.0 && mesh.position(&v1)[2] == 0.0
+            {
+                let halfedge_id = mesh.connecting_edge(&v0, &v1).unwrap();
+                if heid1.is_none() { heid1 = Some((halfedge_id, v0, v1)); }
+                else {
+                    let (halfedge_id1, v10, v11) = heid1.unwrap();
+                    mesh.merge_vertices(&v0, &v11).unwrap();
+                    mesh.merge_vertices(&v1, &v10).unwrap();
+                    mesh.merge_halfedges(&halfedge_id1, &halfedge_id).unwrap();
+                    break;
+                }
+            }
+        }
+
+        assert_eq!(4, mesh.no_vertices());
+        assert_eq!(10, mesh.no_halfedges());
+        assert_eq!(2, mesh.no_faces());
     }
 }
