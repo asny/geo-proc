@@ -170,7 +170,7 @@ impl DynamicMesh
             let mut iter = faces_to_merge.iter();
             iter.next();
             for face_id2 in iter {
-                self.remove_face(&face_id2);
+                self.remove_face_unsafe(&face_id2);
             }
         }
 

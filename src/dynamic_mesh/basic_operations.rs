@@ -240,6 +240,65 @@ impl DynamicMesh
 
     pub fn remove_face(&mut self, face_id: &FaceID)
     {
+        let mut edges = Vec::new();
+        for mut walker in self.face_halfedge_iterator(face_id) {
+            edges.push(walker.halfedge_id().unwrap());
+        }
+
+        self.remove_face_unsafe(face_id);
+        for halfedge_id in edges.iter() {
+            self.remove_edge_if_lonely(halfedge_id);
+        }
+    }
+
+    pub(super) fn remove_edge_if_lonely(&mut self, halfedge_id: &HalfEdgeID)
+    {
+        let mut walker = self.walker_from_halfedge(halfedge_id);
+        if walker.face_id().is_none() && walker.twin().face_id().is_none()
+        {
+            let vertex_id1 = walker.vertex_id().unwrap();
+            let halfedge_id1 = walker.halfedge_id().unwrap();
+            walker.twin();
+            let vertex_id2 = walker.vertex_id().unwrap();
+            let halfedge_id2 = walker.halfedge_id().unwrap();
+
+            self.connectivity_info.remove_halfedge(&halfedge_id1);
+            self.connectivity_info.remove_halfedge(&halfedge_id2);
+
+            let find_new_edge_connectivity = |mesh: &DynamicMesh, vertex_id: &VertexID| -> Option<HalfEdgeID>
+            {
+                for halfedge_id in mesh.halfedge_iterator() {
+                    let walker = mesh.walker_from_halfedge(&halfedge_id);
+                    if &walker.vertex_id().unwrap() == vertex_id {
+                        return walker.twin_id();
+                    }
+                }
+                None
+            };
+
+            if self.walker_from_vertex(&vertex_id1).halfedge_id().unwrap() == halfedge_id2 {
+                let new_edge = find_new_edge_connectivity(&self, &vertex_id1);
+                self.connectivity_info.set_vertex_halfedge(&vertex_id1, new_edge);
+                self.remove_vertex_if_lonely(&vertex_id1);
+            }
+            if self.walker_from_vertex(&vertex_id2).halfedge_id().unwrap() == halfedge_id1 {
+                let new_edge = find_new_edge_connectivity(&self, &vertex_id2);
+                self.connectivity_info.set_vertex_halfedge(&vertex_id2, new_edge);
+                self.remove_vertex_if_lonely(&vertex_id2);
+            }
+        }
+    }
+
+    pub(super) fn remove_vertex_if_lonely(&mut self, vertex_id: &VertexID)
+    {
+        if self.walker_from_vertex(vertex_id).halfedge_id().is_none()
+        {
+            self.connectivity_info.remove_vertex(&vertex_id);
+        }
+    }
+
+    pub(super) fn remove_face_unsafe(&mut self, face_id: &FaceID)
+    {
         let mut walker = self.walker_from_face(face_id);
         let he_id1 = walker.halfedge_id().unwrap();
         walker.next();

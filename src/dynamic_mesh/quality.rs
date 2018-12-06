@@ -42,10 +42,7 @@ impl DynamicMesh
     pub fn remove_lonely_vertices(&mut self)
     {
         for vertex_id in self.vertex_iterator() {
-            if self.walker_from_vertex(&vertex_id).halfedge_id().is_none()
-            {
-                self.connectivity_info.remove_vertex(&vertex_id);
-            }
+            self.remove_vertex_if_lonely(&vertex_id);
         }
     }
 
