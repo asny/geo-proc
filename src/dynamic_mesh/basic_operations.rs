@@ -580,7 +580,7 @@ mod tests {
     }
 
     #[test]
-    fn test_remove_face()
+    fn test_remove_face_when_unconnected()
     {
         let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0];
@@ -593,6 +593,36 @@ mod tests {
         assert_eq!(3, mesh.no_vertices());
         assert_eq!(6, mesh.no_halfedges());
         assert_eq!(1, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_remove_face_when_connected()
+    {
+        let mut mesh = create_two_connected_faces();
+
+        let face_id = mesh.face_iterator().next().unwrap();
+
+        mesh.remove_face(&face_id);
+
+        assert_eq!(3, mesh.no_vertices());
+        assert_eq!(6, mesh.no_halfedges());
+        assert_eq!(1, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_remove_face_when_three_connected_faces()
+    {
+        let mut mesh = create_three_connected_faces();
+
+        let face_id = mesh.face_iterator().next().unwrap();
+
+        mesh.remove_face(&face_id);
+
+        assert_eq!(4, mesh.no_vertices());
+        assert_eq!(10, mesh.no_halfedges());
+        assert_eq!(2, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
     }
 }
