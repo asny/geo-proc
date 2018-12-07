@@ -7,6 +7,7 @@ use std::iter::FromIterator;
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
+pub type HalfEdgePairIterator = Box<Iterator<Item = (HalfEdgeID, HalfEdgeID)>>;
 pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
 
 impl DynamicMesh
@@ -49,6 +50,18 @@ impl DynamicMesh
     pub fn halfedge_iterator(&self) -> HalfEdgeIterator
     {
         self.connectivity_info.halfedge_iterator()
+    }
+
+    pub fn halfedge_pair_iterator(&self) -> HalfEdgePairIterator
+    {
+        let mut values = Vec::with_capacity(self.no_halfedges()/2);
+        for halfedge_id in self.halfedge_iterator() {
+            let twin_id = self.walker_from_halfedge(&halfedge_id).twin_id().unwrap();
+            if halfedge_id < twin_id {
+                values.push((halfedge_id, twin_id))
+            }
+        }
+        Box::new(values.into_iter())
     }
 
     pub fn face_iterator(&self) -> FaceIterator
