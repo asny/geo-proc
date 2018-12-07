@@ -4,6 +4,11 @@ use dynamic_mesh::connectivity_info::{HalfEdge, ConnectivityInfo};
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
+pub type VertexIterator = Box<Iterator<Item = VertexID>>;
+pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
+pub type FaceIterator = Box<Iterator<Item = FaceID>>;
+pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
+
 impl DynamicMesh
 {
     pub fn walker(&self) -> Walker

@@ -4,11 +4,6 @@ use types::*;
 use std::rc::Rc;
 use std::collections::HashMap;
 
-pub type VertexIterator = Box<Iterator<Item = VertexID>>;
-pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
-pub type FaceIterator = Box<Iterator<Item = FaceID>>;
-pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
-
 #[derive(Debug)]
 pub struct DynamicMesh {
     positions: HashMap<VertexID, Vec3>,
