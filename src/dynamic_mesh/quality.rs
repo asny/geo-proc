@@ -39,8 +39,12 @@ impl DynamicMesh
         }
     }
 
-    pub fn remove_lonely_vertices(&mut self)
+    pub fn remove_lonely_primitives(&mut self)
     {
+        for (halfedge_id, _) in self.halfedge_twins_iterator() {
+            self.remove_edge_if_lonely(&halfedge_id);
+        }
+
         for vertex_id in self.vertex_iterator() {
             self.remove_vertex_if_lonely(&vertex_id);
         }
