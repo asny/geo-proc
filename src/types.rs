@@ -1,6 +1,7 @@
 
-use crate::na::{Vector2, Vector3, Vector4, Matrix2, Matrix3, Matrix4};
-pub use crate::na::Unit;
+use nalgebra::{Vector2, Vector3, Vector4, Matrix2, Matrix3, Matrix4};
+pub use nalgebra::Unit;
+pub use nalgebra::Point;
 
 pub type Vec2 = Vector2<f32>;
 pub type Vec3 = Vector3<f32>;
