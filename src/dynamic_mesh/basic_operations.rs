@@ -1,5 +1,5 @@
-use dynamic_mesh::*;
-use types::*;
+use crate::dynamic_mesh::*;
+use crate::types::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -324,13 +324,13 @@ impl DynamicMesh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::test_utility::*;
+    use crate::dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_flip_edge()
     {
         let mut no_flips = 0;
-        let mut mesh = ::models::create_plane().unwrap().to_dynamic();
+        let mut mesh = crate::models::create_plane().unwrap().to_dynamic();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iterator() {
             let (v0, v1) = mesh.edge_vertices(&halfedge_id);
@@ -363,7 +363,7 @@ mod tests {
     fn test_flip_multiple_edges()
     {
         let mut no_flips = 0;
-        let mut mesh = ::models::create_icosahedron().unwrap().to_dynamic();
+        let mut mesh = crate::models::create_icosahedron().unwrap().to_dynamic();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iterator() {
             let (v0, v1) = mesh.edge_vertices(&halfedge_id);

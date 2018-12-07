@@ -1,4 +1,4 @@
-use dynamic_mesh::*;
+use crate::dynamic_mesh::*;
 use std::collections::HashSet;
 
 pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>

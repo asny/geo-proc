@@ -1,5 +1,5 @@
 
-use mesh::*;
+use crate::mesh::*;
 use std;
 
 pub fn create_icosahedron() -> Result<StaticMesh, Error>

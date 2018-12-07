@@ -15,5 +15,5 @@ pub mod exporter;
 pub mod models;
 pub mod algorithms;
 
-pub use types::*;
-pub use algorithms::*;
+pub use crate::types::*;
+pub use crate::algorithms::*;

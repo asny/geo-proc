@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use mesh;
+use crate::mesh;
 use std;
 
 #[derive(Debug)]
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn test_parse_as_obj()
     {
-        let model = ::models::create_cube().unwrap();
+        let model = crate::models::create_cube().unwrap();
         let data = parse_as_obj(&model);
 
         let truth = "o object
@@ -158,7 +158,7 @@ f 5/5/5 4/4/4 8/8/8
     #[test]
     fn test_parse_as_poly()
     {
-        let model = ::models::create_cube().unwrap();
+        let model = crate::models::create_cube().unwrap();
         let data = parse_as_poly(&model);
 
         let truth = "8 3 0 0

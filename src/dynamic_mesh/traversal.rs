@@ -1,6 +1,6 @@
 use std::rc::{Rc};
-use dynamic_mesh::*;
-use dynamic_mesh::connectivity_info::{HalfEdge, ConnectivityInfo};
+use crate::dynamic_mesh::*;
+use crate::dynamic_mesh::connectivity_info::{HalfEdge, ConnectivityInfo};
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
@@ -273,7 +273,7 @@ impl Walker
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::test_utility::*;
+    use crate::dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_vertex_iterator() {

@@ -1,6 +1,6 @@
 
-use types::*;
-use dynamic_mesh::*;
+use crate::types::*;
+use crate::dynamic_mesh::*;
 
 const MARGIN: f32 = 0.00001;
 const SQR_MARGIN: f32 = MARGIN * MARGIN;
@@ -181,7 +181,7 @@ fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::test_utility::*;
+    use crate::dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_find_face_intersection()

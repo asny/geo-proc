@@ -1,5 +1,5 @@
-pub use static_mesh::*;
-pub use dynamic_mesh::*;
+pub use crate::static_mesh::*;
+pub use crate::dynamic_mesh::*;
 
 #[derive(Debug)]
 pub enum Error {

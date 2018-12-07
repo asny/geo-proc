@@ -1,4 +1,4 @@
-use mesh::*;
+use crate::mesh::*;
 
 impl StaticMesh
 {

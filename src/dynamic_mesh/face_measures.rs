@@ -1,5 +1,5 @@
-use dynamic_mesh::*;
-use types::*;
+use crate::dynamic_mesh::*;
+use crate::types::*;
 
 impl DynamicMesh
 {
@@ -47,7 +47,7 @@ impl DynamicMesh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::test_utility::*;
+    use crate::dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_face_normal() {

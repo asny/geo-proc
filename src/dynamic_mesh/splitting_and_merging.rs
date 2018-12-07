@@ -1,6 +1,6 @@
 
-use dynamic_mesh::*;
-use connected_components::*;
+use crate::dynamic_mesh::*;
+use crate::connected_components::*;
 use std::collections::{HashSet, HashMap};
 use std::rc::Rc;
 
@@ -423,8 +423,8 @@ pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<Vertex
 #[cfg(test)]
 mod tests {
     use super::*;
-    use types::*;
-    use dynamic_mesh::test_utility::*;
+    use crate::types::*;
+    use crate::dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_face_face_merging_at_edge()
@@ -545,7 +545,7 @@ mod tests {
     #[test]
     fn test_merge_overlapping_primitives_of_cube()
     {
-        let mut mesh = ::models::create_unconnected_cube().unwrap().to_dynamic();
+        let mut mesh = crate::models::create_unconnected_cube().unwrap().to_dynamic();
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(8, mesh.no_vertices());

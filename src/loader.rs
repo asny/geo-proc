@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use tobj;
-use mesh;
+use crate::mesh;
 
 #[derive(Debug)]
 pub enum Error {

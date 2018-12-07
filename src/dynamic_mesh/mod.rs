@@ -12,6 +12,6 @@ pub mod face_measures;
 pub(super) mod test_utility;
 mod connectivity_info;
 
-pub use dynamic_mesh::dynamic_mesh::*;
-pub use dynamic_mesh::ids::*;
-pub use dynamic_mesh::traversal::*;
+pub use crate::dynamic_mesh::dynamic_mesh::*;
+pub use crate::dynamic_mesh::ids::*;
+pub use crate::dynamic_mesh::traversal::*;

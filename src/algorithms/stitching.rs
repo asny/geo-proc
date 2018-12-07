@@ -1,9 +1,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use types::*;
-use dynamic_mesh::*;
-use collision::*;
+use crate::types::*;
+use crate::dynamic_mesh::*;
+use crate::collision::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -261,7 +261,7 @@ fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(Verte
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dynamic_mesh::test_utility::*;
+    use crate::dynamic_mesh::test_utility::*;
 
     #[test]
     fn test_finding_edge_edge_intersections()
@@ -499,8 +499,8 @@ mod tests {
     #[test]
     fn test_box_box_splitting()
     {
-        let mut mesh1 = ::models::create_cube().unwrap().to_dynamic();
-        let mut mesh2 = ::models::create_cube().unwrap().to_dynamic();
+        let mut mesh1 = crate::models::create_cube().unwrap().to_dynamic();
+        let mut mesh2 = crate::models::create_cube().unwrap().to_dynamic();
         for vertex_id in mesh2.vertex_iterator() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -555,8 +555,8 @@ mod tests {
     #[test]
     fn test_box_box_stitching()
     {
-        let mut mesh1 = ::models::create_cube().unwrap().to_dynamic();
-        let mut mesh2 = ::models::create_cube().unwrap().to_dynamic();
+        let mut mesh1 = crate::models::create_cube().unwrap().to_dynamic();
+        let mut mesh2 = crate::models::create_cube().unwrap().to_dynamic();
         for vertex_id in mesh2.vertex_iterator() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -571,10 +571,10 @@ mod tests {
     #[test]
     fn test_sphere_box_stitching()
     {
-        let mut mesh1 = ::models::create_sphere(1).unwrap().to_dynamic();
+        let mut mesh1 = crate::models::create_sphere(1).unwrap().to_dynamic();
         mesh1.translate(&vec3(0.0, 1.5, 0.0));
         mesh1.update_vertex_normals();
-        let mut mesh2 = ::models::create_cube().unwrap().to_dynamic();
+        let mut mesh2 = crate::models::create_cube().unwrap().to_dynamic();
         mesh2.translate(&vec3(0.5, 2.0, 0.5));
         mesh2.update_vertex_normals();
 

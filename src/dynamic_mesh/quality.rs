@@ -1,5 +1,5 @@
-use dynamic_mesh::*;
-use types::*;
+use crate::dynamic_mesh::*;
+use crate::types::*;
 use std::collections::{HashSet, HashMap};
 
 impl DynamicMesh
