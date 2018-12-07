@@ -47,9 +47,9 @@ impl ConnectivityInfo {
 
         self.set_halfedge_next(&halfedge1, Some(halfedge2.clone()));
 
-        self.set_vertex_halfedge(&vertex_id1, halfedge1.clone());
-        self.set_vertex_halfedge(&vertex_id2, halfedge2);
-        self.set_vertex_halfedge(&vertex_id3, halfedge3);
+        self.set_vertex_halfedge(&vertex_id1, Some(halfedge1.clone()));
+        self.set_vertex_halfedge(&vertex_id2, Some(halfedge2));
+        self.set_vertex_halfedge(&vertex_id3, Some(halfedge3));
 
         self.set_face_halfedge(&id, halfedge1);
 
@@ -141,9 +141,9 @@ impl ConnectivityInfo {
         faces.remove(face_id).unwrap();
     }
 
-    pub fn set_vertex_halfedge(&self, id: &VertexID, val: HalfEdgeID)
+    pub fn set_vertex_halfedge(&self, id: &VertexID, val: Option<HalfEdgeID>)
     {
-        RefCell::borrow_mut(&self.vertices).get_mut(id).unwrap().halfedge = Some(val);
+        RefCell::borrow_mut(&self.vertices).get_mut(id).unwrap().halfedge = val;
     }
 
     pub fn set_halfedge_next(&self, id: &HalfEdgeID, val: Option<HalfEdgeID>)

@@ -15,7 +15,7 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
             }
             if mesh.walker_from_vertex(&vertex_id).twin().vertex_id().unwrap() != vertex_id
             {
-                return Err(Error::IsNotValid {message: format!("Halfedge pointed to by vertex {} does not start in that vertex", vertex_id)});
+                return Err(Error::IsNotValid {message: format!("Halfedge {} pointed to by vertex {} does not start in that vertex, but instead in {}", mesh.walker_from_vertex(&vertex_id).halfedge_id().unwrap(), vertex_id, mesh.walker_from_vertex(&vertex_id).twin().vertex_id().unwrap())});
             }
         }
         else {
@@ -103,7 +103,7 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
     {
         for vertex_id2 in mesh.vertex_iterator()
         {
-            if mesh.find_edge(&vertex_id1, &vertex_id2).is_some() != mesh.find_edge(&vertex_id2, &vertex_id1).is_some()
+            if mesh.connecting_edge(&vertex_id1, &vertex_id2).is_some() != mesh.connecting_edge(&vertex_id2, &vertex_id1).is_some()
             {
                 return Err(Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected one way, but not the other way", vertex_id1, vertex_id2)});
             }

@@ -2,12 +2,7 @@ use dynamic_mesh::connectivity_info::ConnectivityInfo;
 use dynamic_mesh::*;
 use types::*;
 use std::rc::Rc;
-use std::collections::{HashSet, HashMap};
-
-pub type VertexIterator = Box<Iterator<Item = VertexID>>;
-pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
-pub type FaceIterator = Box<Iterator<Item = FaceID>>;
-pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct DynamicMesh {
@@ -82,47 +77,6 @@ impl DynamicMesh
         DynamicMesh {positions, normals, connectivity_info}
     }
 
-    pub fn merge_overlapping_primitives(&mut self) -> Result<(), basic_operations::Error>
-    {
-        let mut vertices_to_check = HashSet::new();
-        self.vertex_iterator().for_each(|v| { vertices_to_check.insert(v); } );
-
-        let mut set_of_vertices_to_merge = Vec::new();
-
-        while !vertices_to_check.is_empty() {
-            let vertex_id1 = *vertices_to_check.iter().next().unwrap();
-            vertices_to_check.remove(&vertex_id1);
-
-            let mut vertices_to_merge = Vec::new();
-            for vertex_id2 in vertices_to_check.iter()
-            {
-                if (self.position(&vertex_id1) - self.position(vertex_id2)).norm() < 0.00001
-                {
-                    vertices_to_merge.push(*vertex_id2);
-                }
-            }
-            if !vertices_to_merge.is_empty()
-            {
-                for vertex_id in vertices_to_merge.iter()
-                {
-                    vertices_to_check.remove(vertex_id);
-                }
-                vertices_to_merge.push(vertex_id1);
-                set_of_vertices_to_merge.push(vertices_to_merge);
-            }
-        }
-
-        for vertices_to_merge in set_of_vertices_to_merge {
-            let mut iter = vertices_to_merge.iter();
-            let mut vertex_id1 = *iter.next().unwrap();
-            for vertex_id2 in iter {
-                vertex_id1 = self.merge_vertices(&vertex_id1, vertex_id2)?;
-            }
-        }
-
-        Ok(())
-    }
-
     pub fn no_vertices(&self) -> usize
     {
         self.connectivity_info.no_vertices()
@@ -142,7 +96,7 @@ impl DynamicMesh
     {
         for vertex_id in self.vertex_iterator() {
             let twin_id = self.walker_from_vertex(&vertex_id).twin_id().unwrap();
-            self.connectivity_info.set_vertex_halfedge(&vertex_id, twin_id);
+            self.connectivity_info.set_vertex_halfedge(&vertex_id, Some(twin_id));
         }
 
         let mut map = HashMap::new();
@@ -387,50 +341,6 @@ mod tests {
         let mesh = DynamicMesh::new(positions, None);
 
         assert_eq!(4, mesh.no_vertices());
-        assert_eq!(3, mesh.no_faces());
-        test_is_valid(&mesh).unwrap();
-    }
-
-    #[test]
-    fn test_merge_overlapping_primitives()
-    {
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
-                                       0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
-                                       0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
-
-        let mut mesh = DynamicMesh::new_with_connectivity((0..9).collect(), positions, None);
-        mesh.merge_overlapping_primitives().unwrap();
-
-        assert_eq!(4, mesh.no_vertices());
-        assert_eq!(12, mesh.no_halfedges());
-        assert_eq!(3, mesh.no_faces());
-        test_is_valid(&mesh).unwrap();
-    }
-
-    #[test]
-    fn test_merge_overlapping_primitives_of_cube()
-    {
-        let mut mesh = ::models::create_unconnected_cube().unwrap().to_dynamic();
-        mesh.merge_overlapping_primitives().unwrap();
-
-        assert_eq!(8, mesh.no_vertices());
-        assert_eq!(36, mesh.no_halfedges());
-        assert_eq!(12, mesh.no_faces());
-        test_is_valid(&mesh).unwrap();
-    }
-
-    #[test]
-    fn test_merge_overlapping_face()
-    {
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
-                                       0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
-                                       0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-
-        let mut mesh = DynamicMesh::new_with_connectivity((0..9).collect(), positions, None);
-        mesh.merge_overlapping_primitives().unwrap();
-
-        assert_eq!(4, mesh.no_vertices());
-        assert_eq!(12, mesh.no_halfedges());
         assert_eq!(3, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
     }
