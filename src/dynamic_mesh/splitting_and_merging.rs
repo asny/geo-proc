@@ -323,40 +323,49 @@ impl DynamicMesh
 
     fn find_overlapping_faces(&self, set_of_vertices_to_merge: &Vec<Vec<VertexID>>) -> Vec<Vec<FaceID>>
     {
-        let vertices_to_merge = |vertex_id| {set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))};
+        let vertices_to_merge = |vertex_id| {
+            set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))
+        };
+        let mut to_check = HashSet::new();
+        self.face_iterator().for_each(|id| { to_check.insert(id); } );
 
-        let mut set_of_faces_to_merge = Vec::new();
-        for face_id1 in self.face_iterator() {
-            let (v0, v1, v2) = self.face_vertices(&face_id1);
+        let mut set_to_merge = Vec::new();
+        while !to_check.is_empty() {
+            let id1 = *to_check.iter().next().unwrap();
+            to_check.remove(&id1);
+
+            let (v0, v1, v2) = self.face_vertices(&id1);
             if let Some(vertices_to_merge0) = vertices_to_merge(v0)
             {
                 if let Some(vertices_to_merge1) = vertices_to_merge(v1)
                 {
                     if let Some(vertices_to_merge2) = vertices_to_merge(v2)
                     {
-                        let mut faces_to_merge = Vec::new();
-                        faces_to_merge.push(face_id1);
-                        for face_id2 in self.face_iterator() {
-                            if face_id1 < face_id2 {
-                                let mut is_overlapping = true;
-                                for walker in self.face_halfedge_iterator(&face_id2) {
-                                    let vid = walker.vertex_id().unwrap();
-                                    if !vertices_to_merge0.contains(&vid) && !vertices_to_merge1.contains(&vid) && !vertices_to_merge2.contains(&vid)
-                                    {
-                                        is_overlapping = false;
-                                    }
+                        let mut to_merge = Vec::new();
+                        for id2 in to_check.iter()
+                        {
+                            let (v3, v4, v5) = self.face_vertices(&id2);
+                            if (vertices_to_merge0.contains(&v3) || vertices_to_merge0.contains(&v4) || vertices_to_merge0.contains(&v5))
+                                && (vertices_to_merge1.contains(&v3) || vertices_to_merge1.contains(&v4) || vertices_to_merge1.contains(&v5))
+                                && (vertices_to_merge2.contains(&v3) || vertices_to_merge2.contains(&v4) || vertices_to_merge2.contains(&v5))
+                                {
+                                    to_merge.push(*id2);
                                 }
-                                if is_overlapping { faces_to_merge.push(face_id2) }
+                        }
+                        if !to_merge.is_empty()
+                            {
+                                for id in to_merge.iter()
+                                {
+                                    to_check.remove(id);
+                                }
+                                to_merge.push(id1);
+                                set_to_merge.push(to_merge);
                             }
-                        }
-                        if faces_to_merge.len() > 1 {
-                            set_of_faces_to_merge.push(faces_to_merge);
-                        }
                     }
                 }
             }
         }
-        set_of_faces_to_merge
+        set_to_merge
     }
 
     fn find_overlapping_edges(&self, set_of_vertices_to_merge: &Vec<Vec<VertexID>>) -> Vec<Vec<HalfEdgeID>>
@@ -562,11 +571,28 @@ mod tests {
     }
 
     #[test]
-    fn test_merge_overlapping_faces()
+    fn test_merge_two_overlapping_faces()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  4, 6, 5,  6, 7, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,
                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5];
+
+        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        mesh.merge_overlapping_primitives().unwrap();
+
+        assert_eq!(5, mesh.no_vertices());
+        assert_eq!(14, mesh.no_halfedges());
+        assert_eq!(3, mesh.no_faces());
+        test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_merge_three_overlapping_faces()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  4, 6, 5,  6, 7, 5,  8, 10, 9];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,
+                                       -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5,
+                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0];
 
         let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
         mesh.merge_overlapping_primitives().unwrap();
