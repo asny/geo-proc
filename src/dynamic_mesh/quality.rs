@@ -44,10 +44,6 @@ impl DynamicMesh
         for (halfedge_id, _) in self.halfedge_twins_iterator() {
             self.remove_edge_if_lonely(&halfedge_id);
         }
-
-        for vertex_id in self.vertex_iterator() {
-            self.remove_vertex_if_lonely(&vertex_id);
-        }
     }
 
     pub fn flip_edges(&mut self, flatness_threshold: f32)
@@ -143,9 +139,26 @@ mod tests {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 0.1,  0.1, 0.0, -0.1,  -1.0, 0.0, -0.5];
         let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
-        test_utility::test_is_valid(&mesh).unwrap();
 
         mesh.collapse_small_faces(0.2);
+        test_utility::test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_remove_lonely_vertices()
+    {
+        let mut mesh = test_utility::create_three_connected_faces();
+        let mut iter = mesh.face_iterator();
+        let face_id1 = iter.next().unwrap();
+        let face_id2 = iter.next().unwrap();
+        mesh.remove_face_unsafe(&face_id1);
+        mesh.remove_face_unsafe(&face_id2);
+
+        mesh.remove_lonely_primitives();
+
+        assert_eq!(3, mesh.no_vertices());
+        assert_eq!(6, mesh.no_halfedges());
+        assert_eq!(1, mesh.no_faces());
         test_utility::test_is_valid(&mesh).unwrap();
     }
 }
