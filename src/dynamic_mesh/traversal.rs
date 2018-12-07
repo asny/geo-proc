@@ -7,7 +7,7 @@ use std::iter::FromIterator;
 pub type VertexIterator = Box<Iterator<Item = VertexID>>;
 pub type HalfEdgeIterator = Box<Iterator<Item = HalfEdgeID>>;
 pub type FaceIterator = Box<Iterator<Item = FaceID>>;
-pub type HalfEdgePairIterator = Box<Iterator<Item = (HalfEdgeID, HalfEdgeID)>>;
+pub type HalfEdgeTwinsIterator = Box<Iterator<Item = (HalfEdgeID, HalfEdgeID)>>;
 pub type EdgeIterator = Box<Iterator<Item = (VertexID, VertexID)>>;
 
 impl DynamicMesh
@@ -52,7 +52,7 @@ impl DynamicMesh
         self.connectivity_info.halfedge_iterator()
     }
 
-    pub fn halfedge_pair_iterator(&self) -> HalfEdgePairIterator
+    pub fn halfedge_twins_iterator(&self) -> HalfEdgeTwinsIterator
     {
         let mut values = Vec::with_capacity(self.no_halfedges()/2);
         for halfedge_id in self.halfedge_iterator() {
