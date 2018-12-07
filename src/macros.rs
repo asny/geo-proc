@@ -1,4 +1,5 @@
 
+#[macro_export]
 macro_rules! att {
     ($( $name: expr => ($data: expr, $no_components: expr)),*) => {{
          let mut vec = Vec::new();
