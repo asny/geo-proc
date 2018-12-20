@@ -156,7 +156,7 @@ pub struct Walker
 
 impl Walker
 {
-    pub(crate) fn new(connectivity_info: &Rc<ConnectivityInfo>) -> Walker
+    pub(crate) fn new(connectivity_info: &Rc<ConnectivityInfo>) -> Self
     {
         Walker {current: None, current_info: None, connectivity_info: connectivity_info.clone()}
     }
@@ -206,7 +206,7 @@ impl Walker
         self
     }
 
-    pub fn twin(&mut self) -> &mut Walker
+    pub fn twin(&mut self) -> &mut Self
     {
         let halfedge_id = match self.current_info {
             Some(ref current_info) => { current_info.twin.clone() },
