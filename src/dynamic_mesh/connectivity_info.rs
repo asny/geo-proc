@@ -4,7 +4,7 @@ use std;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
-pub struct ConnectivityInfo {
+pub(crate) struct ConnectivityInfo {
     vertices: RefCell<HashMap<VertexID, Vertex>>,
     halfedges: RefCell<HashMap<HalfEdgeID, HalfEdge>>,
     faces: RefCell<HashMap<FaceID, Face>>
