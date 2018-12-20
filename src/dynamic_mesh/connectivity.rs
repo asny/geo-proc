@@ -17,7 +17,7 @@ impl DynamicMesh
     {
         let mut walker = self.walker();
         for halfedge_id in self.halfedge_iterator() {
-            walker.as_halfedge(&halfedge_id);
+            walker.as_halfedge_walker(&halfedge_id);
             if &walker.vertex_id().unwrap() == vertex_id2 && &walker.twin().vertex_id().unwrap() == vertex_id1
             {
                 return Some(halfedge_id)
