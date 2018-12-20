@@ -13,9 +13,9 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
             if !mesh.halfedge_iterator().any(|he_id| he_id == halfedge_id) {
                 return Err(Error::IsNotValid {message: format!("Vertex {} points to an invalid halfedge {}", vertex_id, halfedge_id)});
             }
-            if mesh.walker_from_vertex(&vertex_id).twin().vertex_id().unwrap() != vertex_id
+            if mesh.walker_from_vertex(&vertex_id).as_twin().vertex_id().unwrap() != vertex_id
             {
-                return Err(Error::IsNotValid {message: format!("Halfedge {} pointed to by vertex {} does not start in that vertex, but instead in {}", mesh.walker_from_vertex(&vertex_id).halfedge_id().unwrap(), vertex_id, mesh.walker_from_vertex(&vertex_id).twin().vertex_id().unwrap())});
+                return Err(Error::IsNotValid {message: format!("Halfedge {} pointed to by vertex {} does not start in that vertex, but instead in {}", mesh.walker_from_vertex(&vertex_id).halfedge_id().unwrap(), vertex_id, mesh.walker_from_vertex(&vertex_id).as_twin().vertex_id().unwrap())});
             }
         }
         else {

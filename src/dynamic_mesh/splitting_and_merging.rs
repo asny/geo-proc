@@ -29,7 +29,7 @@ impl DynamicMesh
                 info.add_vertex(vertex_id, vertex);
                 info.set_vertex_halfedge(&vertex_id, walker.next_id());
 
-                walker.twin();
+                walker.as_twin();
                 if walker.face_id().is_none()
                 {
                     let twin_id = walker.halfedge_id().unwrap();
@@ -71,7 +71,7 @@ impl DynamicMesh
             if is_at_split(self, &halfedge_id) {
                 let mut walker = self.walker_from_halfedge(&halfedge_id);
                 face_id1 = walker.face_id();
-                face_id2 = walker.twin().face_id();
+                face_id2 = walker.as_twin().face_id();
                 if face_id1.is_some() && face_id2.is_some()
                 {
                     break;
@@ -105,7 +105,7 @@ impl DynamicMesh
                 if let Some(mut self_halfedge_id) = self.connecting_edge(&self_vertex_id1, &self_vertex_id2)
                 {
                     let mut walker = self.walker_from_halfedge(&self_halfedge_id);
-                    if walker.face_id().is_some() { walker.twin(); }
+                    if walker.face_id().is_some() { walker.as_twin(); }
                     if walker.face_id().is_some() {
                         return Err(Error::MergeWillCreateNonManifoldMesh {message: format!("Merge at edge ({}, {}) will create non manifold mesh", self_vertex_id1, self_vertex_id2)});
                     }
@@ -120,7 +120,7 @@ impl DynamicMesh
                             Error::CannotCheckOrientationOfMesh {message: format!("No edge connecting ({}, {}) exists", other_vertex_id1, other_vertex_id2)}
                         )?;
                         let mut other_walker = other.walker_from_halfedge(&other_halfedge_id);
-                        if other_walker.face_id().is_some() { other_walker.twin(); }
+                        if other_walker.face_id().is_some() { other_walker.as_twin(); }
                         if other_walker.face_id().is_some() {
                             return Err(Error::MergeWillCreateNonManifoldMesh {message: format!("Merge at edge ({}, {}) will create non manifold mesh", other_vertex_id1, other_vertex_id2)});
                         }
@@ -198,12 +198,12 @@ impl DynamicMesh
         let mut walker1 = self.walker_from_halfedge(halfedge_id1);
         let mut walker2 = self.walker_from_halfedge(halfedge_id2);
 
-        let edge1_alone =  walker1.face_id().is_none() && walker1.twin().face_id().is_none();
-        let edge1_interior =  walker1.face_id().is_some() && walker1.twin().face_id().is_some();
+        let edge1_alone =  walker1.face_id().is_none() && walker1.as_twin().face_id().is_none();
+        let edge1_interior =  walker1.face_id().is_some() && walker1.as_twin().face_id().is_some();
         let edge1_boundary = !edge1_alone && !edge1_interior;
 
-        let edge2_alone =  walker2.face_id().is_none() && walker2.twin().face_id().is_none();
-        let edge2_interior =  walker2.face_id().is_some() && walker2.twin().face_id().is_some();
+        let edge2_alone =  walker2.face_id().is_none() && walker2.as_twin().face_id().is_none();
+        let edge2_interior =  walker2.face_id().is_some() && walker2.as_twin().face_id().is_some();
         let edge2_boundary = !edge2_alone && !edge2_interior;
 
         if edge1_interior && !edge2_alone || edge2_interior && !edge1_alone {
@@ -218,13 +218,13 @@ impl DynamicMesh
         let mut vertex_id2 = None;
 
         if edge1_boundary {
-            if walker1.face_id().is_none() { walker1.twin(); };
+            if walker1.face_id().is_none() { walker1.as_twin(); };
             halfedge_to_remove1 = walker1.twin_id();
             halfedge_to_survive1 = walker1.halfedge_id();
             vertex_id1 = walker1.vertex_id();
         }
         if edge2_boundary {
-            if walker2.face_id().is_none() { walker2.twin(); };
+            if walker2.face_id().is_none() { walker2.as_twin(); };
             halfedge_to_remove2 = walker2.twin_id();
             halfedge_to_survive2 = walker2.halfedge_id();
             vertex_id2 = walker2.vertex_id();
@@ -238,12 +238,12 @@ impl DynamicMesh
 
                 halfedge_to_survive1 = walker2.halfedge_id();
                 vertex_id1 = walker2.vertex_id();
-                walker2.twin();
+                walker2.as_twin();
                 halfedge_to_survive2 = walker2.halfedge_id();
                 vertex_id2 = walker2.vertex_id();
             }
             else {
-                if vertex_id2 == walker1.vertex_id() { walker1.twin(); }
+                if vertex_id2 == walker1.vertex_id() { walker1.as_twin(); }
                 halfedge_to_remove1 = walker1.twin_id();
                 halfedge_to_survive1 = walker1.halfedge_id();
                 vertex_id1 = walker1.vertex_id();
@@ -257,12 +257,12 @@ impl DynamicMesh
 
                 halfedge_to_survive1 = walker1.halfedge_id();
                 vertex_id1 = walker1.vertex_id();
-                walker1.twin();
+                walker1.as_twin();
                 halfedge_to_survive2 = walker1.halfedge_id();
                 vertex_id2 = walker1.vertex_id();
             }
             else {
-                if vertex_id1 == walker2.vertex_id() { walker2.twin(); }
+                if vertex_id1 == walker2.vertex_id() { walker2.as_twin(); }
                 halfedge_to_remove2 = walker2.twin_id();
                 halfedge_to_survive2 = walker2.halfedge_id();
                 vertex_id2 = walker2.vertex_id();

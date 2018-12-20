@@ -20,7 +20,7 @@ pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limi
 
         for mut walker in mesh.face_halfedge_iterator(&test_face) {
             if !limit(walker.halfedge_id().unwrap()) {
-                if let Some(face_id) = walker.twin().face_id() {
+                if let Some(face_id) = walker.as_twin().face_id() {
                     if !component.contains(&face_id)
                     {
                         component.insert(face_id.clone());

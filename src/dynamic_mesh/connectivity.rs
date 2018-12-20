@@ -18,7 +18,7 @@ impl DynamicMesh
         let mut walker = self.walker();
         for halfedge_id in self.halfedge_iterator() {
             walker.as_halfedge_walker(&halfedge_id);
-            if &walker.vertex_id().unwrap() == vertex_id2 && &walker.twin().vertex_id().unwrap() == vertex_id1
+            if &walker.vertex_id().unwrap() == vertex_id2 && &walker.as_twin().vertex_id().unwrap() == vertex_id1
             {
                 return Some(halfedge_id)
             }
@@ -29,7 +29,7 @@ impl DynamicMesh
     pub fn vertex_on_boundary(&self, vertex_id: &VertexID) -> bool
     {
         for mut walker in self.vertex_halfedge_iterator(vertex_id) {
-            if walker.face_id().is_none() || walker.twin().face_id().is_none()
+            if walker.face_id().is_none() || walker.as_twin().face_id().is_none()
             {
                 return true;
             }
@@ -40,14 +40,14 @@ impl DynamicMesh
     pub fn on_boundary(&self, halfedge_id: &HalfEdgeID) -> bool
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
-        walker.face_id().is_none() || walker.twin().face_id().is_none()
+        walker.face_id().is_none() || walker.as_twin().face_id().is_none()
     }
 
     pub fn edge_vertices(&self, halfedge_id: &HalfEdgeID) -> (VertexID, VertexID)
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
         let v1 = walker.vertex_id().unwrap();
-        let v2 = walker.twin().vertex_id().unwrap();
+        let v2 = walker.as_twin().vertex_id().unwrap();
         (v1, v2)
     }
 
@@ -55,7 +55,7 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
         let v1 = walker.vertex_id().unwrap();
-        let v2 = walker.twin().vertex_id().unwrap();
+        let v2 = walker.as_twin().vertex_id().unwrap();
         if v1 < v2 { (v1, v2) } else { (v2, v1) }
     }
 

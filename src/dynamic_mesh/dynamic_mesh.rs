@@ -103,7 +103,7 @@ impl DynamicMesh
         for halfedge_id in self.halfedge_iterator() {
             let mut walker = self.walker_from_halfedge(&halfedge_id);
             let new_next_id = walker.previous_id();
-            let new_vertex_id = walker.twin().vertex_id().unwrap();
+            let new_vertex_id = walker.as_twin().vertex_id().unwrap();
             map.insert(halfedge_id, (new_vertex_id, new_next_id));
         }
         for (halfedge_id, (new_vertex_id, new_next_id)) in map {
@@ -270,19 +270,19 @@ mod tests {
         let t1 = mesh.walker_from_vertex(&v1).vertex_id();
         assert_eq!(t1, Some(v2.clone()));
 
-        let t2 = mesh.walker_from_vertex(&v1).twin().vertex_id();
+        let t2 = mesh.walker_from_vertex(&v1).as_twin().vertex_id();
         assert_eq!(t2, Some(v1));
 
         let t3 = mesh.walker_from_vertex(&v2.clone()).next().next().vertex_id();
         assert_eq!(t3, Some(v2.clone()));
 
-        let t4 = mesh.walker_from_face(&f1.clone()).twin().face_id();
+        let t4 = mesh.walker_from_face(&f1.clone()).as_twin().face_id();
         assert!(t4.is_none());
 
-        let t5 = mesh.walker_from_face(&f1.clone()).twin().next_id();
+        let t5 = mesh.walker_from_face(&f1.clone()).as_twin().next_id();
         assert!(t5.is_none());
 
-        let t6 = mesh.walker_from_face(&f1.clone()).previous().previous().twin().twin().face_id();
+        let t6 = mesh.walker_from_face(&f1.clone()).previous().previous().as_twin().as_twin().face_id();
         assert_eq!(t6, Some(f1.clone()));
 
         let t7 = mesh.walker_from_vertex(&v2.clone()).next().next().next_id();
@@ -305,7 +305,7 @@ mod tests {
         }
         let mut walker = mesh.walker_from_vertex(&id.unwrap());
         let start_edge = walker.halfedge_id().unwrap();
-        let one_round_edge = walker.previous().twin().previous().twin().previous().twin_id().unwrap();
+        let one_round_edge = walker.previous().as_twin().previous().as_twin().previous().twin_id().unwrap();
         assert_eq!(start_edge, one_round_edge);
     }
 

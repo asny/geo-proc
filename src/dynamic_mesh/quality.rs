@@ -33,7 +33,7 @@ impl DynamicMesh
             faces_to_test.remove(&face_id);
             if self.face_area(&face_id) < area_threshold {
                 let mut walker = self.walker_from_face(&face_id);
-                if let Some(twin_face_id) = walker.twin().face_id() { faces_to_test.remove(&twin_face_id); }
+                if let Some(twin_face_id) = walker.as_twin().face_id() { faces_to_test.remove(&twin_face_id); }
                 self.collapse_edge(&walker.twin_id().unwrap());
             }
         }
@@ -69,7 +69,7 @@ impl DynamicMesh
                 let mut walker = self.walker_from_halfedge(&halfedge_id);
                 insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
                 insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
-                insert_or_remove(&self,&mut to_be_flipped, walker.next().twin().next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.next().as_twin().next().halfedge_id().unwrap());
                 insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
             }
         }
@@ -88,7 +88,7 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_halfedge(haledge_id);
         let face_id1 = walker.face_id().unwrap();
-        let face_id2 = walker.twin().face_id().unwrap();
+        let face_id2 = walker.as_twin().face_id().unwrap();
         self.face_normal(&face_id1).dot(&self.face_normal(&face_id2))
     }
 
@@ -97,7 +97,7 @@ impl DynamicMesh
         let mut walker = self.walker_from_halfedge(haledge_id);
         let p0 = self.position(&walker.vertex_id().unwrap());
         let p2 = self.position(&walker.next().vertex_id().unwrap());
-        let p1 = self.position(&walker.previous().twin().vertex_id().unwrap());
+        let p1 = self.position(&walker.previous().as_twin().vertex_id().unwrap());
         let p3 = self.position(&walker.next().vertex_id().unwrap());
 
         (p2 - p0).cross(&(p3 - p0)).dot(&(p3 - p1).cross(&(p2 - p1))) < 0.0001
@@ -108,7 +108,7 @@ impl DynamicMesh
         let mut walker = self.walker_from_halfedge(haledge_id);
         let p0 = self.position(&walker.vertex_id().unwrap());
         let p2 = self.position(&walker.next().vertex_id().unwrap());
-        let p1 = self.position(&walker.previous().twin().vertex_id().unwrap());
+        let p1 = self.position(&walker.previous().as_twin().vertex_id().unwrap());
         let p3 = self.position(&walker.next().vertex_id().unwrap());
 
         triangle_quality(p0, p2, p1) + triangle_quality(p0, p1, p3) >

@@ -102,14 +102,14 @@ impl Iterator for VertexHalfedgeIterator {
 
         match self.current.face_id() {
             Some(_) => {
-                self.current.previous().twin();
+                self.current.previous().as_twin();
             },
             None => { // In the case there are holes in the one-ring
-                self.current.twin();
+                self.current.as_twin();
                 while let Some(_) = self.current.face_id() {
-                    self.current.next().twin();
+                    self.current.next().as_twin();
                 }
-                self.current.twin();
+                self.current.as_twin();
             }
         }
         self.is_done = self.current.halfedge_id().unwrap() == self.start;
@@ -173,22 +173,16 @@ impl Walker
         self
     }
 
-    pub fn into_halfedge_walker(mut self, halfedge_id: &HalfEdgeID) -> Self
-    {
-        self.as_halfedge_walker(halfedge_id);
-        self
-    }
-
-    pub fn into_face_halfedge_walker(mut self, face_id: &FaceID) -> Self
-    {
-        self.as_face_halfedge_walker(face_id);
-        self
-    }
-
     pub fn as_vertex_halfedge_walker(&mut self, vertex_id: &VertexID) -> &mut Self
     {
         let halfedge_id = self.connectivity_info.vertex_halfedge(vertex_id);
         self.set_current(halfedge_id);
+        self
+    }
+
+    pub fn into_halfedge_walker(mut self, halfedge_id: &HalfEdgeID) -> Self
+    {
+        self.as_halfedge_walker(halfedge_id);
         self
     }
 
@@ -199,6 +193,12 @@ impl Walker
         self
     }
 
+    pub fn into_face_halfedge_walker(mut self, face_id: &FaceID) -> Self
+    {
+        self.as_face_halfedge_walker(face_id);
+        self
+    }
+
     pub fn as_face_halfedge_walker(&mut self, face_id: &FaceID) -> &mut Self
     {
         let halfedge_id = self.connectivity_info.face_halfedge(face_id);
@@ -206,7 +206,13 @@ impl Walker
         self
     }
 
-    pub fn twin(&mut self) -> &mut Self
+    pub fn into_twin(mut self) -> Self
+    {
+        self.as_twin();
+        self
+    }
+
+    pub fn as_twin(&mut self) -> &mut Self
     {
         let halfedge_id = match self.current_info {
             Some(ref current_info) => { current_info.twin.clone() },
