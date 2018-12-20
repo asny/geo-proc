@@ -102,12 +102,12 @@ impl Iterator for VertexHalfedgeIterator {
 
         match self.current.face_id() {
             Some(_) => {
-                self.current.previous().as_twin();
+                self.current.as_previous().as_twin();
             },
             None => { // In the case there are holes in the one-ring
                 self.current.as_twin();
                 while let Some(_) = self.current.face_id() {
-                    self.current.next().as_twin();
+                    self.current.as_next().as_twin();
                 }
                 self.current.as_twin();
             }
@@ -140,7 +140,7 @@ impl Iterator for FaceHalfedgeIterator {
     {
         if self.is_done { return None; }
         let curr = self.current.clone();
-        self.current.next();
+        self.current.as_next();
         self.is_done = self.current.halfedge_id().unwrap() == self.start;
         Some(curr)
     }
@@ -228,7 +228,13 @@ impl Walker
         else { None }
     }
 
-    pub fn next(&mut self) -> &mut Walker
+    pub fn into_next(mut self) -> Self
+    {
+        self.as_next();
+        self
+    }
+
+    pub fn as_next(&mut self) -> &mut Self
     {
         let halfedge_id = match self.current_info {
             Some(ref current_info) => { current_info.next.clone() },
@@ -244,9 +250,14 @@ impl Walker
         else { None }
     }
 
-    pub fn previous(&mut self) -> &mut Walker
+    pub fn as_previous(&mut self) -> &mut Self
     {
-        self.next().next()
+        self.as_next().as_next()
+    }
+    pub fn into_previous(mut self) -> Self
+    {
+        self.as_next().as_next();
+        self
     }
 
     pub fn previous_id(&self) -> Option<HalfEdgeID>

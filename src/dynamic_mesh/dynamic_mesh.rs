@@ -221,7 +221,7 @@ impl DynamicMesh
             if walker.as_halfedge_walker(&halfedge_id1).twin_id().is_none()
             {
                 let vertex_id1 = walker.vertex_id().unwrap();
-                let vertex_id2 = walker.previous().vertex_id().unwrap();
+                let vertex_id2 = walker.as_previous().vertex_id().unwrap();
 
                 let mut halfedge2 = None;
                 for i2 in i1+1..edges.len()
@@ -229,7 +229,7 @@ impl DynamicMesh
                     let halfedge_id2 = &edges[i2];
                     if walker.as_halfedge_walker(halfedge_id2).twin_id().is_none()
                     {
-                        if walker.vertex_id().unwrap() == vertex_id2 && walker.previous().vertex_id().unwrap() == vertex_id1
+                        if walker.vertex_id().unwrap() == vertex_id2 && walker.as_previous().vertex_id().unwrap() == vertex_id1
                         {
                             halfedge2 = Some(halfedge_id2.clone());
                             break;
@@ -273,7 +273,7 @@ mod tests {
         let t2 = mesh.walker_from_vertex(&v1).as_twin().vertex_id();
         assert_eq!(t2, Some(v1));
 
-        let t3 = mesh.walker_from_vertex(&v2.clone()).next().next().vertex_id();
+        let t3 = mesh.walker_from_vertex(&v2.clone()).as_next().as_next().vertex_id();
         assert_eq!(t3, Some(v2.clone()));
 
         let t4 = mesh.walker_from_face(&f1.clone()).as_twin().face_id();
@@ -282,10 +282,10 @@ mod tests {
         let t5 = mesh.walker_from_face(&f1.clone()).as_twin().next_id();
         assert!(t5.is_none());
 
-        let t6 = mesh.walker_from_face(&f1.clone()).previous().previous().as_twin().as_twin().face_id();
+        let t6 = mesh.walker_from_face(&f1.clone()).as_previous().as_previous().as_twin().as_twin().face_id();
         assert_eq!(t6, Some(f1.clone()));
 
-        let t7 = mesh.walker_from_vertex(&v2.clone()).next().next().next_id();
+        let t7 = mesh.walker_from_vertex(&v2.clone()).as_next().as_next().next_id();
         assert_eq!(t7, mesh.walker_from_vertex(&v2).halfedge_id());
 
         let t8 = mesh.walker_from_vertex(&v3).face_id();
@@ -305,7 +305,7 @@ mod tests {
         }
         let mut walker = mesh.walker_from_vertex(&id.unwrap());
         let start_edge = walker.halfedge_id().unwrap();
-        let one_round_edge = walker.previous().as_twin().previous().as_twin().previous().twin_id().unwrap();
+        let one_round_edge = walker.as_previous().as_twin().as_previous().as_twin().as_previous().twin_id().unwrap();
         assert_eq!(start_edge, one_round_edge);
     }
 

@@ -7,9 +7,9 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
-        walker.next();
+        walker.as_next();
         let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
 
         let mut dir = v0.cross(&v1);
@@ -21,9 +21,9 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
-        walker.next();
+        walker.as_next();
         let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
 
         v0.cross(&v1).norm()
@@ -33,9 +33,9 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let p1 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let p2 = *self.position(&walker.vertex_id().unwrap());
 
         (p0 + p1 + p2)/3.0

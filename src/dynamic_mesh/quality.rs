@@ -67,10 +67,10 @@ impl DynamicMesh
 
             if self.flip_edge(&halfedge_id).is_ok() {
                 let mut walker = self.walker_from_halfedge(&halfedge_id);
-                insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
-                insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
-                insert_or_remove(&self,&mut to_be_flipped, walker.next().as_twin().next().halfedge_id().unwrap());
-                insert_or_remove(&self,&mut to_be_flipped, walker.next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.as_next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.as_next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.as_next().as_twin().as_next().halfedge_id().unwrap());
+                insert_or_remove(&self,&mut to_be_flipped, walker.as_next().halfedge_id().unwrap());
             }
         }
     }
@@ -96,9 +96,9 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_halfedge(haledge_id);
         let p0 = self.position(&walker.vertex_id().unwrap());
-        let p2 = self.position(&walker.next().vertex_id().unwrap());
-        let p1 = self.position(&walker.previous().as_twin().vertex_id().unwrap());
-        let p3 = self.position(&walker.next().vertex_id().unwrap());
+        let p2 = self.position(&walker.as_next().vertex_id().unwrap());
+        let p1 = self.position(&walker.as_previous().as_twin().vertex_id().unwrap());
+        let p3 = self.position(&walker.as_next().vertex_id().unwrap());
 
         (p2 - p0).cross(&(p3 - p0)).dot(&(p3 - p1).cross(&(p2 - p1))) < 0.0001
     }
@@ -107,9 +107,9 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_halfedge(haledge_id);
         let p0 = self.position(&walker.vertex_id().unwrap());
-        let p2 = self.position(&walker.next().vertex_id().unwrap());
-        let p1 = self.position(&walker.previous().as_twin().vertex_id().unwrap());
-        let p3 = self.position(&walker.next().vertex_id().unwrap());
+        let p2 = self.position(&walker.as_next().vertex_id().unwrap());
+        let p1 = self.position(&walker.as_previous().as_twin().vertex_id().unwrap());
+        let p3 = self.position(&walker.as_next().vertex_id().unwrap());
 
         triangle_quality(p0, p2, p1) + triangle_quality(p0, p1, p3) >
             1.1 * (triangle_quality(p0, p2, p3) + triangle_quality(p1, p3, p2))

@@ -63,9 +63,9 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_face(face_id);
         let v1 = walker.vertex_id().unwrap();
-        walker.next();
+        walker.as_next();
         let v2 = walker.vertex_id().unwrap();
-        walker.next();
+        walker.as_next();
         let v3 = walker.vertex_id().unwrap();
         (v1, v2, v3)
     }
@@ -74,9 +74,9 @@ impl DynamicMesh
     {
         let mut walker = self.walker_from_face(face_id);
         let v1 = walker.vertex_id().unwrap();
-        walker.next();
+        walker.as_next();
         let v2 = walker.vertex_id().unwrap();
-        walker.next();
+        walker.as_next();
         let v3 = walker.vertex_id().unwrap();
         if v1 < v2 {
             if v2 < v3 { (v1, v2, v3) }
