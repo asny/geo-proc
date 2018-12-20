@@ -212,13 +212,13 @@ impl DynamicMesh
 
     pub(super) fn create_twin_connectivity(&mut self)
     {
-        let mut walker = Walker::create(&self.connectivity_info);
+        let mut walker = Walker::new(&self.connectivity_info);
         let edges: Vec<HalfEdgeID> = self.halfedge_iterator().collect();
 
         for i1 in 0..edges.len()
         {
             let halfedge_id1 = edges[i1];
-            if walker.jump_to_edge(&halfedge_id1).twin_id().is_none()
+            if walker.as_halfedge(&halfedge_id1).twin_id().is_none()
             {
                 let vertex_id1 = walker.vertex_id().unwrap();
                 let vertex_id2 = walker.previous().vertex_id().unwrap();
@@ -227,7 +227,7 @@ impl DynamicMesh
                 for i2 in i1+1..edges.len()
                 {
                     let halfedge_id2 = &edges[i2];
-                    if walker.jump_to_edge(halfedge_id2).twin_id().is_none()
+                    if walker.as_halfedge(halfedge_id2).twin_id().is_none()
                     {
                         if walker.vertex_id().unwrap() == vertex_id2 && walker.previous().vertex_id().unwrap() == vertex_id1
                         {
