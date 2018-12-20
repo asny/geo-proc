@@ -161,12 +161,6 @@ impl Walker
         Walker {current: None, current_info: None, connectivity_info: connectivity_info.clone()}
     }
 
-    fn set_current(&mut self, halfedge_id: Option<HalfEdgeID>)
-    {
-        self.current_info = if let Some(ref id) = halfedge_id { self.connectivity_info.halfedge(id) } else { None };
-        self.current = halfedge_id;
-    }
-
     pub fn into_vertex_halfedge_walker(mut self, vertex_id: &VertexID) -> Self
     {
         self.as_vertex_halfedge_walker(vertex_id);
@@ -254,6 +248,7 @@ impl Walker
     {
         self.as_next().as_next()
     }
+
     pub fn into_previous(mut self) -> Self
     {
         self.as_next().as_next();
@@ -281,6 +276,12 @@ impl Walker
     {
         if let Some(ref halfedge) = self.current_info { halfedge.face.clone() }
         else { None }
+    }
+
+    fn set_current(&mut self, halfedge_id: Option<HalfEdgeID>)
+    {
+        self.current_info = if let Some(ref id) = halfedge_id { self.connectivity_info.halfedge(id) } else { None };
+        self.current = halfedge_id;
     }
 }
 
