@@ -212,7 +212,7 @@ impl DynamicMesh
 
     pub(super) fn create_twin_connectivity(&mut self)
     {
-        let mut walker = Walker::new(&self.connectivity_info);
+        let mut walker = self.walker();
         let edges: Vec<HalfEdgeID> = self.halfedge_iterator().collect();
 
         for i1 in 0..edges.len()
