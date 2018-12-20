@@ -146,7 +146,7 @@ impl Iterator for FaceHalfedgeIterator {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Walker
 {
     connectivity_info: Rc<ConnectivityInfo>,

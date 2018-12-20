@@ -240,12 +240,12 @@ impl ConnectivityInfo {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Vertex {
     pub halfedge: Option<HalfEdgeID>
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct HalfEdge {
     pub vertex: Option<VertexID>,
     pub twin: Option<HalfEdgeID>,
@@ -253,7 +253,7 @@ pub struct HalfEdge {
     pub face: Option<FaceID>
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Face {
     pub halfedge: Option<HalfEdgeID>
 }
