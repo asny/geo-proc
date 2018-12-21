@@ -18,8 +18,14 @@ pub enum Error {
 /// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
 ///                                    0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
 ///                                    0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
-/// let mesh = MeshBuilder::new().with_positions(positions).build()?;
+/// let mut mesh = MeshBuilder::new().with_positions(positions).build()?;
 /// assert_eq!(mesh.no_faces(), 3);
+/// assert_eq!(mesh.no_vertices(), 9);
+///
+/// mesh.merge_overlapping_primitives();
+/// assert_eq!(mesh.no_faces(), 3);
+/// assert_eq!(mesh.no_vertices(), 4);
+///
 /// #
 /// #   Ok(())
 /// # }
@@ -29,7 +35,9 @@ pub enum Error {
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
-/// let mesh = MeshBuilder::new().icosahedron().build()?;
+/// let mesh = MeshBuilder::new().cube().build()?;
+/// assert_eq!(mesh.no_faces(), 12);
+/// assert_eq!(mesh.no_vertices(), 8);
 /// #
 /// #   Ok(())
 /// # }
@@ -75,8 +83,40 @@ impl MeshBuilder {
             Ok(DynamicMesh::new_with_connectivity(indices, positions, self.normals))
         }
         else {
-            Ok(DynamicMesh::new(positions, self.normals))
+            let indices = (0..positions.len() as u32/3).collect();
+            Ok(DynamicMesh::new_with_connectivity(indices, positions, self.normals))
         }
+    }
+
+
+    pub fn cube(mut self) -> Self
+    {
+        self.positions = Some(vec![
+            1.0, -1.0, -1.0,
+            1.0, -1.0, 1.0,
+            -1.0, -1.0, 1.0,
+            -1.0, -1.0, -1.0,
+            1.0, 1.0, -1.0,
+            1.0, 1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            -1.0, 1.0, -1.0
+        ]);
+
+        self.indices = Some(vec![
+            0, 1, 2,
+            0, 2, 3,
+            4, 7, 6,
+            4, 6, 5,
+            0, 4, 5,
+            0, 5, 1,
+            1, 5, 6,
+            1, 6, 2,
+            2, 6, 7,
+            2, 7, 3,
+            4, 0, 3,
+            4, 3, 7
+        ]);
+        self
     }
 
     pub fn icosahedron(mut self) -> Self
