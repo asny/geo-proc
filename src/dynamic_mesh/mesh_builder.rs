@@ -93,17 +93,10 @@ impl MeshBuilder {
     {
         let positions = self.positions.ok_or(
             Error::NoPositionsSpecified {message: format!("Did you forget to specify the vertex positions?")})?;
-
-        if let Some(indices) = self.indices {
-            Ok(DynamicMesh::new_with_connectivity(indices, positions, self.normals))
-        }
-        else {
-            let indices = (0..positions.len() as u32/3).collect();
-            Ok(DynamicMesh::new_with_connectivity(indices, positions, self.normals))
-        }
+        let indices = self.indices.unwrap_or((0..positions.len() as u32/3).collect());
+        Ok(DynamicMesh::new_with_connectivity(indices, positions, self.normals))
     }
-
-
+    
     pub fn cube(mut self) -> Self
     {
         self.positions = Some(vec![
