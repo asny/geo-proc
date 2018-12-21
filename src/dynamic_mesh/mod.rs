@@ -1,4 +1,5 @@
 
+pub mod mesh_builder;
 pub mod ids;
 pub mod traversal;
 pub mod dynamic_mesh;
