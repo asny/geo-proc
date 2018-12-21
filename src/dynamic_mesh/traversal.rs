@@ -128,7 +128,7 @@ impl FaceHalfedgeIterator {
     pub(crate) fn new(face_id: &FaceID, connectivity_info: &Rc<ConnectivityInfo>) -> FaceHalfedgeIterator
     {
         let current = Walker::new(connectivity_info).into_face_halfedge_walker(face_id);
-        let start = current.halfedge_id().unwrap().clone();
+        let start = current.halfedge_id().unwrap();
         FaceHalfedgeIterator { current, start, is_done: false }
     }
 }
