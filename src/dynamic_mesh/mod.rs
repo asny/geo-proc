@@ -14,5 +14,6 @@ pub(super) mod test_utility;
 mod connectivity_info;
 
 pub use crate::dynamic_mesh::dynamic_mesh::*;
+pub use crate::dynamic_mesh::mesh_builder::*;
 pub use crate::dynamic_mesh::ids::*;
 pub use crate::dynamic_mesh::traversal::*;

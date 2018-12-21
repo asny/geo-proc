@@ -6,6 +6,24 @@ pub enum Error {
     NoPositionsSpecified {message: String}
 }
 
+/// Contains functionality to construct a mesh from either raw data (indices, positions, normals)
+/// or from simple geometric shapes (sphere, box, ..)
+///
+/// # Examples
+///
+/// ```
+/// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
+/// #
+/// # fn main() -> Result<(), Box<Error>> {
+/// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
+///                                    0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
+///                                    0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
+/// let mesh = MeshBuilder::new().with_positions(positions).build();
+///
+/// #
+/// #     Ok(())
+/// # }
+/// ```
 #[derive(Debug, Default)]
 pub struct MeshBuilder {
     indices: Option<Vec<u32>>,
@@ -20,19 +38,19 @@ impl MeshBuilder {
         MeshBuilder {indices: None, positions: None, normals: None}
     }
 
-    pub fn with_indices(&mut self, indices: Vec<u32>) -> &mut Self
+    pub fn with_indices(mut self, indices: Vec<u32>) -> Self
     {
         self.indices = Some(indices);
         self
     }
 
-    pub fn with_positions(&mut self, positions: Vec<f32>) -> &mut Self
+    pub fn with_positions(mut self, positions: Vec<f32>) -> Self
     {
         self.positions = Some(positions);
         self
     }
 
-    pub fn with_normals(&mut self, normals: Vec<f32>) -> &mut Self
+    pub fn with_normals(mut self, normals: Vec<f32>) -> Self
     {
         self.positions = Some(normals);
         self
