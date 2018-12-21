@@ -6,11 +6,12 @@ pub enum Error {
     NoPositionsSpecified {message: String}
 }
 
-/// Contains functionality to construct a mesh from either raw data (indices, positions, normals)
-/// or from simple geometric shapes (sphere, box, ..)
+/// `MeshBuilder` contains functionality to build a mesh from either raw data (indices, positions, normals)
+/// or from simple geometric shapes (box, icosahedron, cylinder, ..)
 ///
 /// # Examples
 ///
+/// Build from indices and positions:
 /// ```
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
 /// # use geo_proc::dynamic_mesh::test_utility::*;
@@ -18,7 +19,7 @@ pub enum Error {
 /// # fn main() -> Result<(), Box<Error>> {
 /// let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
 /// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-/// let mut mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build()?;
+/// let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build()?;
 /// assert_eq!(mesh.no_faces(), 3);
 /// assert_eq!(mesh.no_vertices(), 4);
 ///
@@ -27,6 +28,8 @@ pub enum Error {
 /// # }
 /// ```
 ///
+/// Build from positions (note: Use `mesh.merge_overlapping_primitives();` if you want to merge
+/// unconnected but overlapping parts of the mesh):
 /// ```
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
 /// # use geo_proc::dynamic_mesh::test_utility::*;
@@ -35,19 +38,16 @@ pub enum Error {
 /// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
 ///                                    0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
 ///                                    0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
-/// let mut mesh = MeshBuilder::new().with_positions(positions).build()?;
+/// let mesh = MeshBuilder::new().with_positions(positions).build()?;
 /// assert_eq!(mesh.no_faces(), 3);
 /// assert_eq!(mesh.no_vertices(), 9);
-///
-/// mesh.merge_overlapping_primitives();
-/// assert_eq!(mesh.no_faces(), 3);
-/// assert_eq!(mesh.no_vertices(), 4);
 ///
 /// #   test_is_valid(&mesh).unwrap();
 /// #   Ok(())
 /// # }
 /// ```
 ///
+/// Build a cube:
 /// ```
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
 /// # use geo_proc::dynamic_mesh::test_utility::*;
