@@ -7,10 +7,10 @@ impl DynamicMesh
     pub fn smooth_vertices(&mut self, factor: f32)
     {
         let mut map = HashMap::new();
-        for vertex_id in self.vertex_iterator() {
+        for vertex_id in self.vertex_iter() {
             let mut avg_pos = vec3(0.0, 0.0, 0.0);
             let mut i = 0;
-            for walker in self.vertex_halfedge_iterator(&vertex_id) {
+            for walker in self.vertex_halfedge_iter(&vertex_id) {
                 avg_pos = avg_pos + *self.position(&walker.vertex_id().unwrap());
                 i = i + 1;
             }
@@ -19,7 +19,7 @@ impl DynamicMesh
             map.insert(vertex_id, p + factor * (avg_pos - p));
         }
 
-        for vertex_id in self.vertex_iterator() {
+        for vertex_id in self.vertex_iter() {
             self.set_position(vertex_id, *map.get(&vertex_id).unwrap());
         }
     }
@@ -27,7 +27,7 @@ impl DynamicMesh
     pub fn collapse_small_faces(&mut self, area_threshold: f32)
     {
         let mut faces_to_test = HashSet::new();
-        self.face_iterator().for_each(|f| { faces_to_test.insert(f); } );
+        self.face_iter().for_each(|f| { faces_to_test.insert(f); } );
         while !faces_to_test.is_empty() {
             let face_id = *faces_to_test.iter().next().unwrap();
             faces_to_test.remove(&face_id);
@@ -41,7 +41,7 @@ impl DynamicMesh
 
     pub fn remove_lonely_primitives(&mut self)
     {
-        for (halfedge_id, _) in self.halfedge_twins_iterator() {
+        for (halfedge_id, _) in self.halfedge_twins_iter() {
             self.remove_edge_if_lonely(&halfedge_id);
         }
     }
@@ -55,7 +55,7 @@ impl DynamicMesh
         };
 
         let mut to_be_flipped = HashSet::new();
-        for halfedge_id in self.halfedge_iterator()
+        for halfedge_id in self.halfedge_iter()
         {
             insert_or_remove(&self,&mut to_be_flipped, halfedge_id);
         }
@@ -148,7 +148,7 @@ mod tests {
     fn test_remove_lonely_vertices()
     {
         let mut mesh = test_utility::create_three_connected_faces();
-        let mut iter = mesh.face_iterator();
+        let mut iter = mesh.face_iter();
         let face_id1 = iter.next().unwrap();
         let face_id2 = iter.next().unwrap();
         mesh.remove_face_unsafe(&face_id1);

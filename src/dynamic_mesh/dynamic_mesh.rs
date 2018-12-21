@@ -94,13 +94,13 @@ impl DynamicMesh
 
     pub fn flip_orientation(&mut self)
     {
-        for vertex_id in self.vertex_iterator() {
+        for vertex_id in self.vertex_iter() {
             let twin_id = self.walker_from_vertex(&vertex_id).twin_id().unwrap();
             self.connectivity_info.set_vertex_halfedge(&vertex_id, Some(twin_id));
         }
 
         let mut map = HashMap::new();
-        for halfedge_id in self.halfedge_iterator() {
+        for halfedge_id in self.halfedge_iter() {
             let mut walker = self.walker_from_halfedge(&halfedge_id);
             let new_next_id = walker.previous_id();
             let new_vertex_id = walker.as_twin().vertex_id().unwrap();
@@ -139,7 +139,7 @@ impl DynamicMesh
 
     pub fn scale(&mut self, scale: f32)
     {
-        for vertex_id in self.vertex_iterator() {
+        for vertex_id in self.vertex_iter() {
             let p = *self.position(&vertex_id);
             self.set_position(vertex_id, p * scale);
         }
@@ -147,7 +147,7 @@ impl DynamicMesh
 
     pub fn translate(&mut self, translation: &Vec3)
     {
-        for vertex_id in self.vertex_iterator() {
+        for vertex_id in self.vertex_iter() {
             self.move_vertex(vertex_id, *translation);
         }
     }
@@ -181,7 +181,7 @@ impl DynamicMesh
     pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
     {
         let mut normal = vec3(0.0, 0.0, 0.0);
-        for walker in self.vertex_halfedge_iterator(&vertex_id) {
+        for walker in self.vertex_halfedge_iter(&vertex_id) {
             if let Some(face_id) = walker.face_id() {
                 normal = normal + self.face_normal(&face_id)
             }
@@ -192,7 +192,7 @@ impl DynamicMesh
 
     pub fn update_vertex_normals(&mut self)
     {
-        for vertex_id in self.vertex_iterator() {
+        for vertex_id in self.vertex_iter() {
             let normal = self.compute_vertex_normal(&vertex_id);
             self.set_normal(vertex_id, normal);
         }
@@ -213,7 +213,7 @@ impl DynamicMesh
     pub(super) fn create_twin_connectivity(&mut self)
     {
         let mut walker = self.walker();
-        let edges: Vec<HalfEdgeID> = self.halfedge_iterator().collect();
+        let edges: Vec<HalfEdgeID> = self.halfedge_iter().collect();
 
         for i1 in 0..edges.len()
         {
@@ -296,9 +296,9 @@ mod tests {
     fn test_three_face_connectivity() {
         let mesh = create_three_connected_faces();
         let mut id = None;
-        for vertex_id in mesh.vertex_iterator() {
+        for vertex_id in mesh.vertex_iter() {
             let mut round = true;
-            for walker in mesh.vertex_halfedge_iterator(&vertex_id) {
+            for walker in mesh.vertex_halfedge_iter(&vertex_id) {
                 if walker.face_id().is_none() { round = false; break; }
             }
             if round { id = Some(vertex_id); break; }
@@ -323,7 +323,7 @@ mod tests {
         let mut mesh = create_three_connected_faces();
         mesh.update_vertex_normals();
 
-        for vertex_id in mesh.vertex_iterator() {
+        for vertex_id in mesh.vertex_iter() {
             let normal = mesh.normal(&vertex_id).unwrap();
             assert_eq!(0.0, normal.x);
             assert_eq!(1.0, normal.y);

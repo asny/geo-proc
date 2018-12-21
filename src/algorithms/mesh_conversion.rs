@@ -19,7 +19,7 @@ impl DynamicMesh
         let indices = indices(self);
 
         let mut positions = Vec::with_capacity(self.no_vertices() * 3);
-        for v3 in self.vertex_iterator().map(|ref vertex_id| self.position(vertex_id)) {
+        for v3 in self.vertex_iter().map(|ref vertex_id| self.position(vertex_id)) {
             positions.push(v3.x); positions.push(v3.y); positions.push(v3.z);
         }
 
@@ -34,11 +34,11 @@ impl DynamicMesh
 
 fn indices(mesh: &DynamicMesh) -> Vec<u32>
 {
-    let vertices: Vec<VertexID> = mesh.vertex_iterator().collect();
+    let vertices: Vec<VertexID> = mesh.vertex_iter().collect();
     let mut indices = Vec::with_capacity(mesh.no_faces() * 3);
-    for face_id in mesh.face_iterator()
+    for face_id in mesh.face_iter()
     {
-        for walker in mesh.face_halfedge_iterator(&face_id) {
+        for walker in mesh.face_halfedge_iter(&face_id) {
             let vertex_id = walker.vertex_id().unwrap();
             let index = vertices.iter().position(|v| v == &vertex_id).unwrap();
             indices.push(index as u32);
@@ -50,7 +50,7 @@ fn indices(mesh: &DynamicMesh) -> Vec<u32>
 fn normals(mesh: &DynamicMesh) -> Option<Vec<f32>>
 {
     let mut nor = Vec::with_capacity(mesh.no_vertices() * 3);
-    for vertex_id in mesh.vertex_iterator() {
+    for vertex_id in mesh.vertex_iter() {
         if let Some(normal) = mesh.normal(&vertex_id)
         {
             nor.push(normal.x); nor.push(normal.y); nor.push(normal.z);

@@ -18,7 +18,7 @@ pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limi
             None => break
         };
 
-        for mut walker in mesh.face_halfedge_iterator(&test_face) {
+        for mut walker in mesh.face_halfedge_iter(&test_face) {
             if !limit(walker.halfedge_id().unwrap()) {
                 if let Some(face_id) = walker.as_twin().face_id() {
                     if !component.contains(&face_id)
@@ -36,7 +36,7 @@ pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limi
 pub fn connected_components(mesh: &DynamicMesh) -> Vec<HashSet<FaceID>>
 {
     let mut result = Vec::new();
-    while let Some(ref face_id) = mesh.face_iterator().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
+    while let Some(ref face_id) = mesh.face_iter().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
     {
         result.push(connected_component(mesh, face_id));
     }

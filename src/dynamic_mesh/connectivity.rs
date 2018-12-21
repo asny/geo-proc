@@ -5,7 +5,7 @@ impl DynamicMesh
 {
     pub fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
-        for mut walker in self.vertex_halfedge_iterator(vertex_id1) {
+        for mut walker in self.vertex_halfedge_iter(vertex_id1) {
             if &walker.vertex_id().unwrap() == vertex_id2 {
                 return walker.halfedge_id()
             }
@@ -16,7 +16,7 @@ impl DynamicMesh
     pub fn find_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
         let mut walker = self.walker();
-        for halfedge_id in self.halfedge_iterator() {
+        for halfedge_id in self.halfedge_iter() {
             walker.as_halfedge_walker(&halfedge_id);
             if &walker.vertex_id().unwrap() == vertex_id2 && &walker.as_twin().vertex_id().unwrap() == vertex_id1
             {
@@ -28,7 +28,7 @@ impl DynamicMesh
 
     pub fn vertex_on_boundary(&self, vertex_id: &VertexID) -> bool
     {
-        for mut walker in self.vertex_halfedge_iterator(vertex_id) {
+        for mut walker in self.vertex_halfedge_iter(vertex_id) {
             if walker.face_id().is_none() || walker.as_twin().face_id().is_none()
             {
                 return true;

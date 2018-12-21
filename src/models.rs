@@ -28,12 +28,12 @@ pub fn create_sphere(subdivisions: usize) -> Result<StaticMesh, Error>
     let mesh = create_icosahedron()?;
     let mut dyn_mesh = mesh.to_dynamic();
     for _ in 0..subdivisions {
-        for face_id in dyn_mesh.face_iterator() {
+        for face_id in dyn_mesh.face_iter() {
             let p = dyn_mesh.face_center(&face_id).normalize();
             dyn_mesh.split_face(&face_id, p);
         }
         dyn_mesh.smooth_vertices(1.0);
-        for vertex_id in dyn_mesh.vertex_iterator() {
+        for vertex_id in dyn_mesh.vertex_iter() {
             let p = dyn_mesh.position(&vertex_id).normalize();
             dyn_mesh.set_position(vertex_id, p)
         }
