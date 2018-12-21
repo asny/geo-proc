@@ -108,7 +108,7 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
                 return Err(Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected one way, but not the other way", vertex_id1, vertex_id2)});
             }
             let mut found = false;
-            for mut halfedge in mesh.vertex_halfedge_iter(&vertex_id1) {
+            for halfedge in mesh.vertex_halfedge_iter(&vertex_id1) {
                 if halfedge.vertex_id().unwrap() == vertex_id2 {
                     if found {
                         return Err(Error::IsNotValid {message: format!("Vertex {} and Vertex {} is connected by multiple edges", vertex_id1, vertex_id2)})

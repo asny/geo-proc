@@ -12,9 +12,8 @@ impl DynamicMesh
         walker.as_next();
         let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
 
-        let mut dir = v0.cross(&v1);
-        dir.normalize_mut();
-        dir
+        let dir = v0.cross(v1);
+        dir.normalize()
     }
 
     pub fn face_area(&self, face_id: &FaceID) -> f32
@@ -26,7 +25,7 @@ impl DynamicMesh
         walker.as_next();
         let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
 
-        v0.cross(&v1).norm()
+        v0.cross(v1).magnitude()
     }
 
     pub fn face_center(&self, face_id: &FaceID) -> Vec3

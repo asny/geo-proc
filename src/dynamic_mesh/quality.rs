@@ -89,7 +89,7 @@ impl DynamicMesh
         let mut walker = self.walker_from_halfedge(haledge_id);
         let face_id1 = walker.face_id().unwrap();
         let face_id2 = walker.as_twin().face_id().unwrap();
-        self.face_normal(&face_id1).dot(&self.face_normal(&face_id2))
+        self.face_normal(&face_id1).dot(self.face_normal(&face_id2))
     }
 
     fn flip_will_invert_triangle(&self, haledge_id: &HalfEdgeID) -> bool
@@ -100,7 +100,7 @@ impl DynamicMesh
         let p1 = self.position(&walker.as_previous().as_twin().vertex_id().unwrap());
         let p3 = self.position(&walker.as_next().vertex_id().unwrap());
 
-        (p2 - p0).cross(&(p3 - p0)).dot(&(p3 - p1).cross(&(p2 - p1))) < 0.0001
+        (p2 - p0).cross(p3 - p0).dot((p3 - p1).cross(p2 - p1)) < 0.0001
     }
 
     fn flip_will_improve_quality(&self, haledge_id: &HalfEdgeID) -> bool
@@ -119,11 +119,11 @@ impl DynamicMesh
 // Quality measure of 1 = good (equilateral) and >> 1 = bad (needle or flattened)
 fn triangle_quality(p0: &Vec3, p1: &Vec3, p2: &Vec3) -> f32
 {
-    let length01 = (p0-p1).norm();
-    let length02 = (p0-p2).norm();
-    let length12 = (p1-p2).norm();
+    let length01 = (p0-p1).magnitude();
+    let length02 = (p0-p2).magnitude();
+    let length12 = (p1-p2).magnitude();
     let perimiter = length01 + length02 + length12;
-    let area = (p1-p0).cross(&(p2-p0)).norm();
+    let area = (p1-p0).cross(p2-p0).magnitude();
     let inscribed_radius = 2.0 * area / perimiter;
     let circumscribed_radius = length01 * length02 * length12 / (4.0 * area);
     circumscribed_radius / inscribed_radius

@@ -1,4 +1,5 @@
 
+use crate::types::*;
 use crate::dynamic_mesh::*;
 use crate::connected_components::*;
 use std::collections::{HashSet, HashMap};
@@ -33,7 +34,7 @@ impl DynamicMesh
                 if walker.face_id().is_none()
                 {
                     let twin_id = walker.halfedge_id().unwrap();
-                    let mut twin = self.connectivity_info.halfedge(&twin_id).unwrap();
+                    let twin = self.connectivity_info.halfedge(&twin_id).unwrap();
                     info.add_halfedge(twin_id, twin);
 
                 }
@@ -102,7 +103,7 @@ impl DynamicMesh
         let mut halfedges_to_remove = HashSet::new();
         for (other_vertex_id1, self_vertex_id1) in stitches {
             for (other_vertex_id2, self_vertex_id2) in stitches {
-                if let Some(mut self_halfedge_id) = self.connecting_edge(&self_vertex_id1, &self_vertex_id2)
+                if let Some(self_halfedge_id) = self.connecting_edge(&self_vertex_id1, &self_vertex_id2)
                 {
                     let mut walker = self.walker_from_halfedge(&self_halfedge_id);
                     if walker.face_id().is_some() { walker.as_twin(); }
@@ -280,7 +281,7 @@ impl DynamicMesh
     fn merge_vertices(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Result<VertexID, Error>
     {
         for halfedge_id in self.halfedge_iter() {
-            let mut walker = self.walker_from_halfedge(&halfedge_id);
+            let walker = self.walker_from_halfedge(&halfedge_id);
             if walker.vertex_id().unwrap() == *vertex_id2 {
                 self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), *vertex_id1);
             }
@@ -303,7 +304,7 @@ impl DynamicMesh
             let mut to_merge = Vec::new();
             for id2 in to_check.iter()
             {
-                if (self.position(&id1) - self.position(id2)).norm() < 0.00001
+                if (self.position(&id1) - self.position(id2)).magnitude() < 0.00001
                 {
                     to_merge.push(*id2);
                 }
@@ -423,7 +424,6 @@ pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<Vertex
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::*;
     use crate::dynamic_mesh::test_utility::*;
 
     #[test]
@@ -440,7 +440,7 @@ mod tests {
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iter() {
             for vertex_id2 in mesh2.vertex_iter() {
-                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).norm() < 0.001 {
+                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).magnitude() < 0.001 {
                     mapping.insert(vertex_id2, vertex_id1);
                 }
             }
@@ -470,7 +470,7 @@ mod tests {
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iter() {
             for vertex_id2 in mesh2.vertex_iter() {
-                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).norm() < 0.001 {
+                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).magnitude() < 0.001 {
                     mapping.insert(vertex_id2, vertex_id1);
                 }
             }

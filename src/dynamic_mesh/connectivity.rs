@@ -5,7 +5,7 @@ impl DynamicMesh
 {
     pub fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {
-        for mut walker in self.vertex_halfedge_iter(vertex_id1) {
+        for walker in self.vertex_halfedge_iter(vertex_id1) {
             if &walker.vertex_id().unwrap() == vertex_id2 {
                 return walker.halfedge_id()
             }

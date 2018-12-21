@@ -60,10 +60,10 @@ pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), p
 {
     let p0 = mesh.position(&edge.0);
     let p1 = mesh.position(&edge.1);
-    if (point - p0).norm_squared() < SQR_MARGIN {
+    if (point - p0).magnitude2() < SQR_MARGIN {
         return Some(PrimitiveID::Vertex(edge.0));
     }
-    if (point - p1).norm_squared() < SQR_MARGIN {
+    if (point - p1).magnitude2() < SQR_MARGIN {
         return Some(PrimitiveID::Vertex(edge.1));
     }
     if point_line_segment_distance(point, p0, p1) < MARGIN
@@ -86,11 +86,11 @@ pub fn find_face_intersection(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3
 
     if point_line_segment_distance(point, a, b) < MARGIN
     {
-        if (*a - *point).norm_squared() < SQR_MARGIN { return Some(PrimitiveID::Vertex(v0)); }
-        if (*b - *point).norm_squared() < SQR_MARGIN { return Some(PrimitiveID::Vertex(v1)); }
+        if (*a - *point).magnitude2() < SQR_MARGIN { return Some(PrimitiveID::Vertex(v0)); }
+        if (*b - *point).magnitude2() < SQR_MARGIN { return Some(PrimitiveID::Vertex(v1)); }
         return Some(PrimitiveID::Edge((v0, v1)));
     }
-    if (*c - *point).norm_squared() < SQR_MARGIN { return Some(PrimitiveID::Vertex(v2)); }
+    if (*c - *point).magnitude2() < SQR_MARGIN { return Some(PrimitiveID::Vertex(v2)); }
 
     if point_line_segment_distance(point, b, c) < MARGIN { return Some(PrimitiveID::Edge((v1, v2))); }
     if point_line_segment_distance(point, a, c) < MARGIN { return Some(PrimitiveID::Edge((v0, v2))); }
@@ -118,8 +118,8 @@ fn plane_line_piece_intersection(p0: &Vec3, p1: &Vec3, p: &Vec3, n: &Vec3) -> Op
     let ap0 = *p0 - *p;
     let ap1 = *p1 - *p;
 
-    let d0 = n.dot(&ap0);
-    let d1 = n.dot(&ap1);
+    let d0 = n.dot(ap0);
+    let d1 = n.dot(ap1);
 
     if d0.abs() < MARGIN && d1.abs() < MARGIN { // p0 and p1 lies in the plane
         Some(PlaneLinepieceIntersectionResult::LineInPlane)
@@ -134,7 +134,7 @@ fn plane_line_piece_intersection(p0: &Vec3, p1: &Vec3, p: &Vec3, n: &Vec3) -> Op
     {
         // Find intersection point:
         let p01 = *p1 - *p0;
-        let t = n.dot(&-ap0) / n.dot(&p01);
+        let t = n.dot(-ap0) / n.dot(p01);
         let point = p0 + p01 * t;
         Some(PlaneLinepieceIntersectionResult::Intersection(point))
     }
@@ -150,11 +150,11 @@ fn barycentric(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32, f32)
     let v0 = b - a;
     let v1 = c - a;
     let v2 = p - a;
-    let d00 = v0.dot(&v0);
-    let d01 = v0.dot(&v1);
-    let d11 = v1.dot(&v1);
-    let d20 = v2.dot(&v0);
-    let d21 = v2.dot(&v1);
+    let d00 = v0.dot(v0);
+    let d01 = v0.dot(v1);
+    let d11 = v1.dot(v1);
+    let d20 = v2.dot(v0);
+    let d21 = v2.dot(v1);
     let denom = d00 * d11 - d01 * d01;
     let v = (d11 * d20 - d01 * d21) / denom;
     let w = (d00 * d21 - d01 * d20) / denom;
@@ -167,15 +167,15 @@ fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
     let v  = p1 - p0;
     let w  = point - p0;
 
-    let c1 = w.dot(&v);
-    if c1 <= 0.0 { return w.norm(); }
+    let c1 = w.dot(v);
+    if c1 <= 0.0 { return w.magnitude(); }
 
-    let c2 = v.dot(&v);
-    if c2 <= c1 { return (point - p1).norm(); }
+    let c2 = v.dot(v);
+    if c2 <= c1 { return (point - p1).magnitude(); }
 
     let b = c1 / c2;
     let pb = p0 + b * v;
-    (point - &pb).norm()
+    (point - &pb).magnitude()
 }
 
 #[cfg(test)]
@@ -250,7 +250,7 @@ mod tests {
         result = find_edge_intersection(&mesh, &(v0, v1), &edge_midpoint);
         assert_eq!(result, Some(PrimitiveID::Edge((v0, v1))));
 
-        let dir_away_from_edge = dir_away_from_p0.cross(&vec3(1.0, 1.0, 1.0)).normalize();
+        let dir_away_from_edge = dir_away_from_p0.cross(vec3(1.0, 1.0, 1.0)).normalize();
         result = find_edge_intersection(&mesh, &(v0, v1), &(edge_midpoint + 0.99 * MARGIN * dir_away_from_edge));
         assert_eq!(result, Some(PrimitiveID::Edge((v0, v1))));
 

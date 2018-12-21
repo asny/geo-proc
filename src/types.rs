@@ -1,7 +1,6 @@
 
-use nalgebra::{Vector2, Vector3, Vector4, Matrix2, Matrix3, Matrix4};
-pub use nalgebra::Unit;
-pub use nalgebra::Point;
+use cgmath::{Vector2, Vector3, Vector4, Matrix2, Matrix3, Matrix4};
+pub use cgmath::prelude::*;
 
 pub type Vec2 = Vector2<f32>;
 pub type Vec3 = Vector3<f32>;
@@ -26,7 +25,7 @@ pub fn vec4(x: f32, y: f32, z: f32, w: f32) -> Vec4
 }
 
 
-pub fn rotation_matrix_from_dir_to_dir(source_dir: &Vec3, target_dir: &Vec3) -> Mat4
+pub fn rotation_matrix_from_dir_to_dir(source_dir: Vec3, target_dir: Vec3) -> Mat4
 {
     let c = source_dir.dot(target_dir);
     if c > 0.99999 {

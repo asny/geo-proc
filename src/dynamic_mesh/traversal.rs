@@ -379,7 +379,7 @@ mod tests {
     fn test_face_halfedge_iterator() {
         let mesh = create_single_face();
         let mut i = 0;
-        for mut edge in mesh.face_halfedge_iter(&FaceID::new(0)) {
+        for edge in mesh.face_halfedge_iter(&FaceID::new(0)) {
             assert!(edge.halfedge_id().is_some());
             assert!(edge.face_id().is_some());
             i = i+1;

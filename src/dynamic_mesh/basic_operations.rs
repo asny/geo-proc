@@ -243,7 +243,7 @@ impl DynamicMesh
     pub fn remove_face(&mut self, face_id: &FaceID)
     {
         let mut edges = Vec::new();
-        for mut walker in self.face_halfedge_iter(face_id) {
+        for walker in self.face_halfedge_iter(face_id) {
             edges.push(walker.halfedge_id().unwrap());
         }
 

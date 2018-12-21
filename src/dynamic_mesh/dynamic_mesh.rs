@@ -40,7 +40,7 @@ impl DynamicMesh
                 indices[i] = current_index;
                 for j in i+1..positions.len()/3 {
                     let p2 = vec3(positions[3 * j], positions[3 * j + 1], positions[3 * j + 2]);
-                    if (p1 - p2).norm() < 0.00001 {
+                    if (p1 - p2).magnitude() < 0.00001 {
                         indices[j] = current_index;
                     }
                 }
@@ -186,8 +186,7 @@ impl DynamicMesh
                 normal = normal + self.face_normal(&face_id)
             }
         }
-        normal.normalize_mut();
-        normal
+        normal.normalize()
     }
 
     pub fn update_vertex_normals(&mut self)
