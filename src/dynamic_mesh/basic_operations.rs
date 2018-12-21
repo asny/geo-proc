@@ -363,7 +363,7 @@ mod tests {
     fn test_flip_multiple_edges()
     {
         let mut no_flips = 0;
-        let mut mesh = crate::models::create_icosahedron().unwrap().to_dynamic();
+        let mut mesh = crate::dynamic_mesh::MeshBuilder::new().icosahedron().build().unwrap();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iter() {
             let (v0, v1) = mesh.edge_vertices(&halfedge_id);
