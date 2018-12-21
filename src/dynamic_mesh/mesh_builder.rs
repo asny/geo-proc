@@ -97,4 +97,35 @@ impl MeshBuilder {
         ));
         self
     }
+
+    pub fn cylinder(mut self, x_subdivisions: usize, angle_subdivisions: usize) -> Self
+    {
+        let mut positions = Vec::new();
+        for i in 0..x_subdivisions + 1 {
+            let x = i as f32 / x_subdivisions as f32;
+            for j in 0..angle_subdivisions {
+                let angle = 2.0 * std::f32::consts::PI * j as f32 / angle_subdivisions as f32;
+
+                positions.push(x);
+                positions.push(angle.cos());
+                positions.push(angle.sin());
+            }
+        }
+        self.positions = Some(positions);
+
+        let mut indices = Vec::new();
+        for i in 0..x_subdivisions as u32 {
+            for j in 0..angle_subdivisions as u32 {
+                indices.push(i * angle_subdivisions as u32 + j);
+                indices.push(i * angle_subdivisions as u32 + (j + 1) % angle_subdivisions as u32);
+                indices.push((i + 1) * angle_subdivisions as u32 + (j + 1) % angle_subdivisions as u32);
+
+                indices.push(i * angle_subdivisions as u32 + j);
+                indices.push((i + 1) * angle_subdivisions as u32 + (j + 1) % angle_subdivisions as u32);
+                indices.push((i + 1) * angle_subdivisions as u32 + j);
+            }
+        }
+        self.indices = Some(indices);
+        self
+    }
 }
