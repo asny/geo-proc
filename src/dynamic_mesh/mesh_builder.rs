@@ -13,6 +13,7 @@ pub enum Error {
 ///
 /// ```
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
+/// # use geo_proc::dynamic_mesh::test_utility::*;
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
 /// let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
@@ -21,13 +22,14 @@ pub enum Error {
 /// assert_eq!(mesh.no_faces(), 3);
 /// assert_eq!(mesh.no_vertices(), 4);
 ///
-/// #
+/// #   test_is_valid(&mesh).unwrap();
 /// #   Ok(())
 /// # }
 /// ```
 ///
 /// ```
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
+/// # use geo_proc::dynamic_mesh::test_utility::*;
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
 /// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
@@ -41,19 +43,21 @@ pub enum Error {
 /// assert_eq!(mesh.no_faces(), 3);
 /// assert_eq!(mesh.no_vertices(), 4);
 ///
-/// #
+/// #   test_is_valid(&mesh).unwrap();
 /// #   Ok(())
 /// # }
 /// ```
 ///
 /// ```
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
+/// # use geo_proc::dynamic_mesh::test_utility::*;
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
 /// let mesh = MeshBuilder::new().cube().build()?;
 /// assert_eq!(mesh.no_faces(), 12);
 /// assert_eq!(mesh.no_vertices(), 8);
-/// #
+///
+/// #   test_is_valid(&mesh).unwrap();
 /// #   Ok(())
 /// # }
 /// ```
@@ -96,7 +100,7 @@ impl MeshBuilder {
         let indices = self.indices.unwrap_or((0..positions.len() as u32/3).collect());
         Ok(DynamicMesh::new_with_connectivity(indices, positions, self.normals))
     }
-    
+
     pub fn cube(mut self) -> Self
     {
         self.positions = Some(vec![

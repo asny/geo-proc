@@ -13,7 +13,7 @@ pub struct DynamicMesh {
 
 impl DynamicMesh
 {
-    pub fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
+    pub(crate) fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
     {
         let mut indices = vec![None; positions.len()/3];
         let mut positions_out = Vec::new();
@@ -50,7 +50,7 @@ impl DynamicMesh
         DynamicMesh::new_with_connectivity(indices.iter().map(|x| x.unwrap()).collect(), positions_out, normals_out)
     }
 
-    pub fn new_with_connectivity(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
+    pub(crate) fn new_with_connectivity(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
@@ -72,7 +72,7 @@ impl DynamicMesh
         mesh
     }
 
-    pub(super) fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> DynamicMesh
+    pub(crate) fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> DynamicMesh
     {
         DynamicMesh {positions, normals, connectivity_info}
     }

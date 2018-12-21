@@ -10,7 +10,7 @@ pub mod quality;
 pub mod edge_measures;
 pub mod face_measures;
 
-pub(super) mod test_utility;
+pub mod test_utility;
 mod connectivity_info;
 
 pub use crate::dynamic_mesh::dynamic_mesh::*;
