@@ -15,6 +15,21 @@ pub enum Error {
 /// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
+/// let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
+/// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
+/// let mut mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build()?;
+/// assert_eq!(mesh.no_faces(), 3);
+/// assert_eq!(mesh.no_vertices(), 4);
+///
+/// #
+/// #   Ok(())
+/// # }
+/// ```
+///
+/// ```
+/// # use geo_proc::dynamic_mesh::{MeshBuilder, Error};
+/// #
+/// # fn main() -> Result<(), Box<Error>> {
 /// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
 ///                                    0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
 ///                                    0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
