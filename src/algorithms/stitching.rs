@@ -6,13 +6,20 @@ use crate::mesh::*;
 
 #[derive(Debug)]
 pub enum Error {
-    SplittingAndMerging(crate::dynamic_mesh::splitting_and_merging::Error),
+    Merge(crate::dynamic_mesh::splitting_and_merging::Error),
+    Split(crate::algorithms::split::Error),
     EdgeToSplitDoesNotExist {message: String}
 }
 
 impl From<crate::dynamic_mesh::splitting_and_merging::Error> for Error {
     fn from(other: crate::dynamic_mesh::splitting_and_merging::Error) -> Self {
-        Error::SplittingAndMerging(other)
+        Error::Merge(other)
+    }
+}
+
+impl From<crate::algorithms::split::Error> for Error {
+    fn from(other: crate::algorithms::split::Error) -> Self {
+        Error::Split(other)
     }
 }
 
