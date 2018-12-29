@@ -1,6 +1,5 @@
 use crate::dynamic_mesh::connectivity_info::ConnectivityInfo;
-use crate::dynamic_mesh::*;
-use crate::types::*;
+use crate::*;
 use std::rc::Rc;
 use std::collections::HashMap;
 

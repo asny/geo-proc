@@ -1,6 +1,5 @@
 
-use crate::types::*;
-use crate::dynamic_mesh::*;
+use crate::*;
 use crate::connected_components::*;
 use std::collections::{HashSet, HashMap};
 use std::rc::Rc;
@@ -17,7 +16,7 @@ impl DynamicMesh
 {
     pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
     {
-        let info = connectivity_info::ConnectivityInfo::new(faces.len(), faces.len());
+        let info = crate::dynamic_mesh::connectivity_info::ConnectivityInfo::new(faces.len(), faces.len());
         for face_id in faces {
             let face = self.connectivity_info.face(face_id).unwrap();
             for mut walker in self.face_halfedge_iter(face_id) {

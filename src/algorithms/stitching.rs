@@ -1,8 +1,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::types::*;
-use crate::dynamic_mesh::*;
+use crate::*;
 use crate::collision::*;
 
 #[derive(Debug)]
