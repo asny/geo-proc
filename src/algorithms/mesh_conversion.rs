@@ -1,4 +1,4 @@
-use crate::mesh::*;
+use crate::*;
 
 impl DynamicMesh
 {

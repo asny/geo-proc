@@ -1,12 +1,11 @@
 use std::fs::File;
 use std::io::prelude::*;
-use crate::mesh;
+use crate::*;
 use std;
 
 #[derive(Debug)]
 pub enum Error {
     IO(std::io::Error),
-    Mesh(mesh::Error),
     FileTypeNotSupported {message: String},
     ExtensionNotSpecified {message: String},
     FileNameNotSpecified {message: String}
@@ -18,13 +17,7 @@ impl From<std::io::Error> for Error {
     }
 }
 
-impl From<mesh::Error> for Error {
-    fn from(other: mesh::Error) -> Self {
-        Error::Mesh(other)
-    }
-}
-
-pub fn save(mesh: &mesh::DynamicMesh, filename: &str) -> Result<(), Error>
+pub fn save(mesh: &DynamicMesh, filename: &str) -> Result<(), Error>
 {
     let splitted: Vec<&str> = filename.split('.').collect();
     if splitted.len() == 0
@@ -48,14 +41,14 @@ pub fn save(mesh: &mesh::DynamicMesh, filename: &str) -> Result<(), Error>
     Ok(())
 }
 
-fn save_as_obj(mesh: &mesh::DynamicMesh, name: &str) -> Result<(), Error>
+fn save_as_obj(mesh: &DynamicMesh, name: &str) -> Result<(), Error>
 {
     let data = parse_as_obj(mesh);
     save_model(&data, name)?;
     Ok(())
 }
 
-fn parse_as_obj(mesh: &mesh::DynamicMesh) -> String
+fn parse_as_obj(mesh: &DynamicMesh) -> String
 {
     let mut output = String::from("o object\n");
 
@@ -85,14 +78,14 @@ fn parse_as_obj(mesh: &mesh::DynamicMesh) -> String
     output
 }
 
-fn save_as_poly(mesh: &mesh::DynamicMesh, name: &str) -> Result<(), Error>
+fn save_as_poly(mesh: &DynamicMesh, name: &str) -> Result<(), Error>
 {
     let data = parse_as_poly(mesh);
     save_model(&data, name)?;
     Ok(())
 }
 
-fn parse_as_poly(mesh: &mesh::DynamicMesh) -> String
+fn parse_as_poly(mesh: &DynamicMesh) -> String
 {
     let mut output = format!("{} 3 0 0\n", mesh.no_vertices());
 
