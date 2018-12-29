@@ -20,7 +20,7 @@ pub mod mesh_builder;
 pub mod ids;
 pub mod traversal;
 pub mod mesh;
-pub mod splitting_and_merging;
+pub mod merge;
 pub mod connectivity;
 pub mod basic_operations;
 pub mod quality;
