@@ -1,4 +1,3 @@
-pub use crate::static_mesh::*;
 pub use crate::dynamic_mesh::*;
 
 #[derive(Debug)]

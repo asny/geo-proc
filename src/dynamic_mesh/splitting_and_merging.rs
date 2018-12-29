@@ -545,7 +545,7 @@ mod tests {
     #[test]
     fn test_merge_overlapping_primitives_of_cube()
     {
-        let mut mesh = crate::models::create_unconnected_cube().unwrap().to_dynamic();
+        let mut mesh = create_unconnected_cube();
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(8, mesh.no_vertices());

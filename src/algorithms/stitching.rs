@@ -499,8 +499,8 @@ mod tests {
     #[test]
     fn test_box_box_splitting()
     {
-        let mut mesh1 = crate::models::create_cube().unwrap().to_dynamic();
-        let mut mesh2 = crate::models::create_cube().unwrap().to_dynamic();
+        let mut mesh1 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
         for vertex_id in mesh2.vertex_iter() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -555,8 +555,8 @@ mod tests {
     #[test]
     fn test_box_box_stitching()
     {
-        let mut mesh1 = crate::models::create_cube().unwrap().to_dynamic();
-        let mut mesh2 = crate::models::create_cube().unwrap().to_dynamic();
+        let mut mesh1 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
         for vertex_id in mesh2.vertex_iter() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -571,10 +571,22 @@ mod tests {
     #[test]
     fn test_sphere_box_stitching()
     {
-        let mut mesh1 = crate::models::create_sphere(1).unwrap().to_dynamic();
+        let mut mesh1 = crate::dynamic_mesh::MeshBuilder::new().icosahedron().build().unwrap();
+        for _ in 0..1 {
+            for face_id in mesh1.face_iter() {
+                let p = mesh1.face_center(&face_id).normalize();
+                mesh1.split_face(&face_id, p);
+            }
+            mesh1.smooth_vertices(1.0);
+            for vertex_id in mesh1.vertex_iter() {
+                let p = mesh1.position(&vertex_id).normalize();
+                mesh1.set_position(vertex_id, p)
+            }
+            mesh1.flip_edges(0.5);
+        }
         mesh1.translate(&vec3(0.0, 1.5, 0.0));
         mesh1.update_vertex_normals();
-        let mut mesh2 = crate::models::create_cube().unwrap().to_dynamic();
+        let mut mesh2 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(&vec3(0.5, 2.0, 0.5));
         mesh2.update_vertex_normals();
 

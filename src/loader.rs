@@ -21,7 +21,7 @@ impl From<mesh::Error> for Error {
     }
 }
 
-pub fn load_obj(name: &str) -> Result<Vec<mesh::StaticMesh>, Error>
+pub fn load_obj(name: &str) -> Result<Vec<mesh::DynamicMesh>, Error>
 {
     let mut result = Vec::new();
 
@@ -33,15 +33,8 @@ pub fn load_obj(name: &str) -> Result<Vec<mesh::StaticMesh>, Error>
 
     for m in models {
         let indices = match m.mesh.indices.len() > 0 { true => m.mesh.indices.clone(), false => (0..m.mesh.positions.len() as u32/3).collect() };
-        let attributes;
-        if m.mesh.normals.len() > 0
-        {
-            attributes = att!["position" => (m.mesh.positions.clone(), 3), "normal" => (m.mesh.normals.clone(), 3)];
-        }
-        else {
-            attributes = att!["position" => (m.mesh.positions.clone(), 3)];
-        }
-        let mesh = mesh::StaticMesh::create(indices, attributes)?;
+        let normals = if m.mesh.normals.len() > 0 { Some(m.mesh.normals) } else { None };
+        let mesh = mesh::DynamicMesh::new_with_connectivity(indices, m.mesh.positions, normals);
         result.push(mesh);
     }
     Ok(result)

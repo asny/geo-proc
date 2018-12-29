@@ -330,7 +330,7 @@ mod tests {
     fn test_flip_edge()
     {
         let mut no_flips = 0;
-        let mut mesh = crate::models::create_plane().unwrap().to_dynamic();
+        let mut mesh = create_two_connected_faces();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iter() {
             let (v0, v1) = mesh.edge_vertices(&halfedge_id);
