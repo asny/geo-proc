@@ -1,17 +1,17 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::*;
 use crate::collision::*;
+use crate::mesh::*;
 
 #[derive(Debug)]
 pub enum Error {
-    SplittingAndMerging(splitting_and_merging::Error),
+    SplittingAndMerging(crate::dynamic_mesh::splitting_and_merging::Error),
     EdgeToSplitDoesNotExist {message: String}
 }
 
-impl From<splitting_and_merging::Error> for Error {
-    fn from(other: splitting_and_merging::Error) -> Self {
+impl From<crate::dynamic_mesh::splitting_and_merging::Error> for Error {
+    fn from(other: crate::dynamic_mesh::splitting_and_merging::Error) -> Self {
         Error::SplittingAndMerging(other)
     }
 }

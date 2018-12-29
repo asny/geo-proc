@@ -1,5 +1,5 @@
 
-use crate::*;
+use crate::mesh::*;
 
 const MARGIN: f32 = 0.00001;
 const SQR_MARGIN: f32 = MARGIN * MARGIN;
