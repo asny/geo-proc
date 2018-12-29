@@ -5,7 +5,7 @@ pub enum Error {
     IsNotValid {message: String}
 }
 
-pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
+pub fn test_is_valid(mesh: &Mesh) -> Result<(), Error>
 {
     for vertex_id in mesh.vertex_iter() {
         if let Some(halfedge_id) = mesh.walker_from_vertex(&vertex_id).halfedge_id()
@@ -121,28 +121,28 @@ pub fn test_is_valid(mesh: &DynamicMesh) -> Result<(), Error>
     Ok(())
 }
 
-pub fn create_single_face() -> DynamicMesh
+pub fn create_single_face() -> Mesh
 {
     let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
-    DynamicMesh::new_with_connectivity((0..3).collect(), positions, None)
+    Mesh::new_with_connectivity((0..3).collect(), positions, None)
 }
 
-pub fn create_two_connected_faces() -> DynamicMesh
+pub fn create_two_connected_faces() -> Mesh
 {
     let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
     let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
-    DynamicMesh::new_with_connectivity(indices, positions, None)
+    Mesh::new_with_connectivity(indices, positions, None)
 }
 
-pub fn create_three_connected_faces() -> DynamicMesh
+pub fn create_three_connected_faces() -> Mesh
 {
     let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
     let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
     let normals: Vec<f32> = vec![0.0; 4 * 3];
-    DynamicMesh::new_with_connectivity(indices, positions, Some(normals))
+    Mesh::new_with_connectivity(indices, positions, Some(normals))
 }
 
-pub fn create_unconnected_cube() -> DynamicMesh
+pub fn create_unconnected_cube() -> Mesh
 {
     let positions: Vec<f32> = vec![
         1.0, 1.0, -1.0,
@@ -232,5 +232,5 @@ pub fn create_unconnected_cube() -> DynamicMesh
     ];
 
     let indices = (0..positions.len() as u32/3).collect();
-    DynamicMesh::new_with_connectivity(indices, positions, Some(normals))
+    Mesh::new_with_connectivity(indices, positions, Some(normals))
 }

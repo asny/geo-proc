@@ -1,6 +1,6 @@
 use crate::*;
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn face_normal(&self, face_id: &FaceID) -> Vec3
     {

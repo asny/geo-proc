@@ -1,6 +1,6 @@
 use crate::*;
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn indices_buffer(&self) -> Vec<u32>
     {

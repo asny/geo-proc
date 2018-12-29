@@ -5,7 +5,7 @@ pub enum Error {
     FailedToFlipEdge {message: String}
 }
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn flip_edge(&mut self, halfedge_id: &HalfEdgeID) -> Result<(), Error>
     {
@@ -266,7 +266,7 @@ impl DynamicMesh
             self.connectivity_info.remove_halfedge(&halfedge_id1);
             self.connectivity_info.remove_halfedge(&halfedge_id2);
 
-            let find_new_edge_connectivity = |mesh: &DynamicMesh, vertex_id: &VertexID| -> Option<HalfEdgeID>
+            let find_new_edge_connectivity = |mesh: &Mesh, vertex_id: &VertexID| -> Option<HalfEdgeID>
             {
                 for halfedge_id in mesh.halfedge_iter() {
                     let walker = mesh.walker_from_halfedge(&halfedge_id);
@@ -499,7 +499,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
 
         for halfedge_id in mesh.halfedge_iter()
         {
@@ -524,7 +524,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0];
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
         for halfedge_id in mesh.halfedge_iter()
         {
             if mesh.on_boundary(&halfedge_id)
@@ -565,7 +565,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
 
         while mesh.no_faces() > 1 {
             for halfedge_id in mesh.halfedge_iter() {
@@ -587,7 +587,7 @@ mod tests {
     {
         let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0];
-        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions, None);
 
         let faces: Vec<FaceID> = mesh.face_iter().into_iter().collect();
 

@@ -1,7 +1,7 @@
 
 use crate::dynamic_mesh::*;
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>
     {

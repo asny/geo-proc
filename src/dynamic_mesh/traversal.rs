@@ -10,7 +10,7 @@ pub type FaceIter = Box<Iterator<Item = FaceID>>;
 pub type HalfEdgeTwinsIter = Box<Iterator<Item = (HalfEdgeID, HalfEdgeID)>>;
 pub type EdgeIter = Box<Iterator<Item = (VertexID, VertexID)>>;
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn walker(&self) -> Walker
     {
@@ -364,7 +364,7 @@ mod tests {
     fn test_vertex_halfedge_iterator_with_holes() {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
         let positions: Vec<f32> = vec![0.0; 5 * 3];
-        let mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mesh = Mesh::new_with_connectivity(indices, positions, None);
 
         let mut i = 0;
         for edge in mesh.vertex_halfedge_iter(&VertexID::new(0)) {

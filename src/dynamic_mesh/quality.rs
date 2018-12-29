@@ -1,7 +1,7 @@
 use crate::*;
 use std::collections::{HashSet, HashMap};
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn smooth_vertices(&mut self, factor: f32)
     {
@@ -47,7 +47,7 @@ impl DynamicMesh
 
     pub fn flip_edges(&mut self, flatness_threshold: f32)
     {
-        let insert_or_remove = |mesh: &DynamicMesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
+        let insert_or_remove = |mesh: &Mesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
             let twin_id = mesh.walker_from_halfedge(&halfedge_id).twin_id().unwrap();
             let id = if halfedge_id < twin_id {halfedge_id} else {twin_id};
             if mesh.should_flip(&id, flatness_threshold) { to_be_flipped.insert(id); } else { to_be_flipped.remove(&id); }
@@ -137,7 +137,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 0.1,  0.1, 0.0, -0.1,  -1.0, 0.0, -0.5];
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
 
         mesh.collapse_small_faces(0.2);
         test_utility::test_is_valid(&mesh).unwrap();

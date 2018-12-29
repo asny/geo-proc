@@ -1,6 +1,6 @@
 use crate::*;
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn edge_length(&self, halfedge_id: &HalfEdgeID) -> f32
     {

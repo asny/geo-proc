@@ -4,15 +4,15 @@ use std::rc::Rc;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct DynamicMesh {
+pub struct Mesh {
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,
     pub(super) connectivity_info: Rc<ConnectivityInfo>
 }
 
-impl DynamicMesh
+impl Mesh
 {
-    pub(crate) fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
+    pub(crate) fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> Mesh
     {
         let mut indices = vec![None; positions.len()/3];
         let mut positions_out = Vec::new();
@@ -46,14 +46,14 @@ impl DynamicMesh
             }
         }
 
-        DynamicMesh::new_with_connectivity(indices.iter().map(|x| x.unwrap()).collect(), positions_out, normals_out)
+        Mesh::new_with_connectivity(indices.iter().map(|x| x.unwrap()).collect(), positions_out, normals_out)
     }
 
-    pub(crate) fn new_with_connectivity(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> DynamicMesh
+    pub(crate) fn new_with_connectivity(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> Mesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
-        let mut mesh = DynamicMesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)),
+        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)),
             positions: HashMap::new(), normals: HashMap::new()};
 
         for i in 0..no_vertices {
@@ -71,9 +71,9 @@ impl DynamicMesh
         mesh
     }
 
-    pub(crate) fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> DynamicMesh
+    pub(crate) fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> Mesh
     {
-        DynamicMesh {positions, normals, connectivity_info}
+        Mesh {positions, normals, connectivity_info}
     }
 
     pub fn no_vertices(&self) -> usize
@@ -244,9 +244,9 @@ impl DynamicMesh
     }
 }
 
-impl Clone for DynamicMesh {
-    fn clone(&self) -> DynamicMesh {
-        DynamicMesh::new_internal(self.positions.clone(), self.normals.clone(), Rc::new((*self.connectivity_info).clone()))
+impl Clone for Mesh {
+    fn clone(&self) -> Mesh {
+        Mesh::new_internal(self.positions.clone(), self.normals.clone(), Rc::new((*self.connectivity_info).clone()))
     }
 }
 
@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn test_one_face_connectivity() {
-        let mut mesh = DynamicMesh::new_with_connectivity(vec![], vec![], None);
+        let mut mesh = Mesh::new_with_connectivity(vec![], vec![], None);
 
         let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
         let v2 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
@@ -336,7 +336,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
 
-        let mesh = DynamicMesh::new(positions, None);
+        let mesh = Mesh::new(positions, None);
 
         assert_eq!(4, mesh.no_vertices());
         assert_eq!(3, mesh.no_faces());

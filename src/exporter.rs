@@ -17,7 +17,7 @@ impl From<std::io::Error> for Error {
     }
 }
 
-pub fn save(mesh: &DynamicMesh, filename: &str) -> Result<(), Error>
+pub fn save(mesh: &Mesh, filename: &str) -> Result<(), Error>
 {
     let splitted: Vec<&str> = filename.split('.').collect();
     if splitted.len() == 0
@@ -41,14 +41,14 @@ pub fn save(mesh: &DynamicMesh, filename: &str) -> Result<(), Error>
     Ok(())
 }
 
-fn save_as_obj(mesh: &DynamicMesh, name: &str) -> Result<(), Error>
+fn save_as_obj(mesh: &Mesh, name: &str) -> Result<(), Error>
 {
     let data = parse_as_obj(mesh);
     save_model(&data, name)?;
     Ok(())
 }
 
-fn parse_as_obj(mesh: &DynamicMesh) -> String
+fn parse_as_obj(mesh: &Mesh) -> String
 {
     let mut output = String::from("o object\n");
 
@@ -78,14 +78,14 @@ fn parse_as_obj(mesh: &DynamicMesh) -> String
     output
 }
 
-fn save_as_poly(mesh: &DynamicMesh, name: &str) -> Result<(), Error>
+fn save_as_poly(mesh: &Mesh, name: &str) -> Result<(), Error>
 {
     let data = parse_as_poly(mesh);
     save_model(&data, name)?;
     Ok(())
 }
 
-fn parse_as_poly(mesh: &DynamicMesh) -> String
+fn parse_as_poly(mesh: &Mesh) -> String
 {
     let mut output = format!("{} 3 0 0\n", mesh.no_vertices());
 

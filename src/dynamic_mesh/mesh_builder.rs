@@ -1,5 +1,5 @@
 
-use crate::dynamic_mesh::DynamicMesh;
+use crate::dynamic_mesh::Mesh;
 
 #[derive(Debug)]
 pub enum Error {
@@ -93,12 +93,12 @@ impl MeshBuilder {
         self
     }
 
-    pub fn build(self) -> Result<DynamicMesh, Error>
+    pub fn build(self) -> Result<Mesh, Error>
     {
         let positions = self.positions.ok_or(
             Error::NoPositionsSpecified {message: format!("Did you forget to specify the vertex positions?")})?;
         let indices = self.indices.unwrap_or((0..positions.len() as u32/3).collect());
-        Ok(DynamicMesh::new_with_connectivity(indices, positions, self.normals))
+        Ok(Mesh::new_with_connectivity(indices, positions, self.normals))
     }
 
     pub fn cube(mut self) -> Self

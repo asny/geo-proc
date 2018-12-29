@@ -11,7 +11,7 @@ pub struct Intersection {
     pub point: Vec3
 }
 
-pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2: &DynamicMesh, edge: &(VertexID, VertexID)) -> Option<(Intersection, Option<Intersection>)>
+pub fn find_face_edge_intersections(mesh1: &Mesh, face_id: &FaceID, mesh2: &Mesh, edge: &(VertexID, VertexID)) -> Option<(Intersection, Option<Intersection>)>
 {
     let p0 = mesh2.position(&edge.0);
     let p1 = mesh2.position(&edge.1);
@@ -55,7 +55,7 @@ pub fn find_face_edge_intersections(mesh1: &DynamicMesh, face_id: &FaceID, mesh2
     None
 }
 
-pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), point: &Vec3) -> Option<PrimitiveID>
+pub fn find_edge_intersection(mesh: &Mesh, edge: &(VertexID, VertexID), point: &Vec3) -> Option<PrimitiveID>
 {
     let p0 = mesh.position(&edge.0);
     let p1 = mesh.position(&edge.1);
@@ -72,7 +72,7 @@ pub fn find_edge_intersection(mesh: &DynamicMesh, edge: &(VertexID, VertexID), p
     None
 }
 
-pub fn find_face_intersection(mesh: &DynamicMesh, face_id: &FaceID, point: &Vec3) -> Option<PrimitiveID>
+pub fn find_face_intersection(mesh: &Mesh, face_id: &FaceID, point: &Vec3) -> Option<PrimitiveID>
 {
     let face_vertices = mesh.ordered_face_vertices(face_id);
     let v0 = face_vertices.0;
@@ -260,8 +260,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_no_intersection()
     {
-        let mesh1 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![1.0 + MARGIN, 0.0, 0.0, 3.0, 0.0, 1.0, 4.0, 0.0, 0.0], None);
+        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
+        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![1.0 + MARGIN, 0.0, 0.0, 3.0, 0.0, 1.0, 4.0, 0.0, 0.0], None);
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().next().unwrap();
 
@@ -272,8 +272,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_vertex_face_intersection()
     {
-        let mesh1 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.0, 1.0, 0.0, 0.1, 0.0, 0.1, 1.0, 1.0, 0.0], None);
+        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
+        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 1.0, 0.0, 0.1, 0.0, 0.1, 1.0, 1.0, 0.0], None);
         let intersection_point = vec3(0.1, 0.0, 0.1);
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, _)| *mesh2.position(v1) == intersection_point).unwrap();
@@ -286,8 +286,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_edge_face_intersection()
     {
-        let mesh1 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.1, 1.0, 0.1, 0.1, -0.1, 0.1, 1.0, 1.0, 0.0], None);
+        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
+        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.1, 1.0, 0.1, 0.1, -0.1, 0.1, 1.0, 1.0, 0.0], None);
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.position(v1)[0] == 0.1 && mesh2.position(v2)[0] == 0.1 ).unwrap();
@@ -299,8 +299,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_two_vertex_face_intersection()
     {
-        let mesh1 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.1, 0.0, 0.1, 0.2, 0.0, 0.2, 1.0, 1.0, 0.0], None);
+        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
+        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.1, 0.0, 0.1, 0.2, 0.0, 0.2, 1.0, 1.0, 0.0], None);
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.position(v1)[1] == 0.0 && mesh2.position(v2)[1] == 0.0 ).unwrap();
@@ -313,8 +313,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_one_vertex_face_intersection_edge_in_plane()
     {
-        let mesh1 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = DynamicMesh::new_with_connectivity((0..3).collect(), vec![0.1, 0.0, 0.1, 1.2, 0.0, 0.2, 1.0, 1.0, 0.0], None);
+        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
+        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.1, 0.0, 0.1, 1.2, 0.0, 0.2, 1.0, 1.0, 0.0], None);
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.position(v1)[1] == 0.0 && mesh2.position(v2)[1] == 0.0 ).unwrap();

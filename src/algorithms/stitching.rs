@@ -16,7 +16,7 @@ impl From<splitting_and_merging::Error> for Error {
     }
 }
 
-pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Result<DynamicMesh, Error>
+pub fn stitch(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<Mesh, Error>
 {
     let stitches = split_meshes(mesh1, mesh2)?;
     if stitches.iter().len() == 0 { return Ok(mesh1.clone()) }
@@ -38,7 +38,7 @@ pub fn stitch(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Result<Dynami
     Ok(m1)
 }
 
-fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
+fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
 {
     let vertices = mesh1.ordered_edge_vertices(halfedge_id);
     if let Some(vertex_id1) = seam.get(&vertices.0) {
@@ -49,7 +49,7 @@ fn is_at_seam(mesh1: &DynamicMesh, mesh2: &DynamicMesh, seam: &HashMap<VertexID,
     false
 }
 
-fn split_meshes(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Result<HashSet<(VertexID, VertexID)>, Error>
+fn split_meshes(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<HashSet<(VertexID, VertexID)>, Error>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
     let mut stitches = HashSet::new();
@@ -60,7 +60,7 @@ fn split_meshes(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh) -> Result<Hash
     Ok(stitches)
 }
 
-fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, intersections: &HashMap<(PrimitiveID, PrimitiveID), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Result<Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>, Error>
+fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(PrimitiveID, PrimitiveID), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Result<Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>, Error>
 {
     let mut new_edges1 = Vec::new();
     let mut new_edges2 = Vec::new();
@@ -168,7 +168,7 @@ fn split_at_intersections(mesh1: &mut DynamicMesh, mesh2: &mut DynamicMesh, inte
     else {Ok(None)}
 }
 
-fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, point: &Vec3) -> PrimitiveID
+fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, face_id: FaceID, point: &Vec3) -> PrimitiveID
 {
     if let Some(new_faces) = face_splits.get(&face_id)
     {
@@ -181,7 +181,7 @@ fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, 
     PrimitiveID::Face(face_id)
 }
 
-fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &DynamicMesh, edge: (VertexID, VertexID), point: &Vec3) -> PrimitiveID
+fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &Mesh, edge: (VertexID, VertexID), point: &Vec3) -> PrimitiveID
 {
     if let Some(new_edges) = edge_splits.get(&edge)
     {
@@ -203,7 +203,7 @@ fn insert_edges(edge_list: &mut HashMap<(VertexID, VertexID), HashSet<(VertexID,
     list.insert((split_edge.1, vertex_id.clone()));
 }
 
-fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &DynamicMesh, face_id: FaceID, vertex_id: &VertexID)
+fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, face_id: FaceID, vertex_id: &VertexID)
 {
     if !face_list.contains_key(&face_id) { face_list.insert(face_id, HashSet::new()); }
     let list = face_list.get_mut(&face_id).unwrap();
@@ -214,14 +214,14 @@ fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Dynamic
     list.insert(iter.next().unwrap().face_id().unwrap());
 }
 
-fn find_intersections(mesh1: &DynamicMesh, mesh2: &DynamicMesh) -> HashMap<(PrimitiveID, PrimitiveID), Vec3>
+fn find_intersections(mesh1: &Mesh, mesh2: &Mesh) -> HashMap<(PrimitiveID, PrimitiveID), Vec3>
 {
     let edges1 = mesh1.edge_iter().collect();
     let edges2 = mesh2.edge_iter().collect();
     find_intersections_between_edge_face(mesh1, &edges1, mesh2, &edges2)
 }
 
-fn find_intersections_between_edge_face(mesh1: &DynamicMesh, edges1: &Vec<(VertexID, VertexID)>, mesh2: &DynamicMesh, edges2: &Vec<(VertexID, VertexID)>) -> HashMap<(PrimitiveID, PrimitiveID), Vec3>
+fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, VertexID)>, mesh2: &Mesh, edges2: &Vec<(VertexID, VertexID)>) -> HashMap<(PrimitiveID, PrimitiveID), Vec3>
 {
     let mut intersections: HashMap<(PrimitiveID, PrimitiveID), Vec3> = HashMap::new();
     for edge1 in edges1
@@ -289,7 +289,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![0.5, -0.5, 0.0,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 2);
@@ -301,7 +301,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![0.5, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -313,7 +313,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![0.5, 0.0, 0.25,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -325,7 +325,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![1.0, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -392,12 +392,12 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
         let area1 = mesh1.face_area(&mesh1.face_iter().next().unwrap());
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mut mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
 
         let intersections = find_intersections(&mesh1, &mesh2);
 
@@ -433,11 +433,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![0.0, -0.2, 0.5,  0.0, -0.2, 1.5,  0.0, 1.5, 0.0];
-        let mut mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
 
         let intersections = find_intersections(&mesh1, &mesh2);
 
@@ -467,11 +467,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mut mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
 
         let stitches = split_meshes(&mut mesh1, &mut mesh2).unwrap();
 
@@ -514,11 +514,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
-        let mut mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
 
         let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
@@ -535,11 +535,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 1.0,  -2.0, 0.0, -1.0,  -2.0, 0.5, 0.0];
-        let mut mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
 
         let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
@@ -600,24 +600,24 @@ mod tests {
         test_is_valid(&stitched).unwrap();
     }
 
-    fn create_simple_mesh_x_z() -> DynamicMesh
+    fn create_simple_mesh_x_z() -> Mesh
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        DynamicMesh::new_with_connectivity(indices, positions, None)
+        Mesh::new_with_connectivity(indices, positions, None)
     }
 
-    fn create_simple_mesh_y_z() -> DynamicMesh
+    fn create_simple_mesh_y_z() -> Mesh
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.5, -0.5, 0.0,  0.5, -0.5, 1.0,  0.5, 0.5, 0.5,  0.5, 0.5, 1.5,  0.5, -0.5, 2.0,  0.5, 0.5, 2.5];
-        DynamicMesh::new_with_connectivity(indices, positions, None)
+        Mesh::new_with_connectivity(indices, positions, None)
     }
 
-    fn create_shifted_simple_mesh_y_z() -> DynamicMesh
+    fn create_shifted_simple_mesh_y_z() -> Mesh
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.5, -0.5, -0.2,  0.5, -0.5, 0.8,  0.5, 0.5, 0.3,  0.5, 0.5, 1.3,  0.5, -0.5, 1.8,  0.5, 0.5, 2.3];
-        DynamicMesh::new_with_connectivity(indices, positions, None)
+        Mesh::new_with_connectivity(indices, positions, None)
     }
 }
