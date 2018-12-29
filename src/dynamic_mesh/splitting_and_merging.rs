@@ -1,5 +1,4 @@
-
-use crate::*;
+use crate::mesh::*;
 use crate::connected_components::*;
 use std::collections::{HashSet, HashMap};
 use std::rc::Rc;

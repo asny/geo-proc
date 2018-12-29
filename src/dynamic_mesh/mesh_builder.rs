@@ -1,5 +1,4 @@
-
-use crate::dynamic_mesh::Mesh;
+use crate::mesh::*;
 
 #[derive(Debug)]
 pub enum Error {

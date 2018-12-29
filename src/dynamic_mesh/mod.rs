@@ -32,6 +32,4 @@ mod connectivity_info;
 
 pub use crate::dynamic_mesh::mesh::*;
 pub use crate::dynamic_mesh::mesh_builder::*;
-pub use crate::dynamic_mesh::ids::*;
 pub use crate::dynamic_mesh::traversal::*;
-pub use crate::math::*;

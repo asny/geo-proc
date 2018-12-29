@@ -1,5 +1,4 @@
-
-use crate::dynamic_mesh::*;
+use crate::mesh::*;
 
 impl Mesh
 {

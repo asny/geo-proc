@@ -1,7 +1,8 @@
 use crate::dynamic_mesh::connectivity_info::ConnectivityInfo;
-use crate::*;
 use std::rc::Rc;
 use std::collections::HashMap;
+pub use crate::ids::*;
+pub use crate::math::*;
 
 #[derive(Debug)]
 pub struct Mesh {
