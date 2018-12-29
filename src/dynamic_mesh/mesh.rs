@@ -129,6 +129,55 @@ impl Mesh
         Some(nor)
     }
 
+    pub fn create_sub_mesh(&self, faces: &std::collections::HashSet<FaceID>) -> Mesh
+    {
+        let info = crate::dynamic_mesh::connectivity_info::ConnectivityInfo::new(faces.len(), faces.len());
+        for face_id in faces {
+            let face = self.connectivity_info.face(face_id).unwrap();
+            for mut walker in self.face_halfedge_iter(face_id) {
+                let halfedge_id = walker.halfedge_id().unwrap();
+                let halfedge = self.connectivity_info.halfedge(&halfedge_id).unwrap();
+                info.add_halfedge(halfedge_id, halfedge);
+
+                let vertex_id = walker.vertex_id().unwrap();
+                let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
+                info.add_vertex(vertex_id, vertex);
+                info.set_vertex_halfedge(&vertex_id, walker.next_id());
+
+                walker.as_twin();
+                if walker.face_id().is_none()
+                {
+                    let twin_id = walker.halfedge_id().unwrap();
+                    let twin = self.connectivity_info.halfedge(&twin_id).unwrap();
+                    info.add_halfedge(twin_id, twin);
+
+                }
+                else if !faces.contains(&walker.face_id().unwrap())
+                {
+                    let twin_id = walker.halfedge_id().unwrap();
+                    let mut twin = self.connectivity_info.halfedge(&twin_id).unwrap();
+                    twin.face = None;
+                    twin.next = None;
+                    info.add_halfedge(twin_id, twin);
+                }
+            }
+
+            info.add_face(face_id.clone(), face);
+        }
+
+        let mut positions = HashMap::with_capacity(info.no_vertices());
+        let mut normals = HashMap::with_capacity(info.no_vertices());
+        for vertex_id in info.vertex_iterator() {
+            let p = self.position(&vertex_id).clone();
+            positions.insert(vertex_id.clone(), p);
+            if let Some(normal) = self.normal(&vertex_id) {
+                normals.insert(vertex_id, normal.clone());
+            }
+        }
+
+        Mesh::new_internal(positions, normals, Rc::new(info))
+    }
+
     pub fn flip_orientation(&mut self)
     {
         for vertex_id in self.vertex_iter() {
@@ -379,5 +428,24 @@ mod tests {
         assert_eq!(4, mesh.no_vertices());
         assert_eq!(3, mesh.no_faces());
         test_is_valid(&mesh).unwrap();
+    }
+
+    #[test]
+    fn test_create_sub_mesh()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
+        let mesh = Mesh::new_with_connectivity(indices, positions, None);
+
+        let mut faces = std::collections::HashSet::new();
+        for face_id in mesh.face_iter() {
+            faces.insert(face_id);
+            break;
+        }
+
+        let sub_mesh = mesh.create_sub_mesh(&faces);
+
+        test_is_valid(&mesh).unwrap();
+        test_is_valid(&sub_mesh).unwrap();
     }
 }
