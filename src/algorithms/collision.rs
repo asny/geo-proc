@@ -181,6 +181,7 @@ fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
 mod tests {
     use super::*;
     use crate::mesh::test_utility::*;
+    use crate::MeshBuilder;
 
     #[test]
     fn test_find_face_intersection()
@@ -260,8 +261,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_no_intersection()
     {
-        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![1.0 + MARGIN, 0.0, 0.0, 3.0, 0.0, 1.0, 4.0, 0.0, 0.0], None);
+        let mesh1 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]).build().unwrap();
+        let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![1.0 + MARGIN, 0.0, 0.0, 3.0, 0.0, 1.0, 4.0, 0.0, 0.0]).build().unwrap();
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().next().unwrap();
 
@@ -272,8 +273,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_vertex_face_intersection()
     {
-        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 1.0, 0.0, 0.1, 0.0, 0.1, 1.0, 1.0, 0.0], None);
+        let mesh1 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]).build().unwrap();
+        let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 1.0, 0.0, 0.1, 0.0, 0.1, 1.0, 1.0, 0.0]).build().unwrap();
         let intersection_point = vec3(0.1, 0.0, 0.1);
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, _)| *mesh2.position(v1) == intersection_point).unwrap();
@@ -286,8 +287,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_edge_face_intersection()
     {
-        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.1, 1.0, 0.1, 0.1, -0.1, 0.1, 1.0, 1.0, 0.0], None);
+        let mesh1 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]).build().unwrap();
+        let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.1, 1.0, 0.1, 0.1, -0.1, 0.1, 1.0, 1.0, 0.0]).build().unwrap();
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.position(v1)[0] == 0.1 && mesh2.position(v2)[0] == 0.1 ).unwrap();
@@ -299,8 +300,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_two_vertex_face_intersection()
     {
-        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.1, 0.0, 0.1, 0.2, 0.0, 0.2, 1.0, 1.0, 0.0], None);
+        let mesh1 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]).build().unwrap();
+        let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.1, 0.0, 0.1, 0.2, 0.0, 0.2, 1.0, 1.0, 0.0]).build().unwrap();
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.position(v1)[1] == 0.0 && mesh2.position(v2)[1] == 0.0 ).unwrap();
@@ -313,8 +314,8 @@ mod tests {
     #[test]
     fn test_find_face_edge_intersection_one_vertex_face_intersection_edge_in_plane()
     {
-        let mesh1 = Mesh::new_with_connectivity((0..3).collect(), vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], None);
-        let mesh2 = Mesh::new_with_connectivity((0..3).collect(), vec![0.1, 0.0, 0.1, 1.2, 0.0, 0.2, 1.0, 1.0, 0.0], None);
+        let mesh1 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]).build().unwrap();
+        let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.1, 0.0, 0.1, 1.2, 0.0, 0.2, 1.0, 1.0, 0.0]).build().unwrap();
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.position(v1)[1] == 0.0 && mesh2.position(v2)[1] == 0.0 ).unwrap();
