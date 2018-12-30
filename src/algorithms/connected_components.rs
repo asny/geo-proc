@@ -46,6 +46,7 @@ pub fn connected_components(mesh: &Mesh) -> Vec<HashSet<FaceID>>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::MeshBuilder;
 
     #[test]
     fn test_one_connected_component()
@@ -111,7 +112,7 @@ mod tests {
             4, 0, 3,
             4, 3, 7
         ];
-        Mesh::new_with_connectivity(indices, positions, None)
+        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 
     fn create_unconnected_test_object() -> Mesh
@@ -156,6 +157,6 @@ mod tests {
             12, 13, 14
         ];
 
-        Mesh::new_with_connectivity(indices, positions, None)
+        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 }

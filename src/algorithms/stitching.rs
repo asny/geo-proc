@@ -297,7 +297,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![0.5, -0.5, 0.0,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 2);
@@ -309,7 +309,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![0.5, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -321,7 +321,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![0.5, 0.0, 0.25,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -333,7 +333,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f32> = vec![1.0, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = Mesh::new_with_connectivity(indices, positions, None);
+        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -400,12 +400,12 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
         let area1 = mesh1.face_area(&mesh1.face_iter().next().unwrap());
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
 
@@ -441,11 +441,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![0.0, -0.2, 0.5,  0.0, -0.2, 1.5,  0.0, 1.5, 0.0];
-        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
 
@@ -475,11 +475,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let stitches = split_meshes(&mut mesh1, &mut mesh2).unwrap();
 
@@ -522,11 +522,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
-        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
@@ -543,11 +543,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
+        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 1.0,  -2.0, 0.0, -1.0,  -2.0, 0.5, 0.0];
-        let mut mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
+        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
 
@@ -612,20 +612,20 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        Mesh::new_with_connectivity(indices, positions, None)
+        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 
     fn create_simple_mesh_y_z() -> Mesh
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.5, -0.5, 0.0,  0.5, -0.5, 1.0,  0.5, 0.5, 0.5,  0.5, 0.5, 1.5,  0.5, -0.5, 2.0,  0.5, 0.5, 2.5];
-        Mesh::new_with_connectivity(indices, positions, None)
+        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 
     fn create_shifted_simple_mesh_y_z() -> Mesh
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.5, -0.5, -0.2,  0.5, -0.5, 0.8,  0.5, 0.5, 0.3,  0.5, 0.5, 1.3,  0.5, -0.5, 1.8,  0.5, 0.5, 2.3];
-        Mesh::new_with_connectivity(indices, positions, None)
+        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 }
