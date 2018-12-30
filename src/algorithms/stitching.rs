@@ -6,13 +6,13 @@ use crate::mesh::*;
 
 #[derive(Debug)]
 pub enum Error {
-    Merge(crate::dynamic_mesh::merge::Error),
+    Merge(crate::mesh::merge::Error),
     Split(crate::algorithms::split::Error),
     EdgeToSplitDoesNotExist {message: String}
 }
 
-impl From<crate::dynamic_mesh::merge::Error> for Error {
-    fn from(other: crate::dynamic_mesh::merge::Error) -> Self {
+impl From<crate::mesh::merge::Error> for Error {
+    fn from(other: crate::mesh::merge::Error) -> Self {
         Error::Merge(other)
     }
 }
@@ -267,7 +267,7 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dynamic_mesh::test_utility::*;
+    use crate::mesh::test_utility::*;
 
     #[test]
     fn test_finding_edge_edge_intersections()
@@ -505,8 +505,8 @@ mod tests {
     #[test]
     fn test_box_box_splitting()
     {
-        let mut mesh1 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh1 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
         for vertex_id in mesh2.vertex_iter() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -561,8 +561,8 @@ mod tests {
     #[test]
     fn test_box_box_stitching()
     {
-        let mut mesh1 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh1 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
         for vertex_id in mesh2.vertex_iter() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -577,7 +577,7 @@ mod tests {
     #[test]
     fn test_sphere_box_stitching()
     {
-        let mut mesh1 = crate::dynamic_mesh::MeshBuilder::new().icosahedron().build().unwrap();
+        let mut mesh1 = crate::mesh::MeshBuilder::new().icosahedron().build().unwrap();
         for _ in 0..1 {
             for face_id in mesh1.face_iter() {
                 let p = mesh1.face_center(&face_id).normalize();
@@ -592,7 +592,7 @@ mod tests {
         }
         mesh1.translate(&vec3(0.0, 1.5, 0.0));
         mesh1.update_vertex_normals();
-        let mut mesh2 = crate::dynamic_mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(&vec3(0.5, 2.0, 0.5));
         mesh2.update_vertex_normals();
 

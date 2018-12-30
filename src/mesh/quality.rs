@@ -131,7 +131,7 @@ fn triangle_quality(p0: &Vec3, p1: &Vec3, p2: &Vec3) -> f32
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dynamic_mesh::test_utility;
+    use crate::mesh::test_utility;
 
     #[test]
     fn test_collapse_small_faces()

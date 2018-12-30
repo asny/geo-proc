@@ -1,4 +1,38 @@
-use crate::dynamic_mesh::connectivity_info::ConnectivityInfo;
+
+pub mod math {
+    use cgmath::{Vector2, Vector3};
+    pub use cgmath::prelude::*;
+
+    pub type Vec2 = Vector2<f32>;
+    pub type Vec3 = Vector3<f32>;
+
+    pub fn vec2(x: f32, y: f32) -> Vec2
+    {
+        Vector2::new(x, y)
+    }
+    pub fn vec3(x: f32, y: f32, z: f32) -> Vec3
+    {
+        Vector3::new(x, y, z)
+    }
+}
+
+pub mod mesh_builder;
+pub mod ids;
+pub mod traversal;
+pub mod merge;
+pub mod connectivity;
+pub mod basic_operations;
+pub mod quality;
+pub mod edge_measures;
+pub mod face_measures;
+
+pub mod test_utility;
+mod connectivity_info;
+
+pub use crate::mesh::mesh_builder::*;
+pub use crate::mesh::traversal::*;
+
+use crate::mesh::connectivity_info::ConnectivityInfo;
 use std::rc::Rc;
 use std::collections::HashMap;
 pub use crate::ids::*;
@@ -131,7 +165,7 @@ impl Mesh
 
     pub fn create_sub_mesh(&self, faces: &std::collections::HashSet<FaceID>) -> Mesh
     {
-        let info = crate::dynamic_mesh::connectivity_info::ConnectivityInfo::new(faces.len(), faces.len());
+        let info = ConnectivityInfo::new(faces.len(), faces.len());
         for face_id in faces {
             let face = self.connectivity_info.face(face_id).unwrap();
             for mut walker in self.face_halfedge_iter(face_id) {
@@ -340,7 +374,7 @@ impl Clone for Mesh {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dynamic_mesh::test_utility::*;
+    use crate::mesh::test_utility::*;
 
     #[test]
     fn test_one_face_connectivity() {

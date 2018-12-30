@@ -323,7 +323,7 @@ impl Mesh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dynamic_mesh::test_utility::*;
+    use crate::mesh::test_utility::*;
 
     #[test]
     fn test_flip_edge()
@@ -362,7 +362,7 @@ mod tests {
     fn test_flip_multiple_edges()
     {
         let mut no_flips = 0;
-        let mut mesh = crate::dynamic_mesh::MeshBuilder::new().icosahedron().build().unwrap();
+        let mut mesh = crate::mesh::MeshBuilder::new().icosahedron().build().unwrap();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iter() {
             let (v0, v1) = mesh.edge_vertices(&halfedge_id);

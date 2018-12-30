@@ -1,6 +1,6 @@
 use std::cell::{RefCell};
 use std::collections::HashMap;
-use crate::dynamic_mesh::ids::*;
+use crate::mesh::ids::*;
 
 #[derive(Clone, Debug)]
 pub(crate) struct ConnectivityInfo {
