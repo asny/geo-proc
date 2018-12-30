@@ -268,6 +268,7 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
 mod tests {
     use super::*;
     use crate::mesh::test_utility::*;
+    use crate::mesh_builder::MeshBuilder;
 
     #[test]
     fn test_finding_edge_edge_intersections()
@@ -505,8 +506,8 @@ mod tests {
     #[test]
     fn test_box_box_splitting()
     {
-        let mut mesh1 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         for vertex_id in mesh2.vertex_iter() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -561,8 +562,8 @@ mod tests {
     #[test]
     fn test_box_box_stitching()
     {
-        let mut mesh1 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         for vertex_id in mesh2.vertex_iter() {
             mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
         }
@@ -577,7 +578,7 @@ mod tests {
     #[test]
     fn test_sphere_box_stitching()
     {
-        let mut mesh1 = crate::mesh::MeshBuilder::new().icosahedron().build().unwrap();
+        let mut mesh1 = MeshBuilder::new().icosahedron().build().unwrap();
         for _ in 0..1 {
             for face_id in mesh1.face_iter() {
                 let p = mesh1.face_center(&face_id).normalize();
@@ -592,7 +593,7 @@ mod tests {
         }
         mesh1.translate(&vec3(0.0, 1.5, 0.0));
         mesh1.update_vertex_normals();
-        let mut mesh2 = crate::mesh::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(&vec3(0.5, 2.0, 0.5));
         mesh2.update_vertex_normals();
 

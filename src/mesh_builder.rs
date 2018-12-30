@@ -12,7 +12,7 @@ pub enum Error {
 ///
 /// Build from indices and positions:
 /// ```
-/// # use geo_proc::mesh::{MeshBuilder, Error};
+/// # use geo_proc::mesh_builder::{MeshBuilder, Error};
 /// # use geo_proc::mesh::test_utility::*;
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
@@ -30,7 +30,7 @@ pub enum Error {
 /// Build from positions (note: Use `mesh.merge_overlapping_primitives();` if you want to merge
 /// unconnected but overlapping parts of the mesh):
 /// ```
-/// # use geo_proc::mesh::{MeshBuilder, Error};
+/// # use geo_proc::mesh_builder::{MeshBuilder, Error};
 /// # use geo_proc::mesh::test_utility::*;
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
@@ -48,7 +48,7 @@ pub enum Error {
 ///
 /// Build a cube:
 /// ```
-/// # use geo_proc::mesh::{MeshBuilder, Error};
+/// # use geo_proc::mesh_builder::{MeshBuilder, Error};
 /// # use geo_proc::mesh::test_utility::*;
 /// #
 /// # fn main() -> Result<(), Box<Error>> {

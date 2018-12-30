@@ -16,7 +16,6 @@ pub mod math {
     }
 }
 
-pub mod mesh_builder;
 pub mod ids;
 pub mod traversal;
 pub mod merge;
@@ -28,9 +27,6 @@ pub mod face_measures;
 
 pub mod test_utility;
 mod connectivity_info;
-
-pub use crate::mesh::mesh_builder::*;
-pub use crate::mesh::traversal::*;
 
 use crate::mesh::connectivity_info::ConnectivityInfo;
 use std::rc::Rc;
