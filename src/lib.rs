@@ -8,4 +8,3 @@ pub mod mesh_builder;
 pub use crate::mesh::*;
 pub use crate::algorithms::*;
 pub use crate::mesh_builder::*;
-pub use crate::mesh::traversal::*;

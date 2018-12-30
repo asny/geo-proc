@@ -33,6 +33,7 @@ use std::rc::Rc;
 use std::collections::HashMap;
 pub use crate::ids::*;
 pub use crate::math::*;
+pub use crate::traversal::*;
 
 #[derive(Debug)]
 pub struct Mesh {
