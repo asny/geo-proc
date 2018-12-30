@@ -25,10 +25,14 @@ pub fn load_obj(name: &str) -> Result<Vec<Mesh>, Error>
     }
 
     for m in models {
-        let indices = match m.mesh.indices.len() > 0 { true => m.mesh.indices.clone(), false => (0..m.mesh.positions.len() as u32/3).collect() };
-        let normals = if m.mesh.normals.len() > 0 { Some(m.mesh.normals) } else { None };
-        let mesh = Mesh::new_with_connectivity(indices, m.mesh.positions, normals);
-        result.push(mesh);
+        let mut mesh_builder = MeshBuilder::new().with_positions(m.mesh.positions);
+        if m.mesh.normals.len() > 0 {
+            mesh_builder = mesh_builder.with_normals(m.mesh.normals);
+        }
+        if m.mesh.indices.len() > 0 {
+            mesh_builder = mesh_builder.with_indices(m.mesh.indices);
+        }
+        result.push(mesh_builder.build().unwrap());
     }
     Ok(result)
 }
