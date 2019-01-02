@@ -1,10 +1,9 @@
 use std::cell::{RefCell};
-use crate::dynamic_mesh::*;
-use std;
 use std::collections::HashMap;
+use crate::mesh::ids::*;
 
 #[derive(Clone, Debug)]
-pub struct ConnectivityInfo {
+pub(crate) struct ConnectivityInfo {
     vertices: RefCell<HashMap<VertexID, Vertex>>,
     halfedges: RefCell<HashMap<HalfEdgeID, HalfEdge>>,
     faces: RefCell<HashMap<FaceID, Face>>
@@ -240,12 +239,12 @@ impl ConnectivityInfo {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Vertex {
     pub halfedge: Option<HalfEdgeID>
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct HalfEdge {
     pub vertex: Option<VertexID>,
     pub twin: Option<HalfEdgeID>,
@@ -253,7 +252,7 @@ pub struct HalfEdge {
     pub face: Option<FaceID>
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Face {
     pub halfedge: Option<HalfEdgeID>
 }

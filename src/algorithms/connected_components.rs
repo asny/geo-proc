@@ -1,12 +1,12 @@
-use crate::dynamic_mesh::*;
+use crate::prelude::*;
 use std::collections::HashSet;
 
-pub fn connected_component(mesh: &DynamicMesh, face_id: &FaceID) -> HashSet<FaceID>
+pub fn connected_component(mesh: &Mesh, face_id: &FaceID) -> HashSet<FaceID>
 {
     connected_component_with_limit(mesh, face_id, &|_| false )
 }
 
-pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
+pub fn connected_component_with_limit(mesh: &Mesh, face_id: &FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
 {
     let mut component = HashSet::new();
     component.insert(face_id.clone());
@@ -18,9 +18,9 @@ pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limi
             None => break
         };
 
-        for mut walker in mesh.face_halfedge_iterator(&test_face) {
+        for mut walker in mesh.face_halfedge_iter(&test_face) {
             if !limit(walker.halfedge_id().unwrap()) {
-                if let Some(face_id) = walker.twin().face_id() {
+                if let Some(face_id) = walker.as_twin().face_id() {
                     if !component.contains(&face_id)
                     {
                         component.insert(face_id.clone());
@@ -33,10 +33,10 @@ pub fn connected_component_with_limit(mesh: &DynamicMesh, face_id: &FaceID, limi
     component
 }
 
-pub fn connected_components(mesh: &DynamicMesh) -> Vec<HashSet<FaceID>>
+pub fn connected_components(mesh: &Mesh) -> Vec<HashSet<FaceID>>
 {
     let mut result = Vec::new();
-    while let Some(ref face_id) = mesh.face_iterator().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
+    while let Some(ref face_id) = mesh.face_iter().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
     {
         result.push(connected_component(mesh, face_id));
     }
@@ -46,6 +46,7 @@ pub fn connected_components(mesh: &DynamicMesh) -> Vec<HashSet<FaceID>>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::mesh_builder::MeshBuilder;
 
     #[test]
     fn test_one_connected_component()
@@ -84,7 +85,7 @@ mod tests {
         assert!(cc.iter().find(|vec| vec.len() == 1).is_some());
     }
 
-    fn create_connected_test_object() -> DynamicMesh
+    fn create_connected_test_object() -> Mesh
     {
         let positions: Vec<f32> = vec![
             1.0, -1.0, -1.0,
@@ -111,10 +112,10 @@ mod tests {
             4, 0, 3,
             4, 3, 7
         ];
-        DynamicMesh::new_with_connectivity(indices, positions, None)
+        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 
-    fn create_unconnected_test_object() -> DynamicMesh
+    fn create_unconnected_test_object() -> Mesh
     {
         let positions: Vec<f32> = vec![
             1.0, -1.0, -1.0,
@@ -156,6 +157,6 @@ mod tests {
             12, 13, 14
         ];
 
-        DynamicMesh::new_with_connectivity(indices, positions, None)
+        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 }

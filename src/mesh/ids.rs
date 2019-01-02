@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct VertexID
 {
     val: usize
@@ -19,7 +19,7 @@ impl fmt::Display for VertexID {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct HalfEdgeID
 {
     val: usize
@@ -38,7 +38,7 @@ impl fmt::Display for HalfEdgeID {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct FaceID
 {
     val: usize
@@ -57,7 +57,7 @@ impl fmt::Display for FaceID {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum PrimitiveID {
     Vertex(VertexID),
     Edge((VertexID, VertexID)),

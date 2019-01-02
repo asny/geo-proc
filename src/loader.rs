@@ -1,11 +1,10 @@
 use std::path::PathBuf;
 use tobj;
-use crate::mesh;
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {
     ObjLoader(tobj::LoadError),
-    Mesh(mesh::Error),
     FileDoesntContainModel{message: String}
 }
 
@@ -15,13 +14,7 @@ impl From<tobj::LoadError> for Error {
     }
 }
 
-impl From<mesh::Error> for Error {
-    fn from(other: mesh::Error) -> Self {
-        Error::Mesh(other)
-    }
-}
-
-pub fn load_obj(name: &str) -> Result<Vec<mesh::StaticMesh>, Error>
+pub fn load_obj(name: &str) -> Result<Vec<Mesh>, Error>
 {
     let mut result = Vec::new();
 
@@ -32,17 +25,14 @@ pub fn load_obj(name: &str) -> Result<Vec<mesh::StaticMesh>, Error>
     }
 
     for m in models {
-        let indices = match m.mesh.indices.len() > 0 { true => m.mesh.indices.clone(), false => (0..m.mesh.positions.len() as u32/3).collect() };
-        let attributes;
-        if m.mesh.normals.len() > 0
-        {
-            attributes = att!["position" => (m.mesh.positions.clone(), 3), "normal" => (m.mesh.normals.clone(), 3)];
+        let mut mesh_builder = crate::mesh_builder::MeshBuilder::new().with_positions(m.mesh.positions);
+        if m.mesh.normals.len() > 0 {
+            mesh_builder = mesh_builder.with_normals(m.mesh.normals);
         }
-        else {
-            attributes = att!["position" => (m.mesh.positions.clone(), 3)];
+        if m.mesh.indices.len() > 0 {
+            mesh_builder = mesh_builder.with_indices(m.mesh.indices);
         }
-        let mesh = mesh::StaticMesh::create(indices, attributes)?;
-        result.push(mesh);
+        result.push(mesh_builder.build().unwrap());
     }
     Ok(result)
 }

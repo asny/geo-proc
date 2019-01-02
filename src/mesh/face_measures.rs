@@ -1,41 +1,39 @@
-use crate::dynamic_mesh::*;
-use crate::types::*;
+use crate::mesh::*;
 
-impl DynamicMesh
+impl Mesh
 {
     pub fn face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
-        walker.next();
+        walker.as_next();
         let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
 
-        let mut dir = v0.cross(&v1);
-        dir.normalize_mut();
-        dir
+        let dir = v0.cross(v1);
+        dir.normalize()
     }
 
     pub fn face_area(&self, face_id: &FaceID) -> f32
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let v0 = *self.position(&walker.vertex_id().unwrap()) - p0;
-        walker.next();
+        walker.as_next();
         let v1 = *self.position(&walker.vertex_id().unwrap()) - p0;
 
-        v0.cross(&v1).norm()
+        v0.cross(v1).magnitude()
     }
 
     pub fn face_center(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);
         let p0 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let p1 = *self.position(&walker.vertex_id().unwrap());
-        walker.next();
+        walker.as_next();
         let p2 = *self.position(&walker.vertex_id().unwrap());
 
         (p0 + p1 + p2)/3.0
@@ -47,7 +45,7 @@ impl DynamicMesh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dynamic_mesh::test_utility::*;
+    use crate::mesh::test_utility::*;
 
     #[test]
     fn test_face_normal() {

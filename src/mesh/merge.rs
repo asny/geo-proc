@@ -1,111 +1,26 @@
-
-use crate::dynamic_mesh::*;
-use crate::connected_components::*;
+use crate::mesh::*;
 use std::collections::{HashSet, HashMap};
-use std::rc::Rc;
 
 #[derive(Debug)]
 pub enum Error {
     MergeWillCreateNonManifoldMesh {message: String},
     FailedToMergeVertices {message: String},
     CannotCheckOrientationOfMesh {message: String},
-    SplittingEdgesDidNotFormAClosesCurve {message: String}
 }
 
-impl DynamicMesh
+impl Mesh
 {
-    pub fn create_sub_mesh(&self, faces: &HashSet<FaceID>) -> DynamicMesh
-    {
-        let info = connectivity_info::ConnectivityInfo::new(faces.len(), faces.len());
-        for face_id in faces {
-            let face = self.connectivity_info.face(face_id).unwrap();
-            for mut walker in self.face_halfedge_iterator(face_id) {
-                let halfedge_id = walker.halfedge_id().unwrap();
-                let halfedge = self.connectivity_info.halfedge(&halfedge_id).unwrap();
-                info.add_halfedge(halfedge_id, halfedge);
-
-                let vertex_id = walker.vertex_id().unwrap();
-                let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
-                info.add_vertex(vertex_id, vertex);
-                info.set_vertex_halfedge(&vertex_id, walker.next_id());
-
-                walker.twin();
-                if walker.face_id().is_none()
-                {
-                    let twin_id = walker.halfedge_id().unwrap();
-                    let mut twin = self.connectivity_info.halfedge(&twin_id).unwrap();
-                    info.add_halfedge(twin_id, twin);
-
-                }
-                else if !faces.contains(&walker.face_id().unwrap())
-                {
-                    let twin_id = walker.halfedge_id().unwrap();
-                    let mut twin = self.connectivity_info.halfedge(&twin_id).unwrap();
-                    twin.face = None;
-                    twin.next = None;
-                    info.add_halfedge(twin_id, twin);
-                }
-            }
-
-            info.add_face(face_id.clone(), face);
-        }
-
-        let mut positions = HashMap::with_capacity(info.no_vertices());
-        let mut normals = HashMap::with_capacity(info.no_vertices());
-        for vertex_id in info.vertex_iterator() {
-            let p = self.position(&vertex_id).clone();
-            positions.insert(vertex_id.clone(), p);
-            if let Some(normal) = self.normal(&vertex_id) {
-                normals.insert(vertex_id, normal.clone());
-            }
-        }
-
-        DynamicMesh::new_internal(positions, normals, Rc::new(info))
-    }
-
-    pub fn split(&self, is_at_split: &Fn(&DynamicMesh, &HalfEdgeID) -> bool) -> Result<(DynamicMesh, DynamicMesh), Error>
-    {
-        let mut face_id1 = None;
-        let mut face_id2 = None;
-        for halfedge_id in self.halfedge_iterator() {
-            if is_at_split(self, &halfedge_id) {
-                let mut walker = self.walker_from_halfedge(&halfedge_id);
-                face_id1 = walker.face_id();
-                face_id2 = walker.twin().face_id();
-                if face_id1.is_some() && face_id2.is_some()
-                {
-                    break;
-                }
-            }
-        }
-
-        let cc1 = if let Some(face_id) = face_id1 {
-            connected_component_with_limit(self, &face_id, &|halfedge_id| is_at_split(self, &halfedge_id))
-        } else { HashSet::new() };
-        let cc2 = if let Some(face_id) = face_id2 {
-            connected_component_with_limit(self, &face_id, &|halfedge_id| is_at_split(self, &halfedge_id))
-        } else { HashSet::new() };
-
-        if self.no_faces() != cc1.len() + cc2.len() {
-            return Err(Error::SplittingEdgesDidNotFormAClosesCurve {message: format!("It was not possible to split a mesh in two parts, the splitting edges and boundary edges did not form a closed curve.")})
-        }
-
-        let sub_mesh1 = self.create_sub_mesh(&cc1);
-        let sub_mesh2 = self.create_sub_mesh(&cc2);
-        Ok((sub_mesh1, sub_mesh2))
-    }
-
-    pub fn merge_with(&mut self, other: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>) -> Result<(), Error>
+    pub fn merge_with(&mut self, other: &Mesh, stitches: &HashMap<VertexID, VertexID>) -> Result<(), Error>
     {
         let mut is_same_orientation = None;
         // Remove halfedges where the meshes should be stitched
         let mut halfedges_to_remove = HashSet::new();
         for (other_vertex_id1, self_vertex_id1) in stitches {
             for (other_vertex_id2, self_vertex_id2) in stitches {
-                if let Some(mut self_halfedge_id) = self.connecting_edge(&self_vertex_id1, &self_vertex_id2)
+                if let Some(self_halfedge_id) = self.connecting_edge(&self_vertex_id1, &self_vertex_id2)
                 {
                     let mut walker = self.walker_from_halfedge(&self_halfedge_id);
-                    if walker.face_id().is_some() { walker.twin(); }
+                    if walker.face_id().is_some() { walker.as_twin(); }
                     if walker.face_id().is_some() {
                         return Err(Error::MergeWillCreateNonManifoldMesh {message: format!("Merge at edge ({}, {}) will create non manifold mesh", self_vertex_id1, self_vertex_id2)});
                     }
@@ -120,7 +35,7 @@ impl DynamicMesh
                             Error::CannotCheckOrientationOfMesh {message: format!("No edge connecting ({}, {}) exists", other_vertex_id1, other_vertex_id2)}
                         )?;
                         let mut other_walker = other.walker_from_halfedge(&other_halfedge_id);
-                        if other_walker.face_id().is_some() { other_walker.twin(); }
+                        if other_walker.face_id().is_some() { other_walker.as_twin(); }
                         if other_walker.face_id().is_some() {
                             return Err(Error::MergeWillCreateNonManifoldMesh {message: format!("Merge at edge ({}, {}) will create non manifold mesh", other_vertex_id1, other_vertex_id2)});
                         }
@@ -138,7 +53,7 @@ impl DynamicMesh
         }
 
         let mut mapping = stitches.clone();
-        let mut get_or_create_vertex = |mesh: &mut DynamicMesh, vertex_id| -> VertexID {
+        let mut get_or_create_vertex = |mesh: &mut Mesh, vertex_id| -> VertexID {
             if let Some(vid) = mapping.get(&vertex_id) {return vid.clone();}
             let p = other.position(&vertex_id);
             let n = other.normal(&vertex_id).map(|n| n.clone());
@@ -147,7 +62,7 @@ impl DynamicMesh
             vid
         };
 
-        for face_id in other.face_iterator() {
+        for face_id in other.face_iter() {
             let vertex_ids = other.face_vertices(&face_id);
 
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
@@ -198,12 +113,12 @@ impl DynamicMesh
         let mut walker1 = self.walker_from_halfedge(halfedge_id1);
         let mut walker2 = self.walker_from_halfedge(halfedge_id2);
 
-        let edge1_alone =  walker1.face_id().is_none() && walker1.twin().face_id().is_none();
-        let edge1_interior =  walker1.face_id().is_some() && walker1.twin().face_id().is_some();
+        let edge1_alone =  walker1.face_id().is_none() && walker1.as_twin().face_id().is_none();
+        let edge1_interior =  walker1.face_id().is_some() && walker1.as_twin().face_id().is_some();
         let edge1_boundary = !edge1_alone && !edge1_interior;
 
-        let edge2_alone =  walker2.face_id().is_none() && walker2.twin().face_id().is_none();
-        let edge2_interior =  walker2.face_id().is_some() && walker2.twin().face_id().is_some();
+        let edge2_alone =  walker2.face_id().is_none() && walker2.as_twin().face_id().is_none();
+        let edge2_interior =  walker2.face_id().is_some() && walker2.as_twin().face_id().is_some();
         let edge2_boundary = !edge2_alone && !edge2_interior;
 
         if edge1_interior && !edge2_alone || edge2_interior && !edge1_alone {
@@ -218,13 +133,13 @@ impl DynamicMesh
         let mut vertex_id2 = None;
 
         if edge1_boundary {
-            if walker1.face_id().is_none() { walker1.twin(); };
+            if walker1.face_id().is_none() { walker1.as_twin(); };
             halfedge_to_remove1 = walker1.twin_id();
             halfedge_to_survive1 = walker1.halfedge_id();
             vertex_id1 = walker1.vertex_id();
         }
         if edge2_boundary {
-            if walker2.face_id().is_none() { walker2.twin(); };
+            if walker2.face_id().is_none() { walker2.as_twin(); };
             halfedge_to_remove2 = walker2.twin_id();
             halfedge_to_survive2 = walker2.halfedge_id();
             vertex_id2 = walker2.vertex_id();
@@ -238,12 +153,12 @@ impl DynamicMesh
 
                 halfedge_to_survive1 = walker2.halfedge_id();
                 vertex_id1 = walker2.vertex_id();
-                walker2.twin();
+                walker2.as_twin();
                 halfedge_to_survive2 = walker2.halfedge_id();
                 vertex_id2 = walker2.vertex_id();
             }
             else {
-                if vertex_id2 == walker1.vertex_id() { walker1.twin(); }
+                if vertex_id2 == walker1.vertex_id() { walker1.as_twin(); }
                 halfedge_to_remove1 = walker1.twin_id();
                 halfedge_to_survive1 = walker1.halfedge_id();
                 vertex_id1 = walker1.vertex_id();
@@ -257,12 +172,12 @@ impl DynamicMesh
 
                 halfedge_to_survive1 = walker1.halfedge_id();
                 vertex_id1 = walker1.vertex_id();
-                walker1.twin();
+                walker1.as_twin();
                 halfedge_to_survive2 = walker1.halfedge_id();
                 vertex_id2 = walker1.vertex_id();
             }
             else {
-                if vertex_id1 == walker2.vertex_id() { walker2.twin(); }
+                if vertex_id1 == walker2.vertex_id() { walker2.as_twin(); }
                 halfedge_to_remove2 = walker2.twin_id();
                 halfedge_to_survive2 = walker2.halfedge_id();
                 vertex_id2 = walker2.vertex_id();
@@ -279,8 +194,8 @@ impl DynamicMesh
 
     fn merge_vertices(&mut self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Result<VertexID, Error>
     {
-        for halfedge_id in self.halfedge_iterator() {
-            let mut walker = self.walker_from_halfedge(&halfedge_id);
+        for halfedge_id in self.halfedge_iter() {
+            let walker = self.walker_from_halfedge(&halfedge_id);
             if walker.vertex_id().unwrap() == *vertex_id2 {
                 self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), *vertex_id1);
             }
@@ -293,7 +208,7 @@ impl DynamicMesh
     fn find_overlapping_vertices(&self) -> Vec<Vec<VertexID>>
     {
         let mut to_check = HashSet::new();
-        self.vertex_iterator().for_each(|v| { to_check.insert(v); } );
+        self.vertex_iter().for_each(|v| { to_check.insert(v); } );
 
         let mut set_to_merge = Vec::new();
         while !to_check.is_empty() {
@@ -303,7 +218,7 @@ impl DynamicMesh
             let mut to_merge = Vec::new();
             for id2 in to_check.iter()
             {
-                if (self.position(&id1) - self.position(id2)).norm() < 0.00001
+                if (self.position(&id1) - self.position(id2)).magnitude() < 0.00001
                 {
                     to_merge.push(*id2);
                 }
@@ -327,7 +242,7 @@ impl DynamicMesh
             set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))
         };
         let mut to_check = HashSet::new();
-        self.face_iterator().for_each(|id| { to_check.insert(id); } );
+        self.face_iter().for_each(|id| { to_check.insert(id); } );
 
         let mut set_to_merge = Vec::new();
         while !to_check.is_empty() {
@@ -374,7 +289,7 @@ impl DynamicMesh
             set_of_vertices_to_merge.iter().find(|vec| vec.contains(&vertex_id))
         };
         let mut to_check = HashSet::new();
-        self.edge_iterator().for_each(|e| { to_check.insert(e); } );
+        self.edge_iter().for_each(|e| { to_check.insert(e); } );
 
         let mut set_to_merge = Vec::new();
         while !to_check.is_empty() {
@@ -411,7 +326,7 @@ impl DynamicMesh
 }
 
 // Stitches is a map of vertex id in the other mesh to vertex id in self where the two meshes should be connected.
-pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<VertexID, VertexID>) -> Result<DynamicMesh, Error>
+pub fn merge(mesh1: &Mesh, mesh2: &Mesh, stitches: &HashMap<VertexID, VertexID>) -> Result<Mesh, Error>
 {
     let mut mesh = mesh1.clone();
     mesh.merge_with(mesh2, stitches)?;
@@ -423,24 +338,23 @@ pub fn merge(mesh1: &DynamicMesh, mesh2: &DynamicMesh, stitches: &HashMap<Vertex
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::*;
-    use crate::dynamic_mesh::test_utility::*;
+    use crate::mesh::test_utility::*;
 
     #[test]
     fn test_face_face_merging_at_edge()
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
+        let mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.0, -2.0, -2.0, 0.5, 0.0];
-        let mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
+        let mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
 
         let mut mapping = HashMap::new();
-        for vertex_id1 in mesh1.vertex_iterator() {
-            for vertex_id2 in mesh2.vertex_iterator() {
-                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).norm() < 0.001 {
+        for vertex_id1 in mesh1.vertex_iter() {
+            for vertex_id2 in mesh2.vertex_iter() {
+                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).magnitude() < 0.001 {
                     mapping.insert(vertex_id2, vertex_id1);
                 }
             }
@@ -461,16 +375,16 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mesh1 = DynamicMesh::new_with_connectivity(indices1, positions1, None);
+        let mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.5, 0.0, -2.0, 0.0, -2.0];
-        let mesh2 = DynamicMesh::new_with_connectivity(indices2, positions2, None);
+        let mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
 
         let mut mapping = HashMap::new();
-        for vertex_id1 in mesh1.vertex_iterator() {
-            for vertex_id2 in mesh2.vertex_iterator() {
-                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).norm() < 0.001 {
+        for vertex_id1 in mesh1.vertex_iter() {
+            for vertex_id2 in mesh2.vertex_iter() {
+                if (*mesh1.position(&vertex_id1) - *mesh2.position(&vertex_id2)).magnitude() < 0.001 {
                     mapping.insert(vertex_id2, vertex_id1);
                 }
             }
@@ -487,30 +401,11 @@ mod tests {
     }
 
     #[test]
-    fn test_create_sub_mesh()
-    {
-        let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
-
-        let mut faces = HashSet::new();
-        for face_id in mesh.face_iterator() {
-            faces.insert(face_id);
-            break;
-        }
-
-        let sub_mesh = mesh.create_sub_mesh(&faces);
-
-        test_is_valid(&mesh).unwrap();
-        test_is_valid(&sub_mesh).unwrap();
-    }
-
-    #[test]
     fn test_splitting()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mesh = Mesh::new_with_connectivity(indices, positions, None);
 
         let (m1, m2) = mesh.split(&|mesh,
             he_id| {
@@ -533,7 +428,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
 
-        let mut mesh = DynamicMesh::new_with_connectivity((0..9).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..9).collect(), positions, None);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(4, mesh.no_vertices());
@@ -545,7 +440,7 @@ mod tests {
     #[test]
     fn test_merge_overlapping_primitives_of_cube()
     {
-        let mut mesh = crate::models::create_unconnected_cube().unwrap().to_dynamic();
+        let mut mesh = create_unconnected_cube();
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(8, mesh.no_vertices());
@@ -561,7 +456,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
 
-        let mut mesh = DynamicMesh::new_with_connectivity((0..9).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..9).collect(), positions, None);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(4, mesh.no_vertices());
@@ -577,7 +472,7 @@ mod tests {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,
                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5];
 
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(5, mesh.no_vertices());
@@ -594,7 +489,7 @@ mod tests {
                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5,
                                         -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0];
 
-        let mut mesh = DynamicMesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(5, mesh.no_vertices());
@@ -608,10 +503,10 @@ mod tests {
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions, None);
 
         let mut vertex_id1 = None;
-        for vertex_id in mesh.vertex_iterator() {
+        for vertex_id in mesh.vertex_iter() {
             if *mesh.position(&vertex_id) == vec3(0.0, 0.0, 0.0)
             {
                 if vertex_id1.is_none() { vertex_id1 = Some(vertex_id); }
@@ -632,10 +527,10 @@ mod tests {
     {
         let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0];
-        let mut mesh = DynamicMesh::new_with_connectivity((0..6).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions, None);
 
         let mut heid1 = None;
-        for (v0, v1) in mesh.edge_iterator() {
+        for (v0, v1) in mesh.edge_iter() {
             if mesh.position(&v0)[2] == 0.0 && mesh.position(&v1)[2] == 0.0
             {
                 let halfedge_id = mesh.connecting_edge(&v0, &v1).unwrap();
