@@ -1,5 +1,6 @@
 use std::rc::{Rc};
-use crate::mesh::*;
+use crate::mesh::Mesh;
+use crate::mesh::ids::*;
 use crate::mesh::connectivity_info::{HalfEdge, ConnectivityInfo};
 use std::collections::HashSet;
 use std::iter::FromIterator;

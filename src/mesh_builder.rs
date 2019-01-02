@@ -1,4 +1,4 @@
-use crate::mesh::*;
+use crate::mesh::Mesh;
 
 #[derive(Debug)]
 pub enum Error {

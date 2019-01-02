@@ -1,7 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use crate::*;
-use std;
+use crate::mesh::Mesh;
 
 #[derive(Debug)]
 pub enum Error {
