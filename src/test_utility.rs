@@ -232,5 +232,5 @@ pub fn create_unconnected_cube() -> Mesh
         -1.0, 0.0, 0.0
     ];
 
-    MeshBuilder::new().with_positions(positions).build().unwrap()
+    MeshBuilder::new().with_positions(positions).with_normals(normals).build().unwrap()
 }

@@ -44,7 +44,6 @@ impl Mesh
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::test_utility::*;
     use crate::MeshBuilder;
 
