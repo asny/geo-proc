@@ -88,7 +88,7 @@ impl MeshBuilder {
 
     pub fn with_normals(mut self, normals: Vec<f32>) -> Self
     {
-        self.positions = Some(normals);
+        self.normals = Some(normals);
         self
     }
 
