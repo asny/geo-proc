@@ -340,7 +340,7 @@ impl Mesh
     // *** Internal connectivity changing functions ***
     ///////////////////////////////////////////////////
 
-    pub(super) fn create_vertex(&mut self, position: Vec3, normal: Option<Vec3>) -> VertexID
+    fn create_vertex(&mut self, position: Vec3, normal: Option<Vec3>) -> VertexID
     {
         let id = self.connectivity_info.new_vertex();
         self.positions.insert(id.clone(), position);
@@ -348,7 +348,7 @@ impl Mesh
         id
     }
 
-    pub(super) fn create_twin_connectivity(&mut self)
+    fn create_twin_connectivity(&mut self)
     {
         let mut walker = self.walker();
         let edges: Vec<HalfEdgeID> = self.halfedge_iter().collect();
