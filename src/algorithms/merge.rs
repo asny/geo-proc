@@ -89,17 +89,18 @@ pub fn merge(mesh1: &Mesh, mesh2: &Mesh, stitches: &HashMap<VertexID, VertexID>)
 mod tests {
     use super::*;
     use crate::test_utility::*;
+    use crate::MeshBuilder;
 
     #[test]
     fn test_face_face_merging_at_edge()
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
+        let mesh1 = MeshBuilder::new().with_indices(indices1).with_positions(positions1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.0, -2.0, -2.0, 0.5, 0.0];
-        let mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
+        let mesh2 = MeshBuilder::new().with_indices(indices2).with_positions(positions2).build().unwrap();
 
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iter() {
@@ -125,11 +126,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mesh1 = Mesh::new_with_connectivity(indices1, positions1, None);
+        let mesh1 = MeshBuilder::new().with_indices(indices1).with_positions(positions1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.5, 0.0, -2.0, 0.0, -2.0];
-        let mesh2 = Mesh::new_with_connectivity(indices2, positions2, None);
+        let mesh2 = MeshBuilder::new().with_indices(indices2).with_positions(positions2).build().unwrap();
 
         let mut mapping = HashMap::new();
         for vertex_id1 in mesh1.vertex_iter() {

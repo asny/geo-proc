@@ -42,7 +42,7 @@ pub struct Mesh {
 
 impl Mesh
 {
-    pub(crate) fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> Mesh
+    fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> Mesh
     {
         let mut indices = vec![None; positions.len()/3];
         let mut positions_out = Vec::new();
@@ -101,7 +101,7 @@ impl Mesh
         mesh
     }
 
-    pub(crate) fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> Mesh
+    fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> Mesh
     {
         Mesh {positions, normals, connectivity_info}
     }
@@ -464,7 +464,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mesh = crate::MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
 
         let mut faces = std::collections::HashSet::new();
         for face_id in mesh.face_iter() {

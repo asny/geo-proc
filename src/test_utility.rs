@@ -1,4 +1,5 @@
 use crate::mesh::*;
+use crate::MeshBuilder;
 
 #[derive(Debug)]
 pub enum Error {
@@ -124,14 +125,14 @@ pub fn test_is_valid(mesh: &Mesh) -> Result<(), Error>
 pub fn create_single_face() -> Mesh
 {
     let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0];
-    Mesh::new_with_connectivity((0..3).collect(), positions, None)
+    MeshBuilder::new().with_positions(positions).build().unwrap()
 }
 
 pub fn create_two_connected_faces() -> Mesh
 {
     let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
     let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
-    Mesh::new_with_connectivity(indices, positions, None)
+    MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap()
 }
 
 pub fn create_three_connected_faces() -> Mesh
@@ -139,7 +140,7 @@ pub fn create_three_connected_faces() -> Mesh
     let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
     let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
     let normals: Vec<f32> = vec![0.0; 4 * 3];
-    Mesh::new_with_connectivity(indices, positions, Some(normals))
+    MeshBuilder::new().with_indices(indices).with_positions(positions).with_normals(normals).build().unwrap()
 }
 
 pub fn create_unconnected_cube() -> Mesh
@@ -231,6 +232,5 @@ pub fn create_unconnected_cube() -> Mesh
         -1.0, 0.0, 0.0
     ];
 
-    let indices = (0..positions.len() as u32/3).collect();
-    Mesh::new_with_connectivity(indices, positions, Some(normals))
+    MeshBuilder::new().with_positions(positions).build().unwrap()
 }

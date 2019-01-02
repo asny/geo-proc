@@ -46,13 +46,14 @@ impl Mesh
 mod tests {
     use super::*;
     use crate::test_utility::*;
+    use crate::MeshBuilder;
 
     #[test]
     fn test_splitting()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
 
         let (m1, m2) = mesh.split(&|mesh,
             he_id| {
