@@ -7,3 +7,5 @@ pub mod mesh_builder;
 pub mod prelude;
 
 pub use crate::algorithms::*;
+
+pub use crate::mesh_builder::MeshBuilder as MeshBuilder;
