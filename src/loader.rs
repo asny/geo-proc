@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use tobj;
-use crate::mesh::Mesh;
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -25,7 +25,7 @@ pub fn load_obj(name: &str) -> Result<Vec<Mesh>, Error>
     }
 
     for m in models {
-        let mut mesh_builder = crate::MeshBuilder::new().with_positions(m.mesh.positions);
+        let mut mesh_builder = crate::mesh_builder::MeshBuilder::new().with_positions(m.mesh.positions);
         if m.mesh.normals.len() > 0 {
             mesh_builder = mesh_builder.with_normals(m.mesh.normals);
         }

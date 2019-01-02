@@ -2,7 +2,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::collision::*;
-use crate::mesh::*;
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {

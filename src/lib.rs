@@ -4,7 +4,6 @@ pub mod loader;
 pub mod exporter;
 pub mod algorithms;
 pub mod mesh_builder;
+pub mod prelude;
 
-pub use crate::mesh::*;
 pub use crate::algorithms::*;
-pub use crate::mesh_builder::*;

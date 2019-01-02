@@ -1,4 +1,4 @@
-use crate::mesh::*;
+use crate::prelude::*;
 use crate::connected_components::*;
 use std::collections::HashSet;
 

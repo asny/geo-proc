@@ -31,10 +31,8 @@ mod connectivity_info;
 use crate::mesh::connectivity_info::ConnectivityInfo;
 use std::rc::Rc;
 use std::collections::HashMap;
-
-pub use crate::mesh::ids::*;
-pub use crate::mesh::math::*;
-pub use crate::mesh::traversal::*;
+use crate::mesh::ids::*;
+use crate::mesh::math::*;
 
 #[derive(Debug)]
 pub struct Mesh {
