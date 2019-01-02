@@ -207,6 +207,30 @@ impl Mesh
         Mesh::new_internal(positions, normals, Rc::new(info))
     }
 
+    pub fn append(&mut self, other: &Self)
+    {
+        let mut mapping: HashMap<VertexID, VertexID> = HashMap::new();
+        let mut get_or_create_vertex = |mesh: &mut Mesh, vertex_id| -> VertexID {
+            if let Some(vid) = mapping.get(&vertex_id) {return vid.clone();}
+            let p = other.position(&vertex_id);
+            let n = other.normal(&vertex_id).map(|n| n.clone());
+            let vid = mesh.create_vertex(p.clone(), n);
+            mapping.insert(vertex_id, vid);
+            vid
+        };
+
+        for face_id in other.face_iter() {
+            let vertex_ids = other.face_vertices(&face_id);
+
+            let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
+            let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);
+            let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
+            self.connectivity_info.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
+        }
+
+        self.create_twin_connectivity();
+    }
+
     pub fn flip_orientation(&mut self)
     {
         for vertex_id in self.vertex_iter() {
