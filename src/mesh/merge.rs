@@ -338,7 +338,7 @@ pub fn merge(mesh1: &Mesh, mesh2: &Mesh, stitches: &HashMap<VertexID, VertexID>)
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh::test_utility::*;
+    use crate::test_utility::*;
 
     #[test]
     fn test_face_face_merging_at_edge()

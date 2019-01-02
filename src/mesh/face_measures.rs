@@ -45,7 +45,7 @@ impl Mesh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh::test_utility::*;
+    use crate::test_utility::*;
 
     #[test]
     fn test_face_normal() {

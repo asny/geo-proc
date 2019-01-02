@@ -25,7 +25,6 @@ pub mod quality;
 pub mod edge_measures;
 pub mod face_measures;
 
-pub mod test_utility;
 mod connectivity_info;
 
 use crate::mesh::connectivity_info::ConnectivityInfo;
@@ -370,7 +369,7 @@ impl Clone for Mesh {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh::test_utility::*;
+    use crate::test_utility::*;
 
     #[test]
     fn test_one_face_connectivity() {

@@ -180,7 +180,7 @@ fn point_line_segment_distance( point: &Vec3, p0: &Vec3, p1: &Vec3 ) -> f32
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh::test_utility::*;
+    use crate::test_utility::*;
     use crate::mesh_builder::MeshBuilder;
 
     #[test]

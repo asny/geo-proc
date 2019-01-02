@@ -323,7 +323,7 @@ impl Mesh
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh::test_utility::*;
+    use crate::test_utility::*;
     use crate::mesh_builder::MeshBuilder;
 
     #[test]
