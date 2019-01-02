@@ -41,3 +41,30 @@ impl Mesh
         Ok((sub_mesh1, sub_mesh2))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utility::*;
+
+    #[test]
+    fn test_splitting()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
+        let mesh = Mesh::new_with_connectivity(indices, positions, None);
+
+        let (m1, m2) = mesh.split(&|mesh,
+            he_id| {
+                let (p0, p1) = mesh.edge_positions(he_id);
+                p0.z > 0.75 && p0.z < 1.75 && p1.z > 0.75 && p1.z < 1.75
+            }).unwrap();
+
+        test_is_valid(&mesh).unwrap();
+        test_is_valid(&m1).unwrap();
+        test_is_valid(&m2).unwrap();
+
+        assert_eq!(m1.no_faces(), 2);
+        assert_eq!(m2.no_faces(), 2);
+    }
+}

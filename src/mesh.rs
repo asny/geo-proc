@@ -18,7 +18,7 @@ pub mod math {
 
 pub mod ids;
 pub mod traversal;
-pub mod merge;
+pub mod merge_overlapping_primitives;
 pub mod connectivity;
 pub mod basic_operations;
 pub mod quality;

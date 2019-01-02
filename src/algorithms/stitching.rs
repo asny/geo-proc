@@ -6,19 +6,19 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {
-    Merge(crate::mesh::merge::Error),
-    Split(crate::algorithms::split::Error),
+    Merge(crate::merge::Error),
+    Split(crate::split::Error),
     EdgeToSplitDoesNotExist {message: String}
 }
 
-impl From<crate::mesh::merge::Error> for Error {
-    fn from(other: crate::mesh::merge::Error) -> Self {
+impl From<crate::merge::Error> for Error {
+    fn from(other: crate::merge::Error) -> Self {
         Error::Merge(other)
     }
 }
 
-impl From<crate::algorithms::split::Error> for Error {
-    fn from(other: crate::algorithms::split::Error) -> Self {
+impl From<crate::split::Error> for Error {
+    fn from(other: crate::split::Error) -> Self {
         Error::Split(other)
     }
 }
