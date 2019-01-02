@@ -158,7 +158,7 @@ impl Mesh
         Some(nor)
     }
 
-    pub fn create_sub_mesh(&self, faces: &std::collections::HashSet<FaceID>) -> Mesh
+    pub fn clone_subset(&self, faces: &std::collections::HashSet<FaceID>) -> Mesh
     {
         let info = ConnectivityInfo::new(faces.len(), faces.len());
         for face_id in faces {
@@ -496,7 +496,7 @@ mod tests {
             break;
         }
 
-        let sub_mesh = mesh.create_sub_mesh(&faces);
+        let sub_mesh = mesh.clone_subset(&faces);
 
         test_is_valid(&mesh).unwrap();
         test_is_valid(&sub_mesh).unwrap();

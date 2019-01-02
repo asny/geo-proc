@@ -36,8 +36,8 @@ impl Mesh
             return Err(Error::SplittingEdgesDidNotFormAClosesCurve { message: format!("It was not possible to split a mesh in two parts, the splitting edges and boundary edges did not form a closed curve.") })
         }
 
-        let sub_mesh1 = self.create_sub_mesh(&cc1);
-        let sub_mesh2 = self.create_sub_mesh(&cc2);
+        let sub_mesh1 = self.clone_subset(&cc1);
+        let sub_mesh2 = self.clone_subset(&cc2);
         Ok((sub_mesh1, sub_mesh2))
     }
 }
