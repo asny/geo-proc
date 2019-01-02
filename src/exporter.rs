@@ -16,13 +16,15 @@ impl From<std::io::Error> for Error {
     }
 }
 
-pub fn save(mesh: &Mesh, filename: &str) -> Result<(), Error>
+pub fn save(mesh: &Mesh, path: &str) -> Result<(), Error>
 {
-    let splitted: Vec<&str> = filename.split('.').collect();
-    if splitted.len() == 0
+    let path_split: Vec<&str> = path.split('/').collect();
+    if path_split.len() == 0
     {
         return Err(Error::FileNameNotSpecified {message: format!("Filename is not specified!")})
     }
+    let filename = path_split.last().unwrap();
+    let splitted: Vec<&str> = filename.split('.').collect();
     if splitted.len() == 1
     {
         return Err(Error::ExtensionNotSpecified {message: format!("Extension for file {} is not specified!", splitted[0])})
@@ -36,7 +38,7 @@ pub fn save(mesh: &Mesh, filename: &str) -> Result<(), Error>
         Ok(parse_as_poly(mesh))
     }
     else { Err(Error::FileTypeNotSupported {message: format!("Extension {} of file {} is not supported!", extension, splitted[0])}) };
-    save_model(&data?, filename)?;
+    save_model(&data?, path)?;
     Ok(())
 }
 
