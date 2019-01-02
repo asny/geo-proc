@@ -6,20 +6,20 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {
-    Merge(crate::merge::Error),
     Split(crate::split::Error),
+    Merge(crate::merge::Error),
     EdgeToSplitDoesNotExist {message: String}
-}
-
-impl From<crate::merge::Error> for Error {
-    fn from(other: crate::merge::Error) -> Self {
-        Error::Merge(other)
-    }
 }
 
 impl From<crate::split::Error> for Error {
     fn from(other: crate::split::Error) -> Self {
         Error::Split(other)
+    }
+}
+
+impl From<crate::merge::Error> for Error {
+    fn from(other: crate::merge::Error) -> Self {
+        Error::Merge(other)
     }
 }
 
@@ -40,7 +40,7 @@ pub fn stitch(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<Mesh, Error>
 
     let mut m1 = if mesh11.no_faces() > mesh12.no_faces() { mesh11 } else { mesh12 };
     let m2 = if mesh21.no_faces() > mesh22.no_faces() { mesh21 } else { mesh22 };
-    m1.merge_with(&m2, &seam2)?;
+    m1.merge_with(&m2)?;
 
     Ok(m1)
 }
