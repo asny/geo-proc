@@ -6,25 +6,7 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {
-    Merge(crate::merge::Error),
     EdgeToSplitDoesNotExist {message: String}
-}
-
-impl From<crate::merge::Error> for Error {
-    fn from(other: crate::merge::Error) -> Self {
-        Error::Merge(other)
-    }
-}
-
-pub fn stitch(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<Mesh, Error>
-{
-    let (meshes1, meshes2) = split_meshes_at_intersections(mesh1, mesh2)?;
-
-    let mut m1 = meshes1.first().unwrap().clone();
-    let m2 = meshes2.first().unwrap();
-
-    m1.merge_with(&m2)?;
-    Ok(m1)
 }
 
 pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
@@ -528,14 +510,21 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        assert_eq!(meshes1.len(), 1);
+        assert_eq!(meshes2.len(), 1);
+
+        let mut m1 = meshes1[0].clone();
+        let mut m2 = meshes2[0].clone();
+        m1.merge_with(&m2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
 
-        assert_eq!(stitched.no_faces(), 2);
-        assert_eq!(stitched.no_vertices(), 4);
-        test_is_valid(&stitched).unwrap();
+        assert_eq!(m1.no_faces(), 2);
+        assert_eq!(m1.no_vertices(), 4);
+        test_is_valid(&m1).unwrap();
+        test_is_valid(&m2).unwrap();
     }
 
     #[test]
@@ -549,14 +538,21 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 1.0,  -2.0, 0.0, -1.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        assert_eq!(meshes1.len(), 1);
+        assert_eq!(meshes2.len(), 1);
+
+        let mut m1 = meshes1[0].clone();
+        let mut m2 = meshes2[0].clone();
+        m1.merge_with(&m2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
 
-        assert_eq!(stitched.no_faces(), 4);
-        assert_eq!(stitched.no_vertices(), 6);
-        test_is_valid(&stitched).unwrap();
+        assert_eq!(m1.no_faces(), 4);
+        assert_eq!(m1.no_vertices(), 6);
+        test_is_valid(&m1).unwrap();
+        test_is_valid(&m2).unwrap();
     }
 
     #[test]
@@ -564,15 +560,21 @@ mod tests {
     {
         let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
-        for vertex_id in mesh2.vertex_iter() {
-            mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
-        }
-        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
+        mesh2.translate(&vec3(0.5, 0.5, 0.5));
+
+        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        assert_eq!(meshes1.len(), 2);
+        assert_eq!(meshes2.len(), 2);
+
+        let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
+        let mut m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+        m1.merge_with(&m2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
 
-        test_is_valid(&stitched).unwrap();
+        test_is_valid(&m1).unwrap();
+        test_is_valid(&m2).unwrap();
     }
 
     #[test]
@@ -597,15 +599,19 @@ mod tests {
         mesh2.translate(&vec3(0.5, 2.0, 0.5));
         mesh2.update_vertex_normals();
 
+        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        assert_eq!(meshes1.len(), 2);
+        assert_eq!(meshes2.len(), 2);
+
+        let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
+        let mut m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+        m1.merge_with(&m2).unwrap();
+
         test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
 
-        let stitched = stitch(&mut mesh1, &mut mesh2).unwrap();
-
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
-
-        test_is_valid(&stitched).unwrap();
+        test_is_valid(&m1).unwrap();
+        test_is_valid(&m2).unwrap();
     }
 
     fn create_simple_mesh_x_z() -> Mesh
