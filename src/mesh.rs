@@ -238,14 +238,14 @@ impl Mesh
             self.connectivity_info.set_vertex_halfedge(&vertex_id, Some(twin_id));
         }
 
-        let mut map = HashMap::new();
+        let mut update_list = Vec::with_capacity(self.no_halfedges());
         for halfedge_id in self.halfedge_iter() {
             let mut walker = self.walker_from_halfedge(&halfedge_id);
             let new_next_id = walker.previous_id();
             let new_vertex_id = walker.as_twin().vertex_id().unwrap();
-            map.insert(halfedge_id, (new_vertex_id, new_next_id));
+            update_list.push((halfedge_id, new_vertex_id, new_next_id));
         }
-        for (halfedge_id, (new_vertex_id, new_next_id)) in map {
+        for (halfedge_id, new_vertex_id, new_next_id) in update_list {
             self.connectivity_info.set_halfedge_vertex(&halfedge_id, new_vertex_id);
             if let Some(next_id) = new_next_id {
                 self.connectivity_info.set_halfedge_next(&halfedge_id, Some(next_id));
