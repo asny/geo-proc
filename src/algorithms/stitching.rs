@@ -515,7 +515,7 @@ mod tests {
         assert_eq!(meshes2.len(), 1);
 
         let mut m1 = meshes1[0].clone();
-        let mut m2 = meshes2[0].clone();
+        let m2 = meshes2[0].clone();
         m1.merge_with(&m2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
@@ -543,7 +543,7 @@ mod tests {
         assert_eq!(meshes2.len(), 1);
 
         let mut m1 = meshes1[0].clone();
-        let mut m2 = meshes2[0].clone();
+        let m2 = meshes2[0].clone();
         m1.merge_with(&m2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
@@ -567,7 +567,7 @@ mod tests {
         assert_eq!(meshes2.len(), 2);
 
         let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
-        let mut m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+        let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
         m1.merge_with(&m2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
@@ -604,7 +604,7 @@ mod tests {
         assert_eq!(meshes2.len(), 2);
 
         let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
-        let mut m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+        let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
         m1.merge_with(&m2).unwrap();
 
         test_is_valid(&mesh1).unwrap();
