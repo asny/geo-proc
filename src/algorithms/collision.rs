@@ -16,40 +16,20 @@ pub fn find_face_edge_intersections(mesh1: &Mesh, face_id: &FaceID, mesh2: &Mesh
     let p0 = mesh2.position(&edge.0);
     let p1 = mesh2.position(&edge.1);
 
-    let p = mesh1.position(&mesh1.walker_from_face(face_id).vertex_id().unwrap());
-    let n = mesh1.face_normal(face_id);
-
-    match plane_line_piece_intersection(&p0, &p1, p, &n) {
-        Some(PlaneLinepieceIntersectionResult::LineInPlane) => {
-            if let Some(id1) = find_face_point_intersection_when_point_in_plane(mesh1, face_id, p0 ) {
-                if let Some(id1_) = find_face_point_intersection_when_point_in_plane(mesh1, face_id, p1 ) {
-                    return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0},
-                                 Some(Intersection{id1: id1_, id2: PrimitiveID::Vertex(edge.1), point: *p1})));
-                }
-                else {
-                    return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0}, None));
-                }
+    if let Some(intersection) = find_face_line_piece_intersection(mesh1, face_id, &p0, &p1)
+    {
+        let mut id2 = PrimitiveID::Edge(edge.clone());
+        let mut intersection2 = None;
+        if (intersection.point - p0).magnitude() < MARGIN {
+            id2 = PrimitiveID::Vertex(edge.0);
+            if let Some(id) = find_face_point_intersection(mesh1, face_id, p1 ) {
+                intersection2 = Some(Intersection{id1: id, id2: PrimitiveID::Vertex(edge.1), point: *p1});
             }
-            else if let Some(id1) = find_face_point_intersection_when_point_in_plane(mesh1, face_id, p1 ) {
-                return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1}, None));
-            }
-        },
-        Some(PlaneLinepieceIntersectionResult::P0InPlane) => {
-            if let Some(id1) = find_face_point_intersection_when_point_in_plane(mesh1, face_id, p0 ) {
-                return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.0), point: *p0}, None));
-            }
-        },
-        Some(PlaneLinepieceIntersectionResult::P1InPlane) => {
-            if let Some(id1) = find_face_point_intersection_when_point_in_plane(mesh1, face_id, p1 ) {
-                return Some((Intersection{id1, id2: PrimitiveID::Vertex(edge.1), point: *p1}, None));
-            }
-        },
-        Some(PlaneLinepieceIntersectionResult::Intersection(point)) => {
-            if let Some(id1) = find_face_point_intersection_when_point_in_plane(mesh1, face_id, &point ) {
-                return Some((Intersection{id1, id2: PrimitiveID::Edge(edge.clone()), point}, None));
-            }
-        },
-        None => {}
+        }
+        else if (intersection.point - p1).magnitude() < MARGIN {
+            id2 = PrimitiveID::Vertex(edge.1);
+        }
+        return Some((Intersection {id1: intersection.id, id2, point: intersection.point}, intersection2));
     }
 
     None
