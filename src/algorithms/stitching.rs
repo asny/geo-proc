@@ -163,7 +163,7 @@ fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, 
     {
         for new_face_id in new_faces.iter()
         {
-            if let Some(id) = find_face_intersection(mesh, new_face_id, point) { return id; }
+            if let Some(id) = find_face_point_intersection(mesh, new_face_id, point) { return id; }
         }
         unreachable!()
     }

@@ -72,7 +72,18 @@ pub fn find_edge_intersection(mesh: &Mesh, edge: &(VertexID, VertexID), point: &
     None
 }
 
-pub fn find_face_intersection(mesh: &Mesh, face_id: &FaceID, point: &Vec3) -> Option<PrimitiveID>
+pub fn find_face_point_intersection(mesh: &Mesh, face_id: &FaceID, point: &Vec3) -> Option<PrimitiveID>
+{
+    let p = *mesh.position(&mesh.walker_from_face(face_id).vertex_id().unwrap());
+    let n = mesh.face_normal(face_id);
+    let v = (point - p).normalize();
+    if n.dot(v).abs() > MARGIN { return None; }
+
+    find_face_intersection(mesh, face_id, point)
+}
+
+// Assumes that the point lies in the plane spanned by the face
+fn find_face_intersection(mesh: &Mesh, face_id: &FaceID, point: &Vec3) -> Option<PrimitiveID>
 {
     let face_vertices = mesh.ordered_face_vertices(face_id);
     let v0 = face_vertices.0;
