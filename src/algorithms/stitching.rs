@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::collision::*;
 use crate::prelude::*;
+use crate::algorithms::connected_components::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -11,20 +12,44 @@ pub enum Error {
 
 pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
 {
+    let (components1, components2) = split_meshes_at_intersections_and_return_components(mesh1, mesh2)?;
+    let mut meshes1 = Vec::new();
+    for component in components1.iter() {
+        meshes1.push(mesh1.clone_subset(component));
+    }
+    let mut meshes2 = Vec::new();
+    for component in components2.iter() {
+        meshes2.push(mesh2.clone_subset(component));
+    }
+    Ok((meshes1, meshes2))
+}
+
+pub fn split_meshes_at_intersections_and_return_components(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<HashSet<FaceID>>, Vec<HashSet<FaceID>>), Error>
+{
     let stitches = split_meshes(mesh1, mesh2)?;
-    if stitches.iter().len() == 0 { return Ok((vec![mesh1.clone()], vec![mesh2.clone()])) }
+    if stitches.iter().len() == 0 { return Ok((vec![mesh1.face_iter().collect()], vec![mesh2.face_iter().collect()])) }
 
     let mut seam1 = HashMap::new();
     stitches.iter().for_each(|pair| {seam1.insert(pair.0.clone(), pair.1.clone());});
-    let meshes1 = mesh1.split(
-                         &|mesh, halfedge_id| { is_at_seam(mesh, mesh2, &seam1, halfedge_id) });
-
     let mut seam2 = HashMap::new();
     stitches.iter().for_each(|pair| {seam2.insert(pair.1, pair.0);});
-    let meshes2 = mesh2.split(
-                         &|mesh, halfedge_id| { is_at_seam(mesh, mesh1, &seam2, halfedge_id) });
+
+    let meshes1 = split_mesh_into_components(mesh1, mesh2, &seam1);
+    let meshes2 = split_mesh_into_components(mesh2, mesh1, &seam2);
 
     Ok((meshes1, meshes2))
+}
+
+fn split_mesh_into_components(mesh: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID, VertexID>) -> Vec<HashSet<FaceID>>
+{
+    let mut components: Vec<HashSet<FaceID>> = Vec::new();
+    for face_id in mesh.face_iter() {
+        if components.iter().find(|com| com.contains(&face_id)).is_none() {
+            let component = connected_component_with_limit(mesh, &face_id, &|halfedge_id| { is_at_seam(mesh, mesh2, seam, &halfedge_id) });
+            components.push(component);
+        }
+    }
+    components
 }
 
 fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
