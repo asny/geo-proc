@@ -6,15 +6,8 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {
-    Split(crate::split::Error),
     Merge(crate::merge::Error),
     EdgeToSplitDoesNotExist {message: String}
-}
-
-impl From<crate::split::Error> for Error {
-    fn from(other: crate::split::Error) -> Self {
-        Error::Split(other)
-    }
 }
 
 impl From<crate::merge::Error> for Error {
@@ -25,24 +18,31 @@ impl From<crate::merge::Error> for Error {
 
 pub fn stitch(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<Mesh, Error>
 {
+    let (meshes1, meshes2) = split_meshes_at_intersections(mesh1, mesh2)?;
+
+    let mut m1 = meshes1.first().unwrap().clone();
+    let m2 = meshes2.first().unwrap();
+
+    m1.merge_with(&m2)?;
+    Ok(m1)
+}
+
+pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
+{
     let stitches = split_meshes(mesh1, mesh2)?;
-    if stitches.iter().len() == 0 { return Ok(mesh1.clone()) }
+    if stitches.iter().len() == 0 { return Ok((vec![mesh1.clone()], vec![mesh2.clone()])) }
 
     let mut seam1 = HashMap::new();
     stitches.iter().for_each(|pair| {seam1.insert(pair.0.clone(), pair.1.clone());});
-    let (mesh11, mesh12) = mesh1.split(
-                                 &|mesh, halfedge_id| { is_at_seam(mesh, mesh2, &seam1, halfedge_id) })?;
+    let meshes1 = mesh1.split(
+                         &|mesh, halfedge_id| { is_at_seam(mesh, mesh2, &seam1, halfedge_id) });
 
     let mut seam2 = HashMap::new();
     stitches.iter().for_each(|pair| {seam2.insert(pair.1, pair.0);});
-    let (mesh21, mesh22) = mesh2.split(
-                                 &|mesh, halfedge_id| { is_at_seam(mesh, mesh1, &seam2, halfedge_id) })?;
+    let meshes2 = mesh2.split(
+                         &|mesh, halfedge_id| { is_at_seam(mesh, mesh1, &seam2, halfedge_id) });
 
-    let mut m1 = if mesh11.no_faces() > mesh12.no_faces() { mesh11 } else { mesh12 };
-    let m2 = if mesh21.no_faces() > mesh22.no_faces() { mesh21 } else { mesh22 };
-    m1.merge_with(&m2)?;
-
-    Ok(m1)
+    Ok((meshes1, meshes2))
 }
 
 fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: &HalfEdgeID) -> bool
