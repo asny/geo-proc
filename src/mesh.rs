@@ -456,13 +456,12 @@ mod tests {
 
     #[test]
     fn test_one_face_connectivity() {
-        let mut mesh = Mesh::new_with_connectivity(vec![], vec![], None);
+        let mut mesh = Mesh::new_with_connectivity(vec![0, 1, 2], vec![0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0], None);
 
-        let v1 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
-        let v2 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
-        let v3 = mesh.create_vertex(vec3(0.0, 0.0, 0.0), None);
-        let f1 = mesh.connectivity_info.create_face(&v1, &v2, &v3);
-        mesh.create_twin_connectivity();
+        let f1 = mesh.face_iter().next().unwrap();
+        let v1 = mesh.walker_from_face(&f1).vertex_id().unwrap();
+        let v2 = mesh.walker_from_face(&f1).as_next().vertex_id().unwrap();
+        let v3 = mesh.walker_from_face(&f1).as_previous().vertex_id().unwrap();
 
         let t1 = mesh.walker_from_vertex(&v1).vertex_id();
         assert_eq!(t1, Some(v2.clone()));
@@ -487,6 +486,8 @@ mod tests {
 
         let t8 = mesh.walker_from_vertex(&v3).face_id();
         assert_eq!(t8, Some(f1));
+
+        test_is_valid(&mesh).unwrap();
     }
 
     #[test]
