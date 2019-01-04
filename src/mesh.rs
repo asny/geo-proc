@@ -99,33 +99,27 @@ impl Mesh
             let v1 = VertexID::new(indices[face * 3 + 1] as usize);
             let v2 = VertexID::new(indices[face * 3 + 2] as usize);
 
-            let mut twins = [None; 3];
-            for halfedge_id in mesh.halfedge_iter() {
-                walker.as_halfedge_walker(&halfedge_id);
-                if walker.twin_id().is_none() {
+            let face_id = mesh.connectivity_info.create_face(&v0, &v1, &v2);
+
+            for twin_id in mesh.halfedge_iter() {
+                walker.as_halfedge_walker(&twin_id);
+                if walker.twin_id().is_none() && walker.face_id().unwrap() != face_id {
                     let vertex_id0 = walker.vertex_id().unwrap();
                     let vertex_id1 = walker.as_previous().vertex_id().unwrap();
 
                     if vertex_id0 == v0 && vertex_id1 == v1 || vertex_id0 == v1 && vertex_id1 == v0 {
-                        twins[0] = Some(halfedge_id);
+                        let halfedge_id = mesh.walker_from_face(&face_id).halfedge_id().unwrap();
+                        mesh.connectivity_info.set_halfedge_twin(halfedge_id, twin_id);
                     }
                     if vertex_id0 == v1 && vertex_id1 == v2 || vertex_id0 == v2 && vertex_id1 == v1 {
-                        twins[1] = Some(halfedge_id);
+                        let halfedge_id = mesh.walker_from_face(&face_id).as_next().halfedge_id().unwrap();
+                        mesh.connectivity_info.set_halfedge_twin(halfedge_id, twin_id);
                     }
                     if vertex_id0 == v2 && vertex_id1 == v0 || vertex_id0 == v0 && vertex_id1 == v2 {
-                        twins[2] = Some(halfedge_id);
+                        let halfedge_id = mesh.walker_from_face(&face_id).as_previous().halfedge_id().unwrap();
+                        mesh.connectivity_info.set_halfedge_twin(halfedge_id, twin_id);
                     }
                 }
-            }
-
-            let face_id = mesh.connectivity_info.create_face(&v0, &v1, &v2);
-
-            let mut i = 0;
-            for walker in mesh.face_halfedge_iter(&face_id) {
-                if let Some(twin_id) = twins[i] {
-                    mesh.connectivity_info.set_halfedge_twin(twin_id, walker.halfedge_id().unwrap());
-                }
-                i += 1;
             }
         }
 
