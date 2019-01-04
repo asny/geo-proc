@@ -64,7 +64,7 @@ mod tests {
         assert_eq!(mesh1.no_faces(), 2);
         assert_eq!(mesh1.no_vertices(), 4);
 
-        //test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh1).unwrap();
         test_is_valid(&mesh2).unwrap();
     }
 }
