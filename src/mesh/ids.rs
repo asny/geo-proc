@@ -15,7 +15,7 @@ impl VertexID {
 
 impl fmt::Display for VertexID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(id: {})", self.val)
+        write!(f, "{}", self.val)
     }
 }
 
@@ -34,7 +34,7 @@ impl HalfEdgeID {
 
 impl fmt::Display for HalfEdgeID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(id: {})", self.val)
+        write!(f, "{}", self.val)
     }
 }
 
@@ -53,7 +53,7 @@ impl FaceID {
 
 impl fmt::Display for FaceID {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(id: {})", self.val)
+        write!(f, "{}", self.val)
     }
 }
 

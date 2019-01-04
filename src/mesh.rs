@@ -390,6 +390,18 @@ impl Clone for Mesh {
     }
 }
 
+impl std::fmt::Display for Mesh {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        writeln!(f, "**** Connectivity: ****")?;
+        writeln!(f, "{}", self.connectivity_info)?;
+        writeln!(f, "**** Positions: ****")?;
+        writeln!(f, "{:?}", self.positions)?;
+        writeln!(f, "**** Normals: ****")?;
+        writeln!(f, "{:?}", self.normals)?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

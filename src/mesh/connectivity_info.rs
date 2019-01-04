@@ -239,6 +239,30 @@ impl ConnectivityInfo {
     }
 }
 
+impl std::fmt::Display for ConnectivityInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        writeln!(f, "**** VERTICES: ****")?;
+        let vertices = RefCell::borrow(&self.vertices);
+        writeln!(f, "Count: {}", vertices.len())?;
+        for (id, info) in vertices.iter() {
+            writeln!(f, "{}: {:?}", id, info)?;
+        }
+        writeln!(f, "**** Halfedges: ****")?;
+        let halfedges = RefCell::borrow(&self.halfedges);
+        writeln!(f, "Count: {}", halfedges.len())?;
+        for (id, info) in halfedges.iter() {
+            writeln!(f, "{}: {:?}", id, info)?;
+        }
+        writeln!(f, "**** Faces: ****")?;
+        let faces = RefCell::borrow(&self.faces);
+        writeln!(f, "Count: {}", faces.len())?;
+        for (id, info) in faces.iter() {
+            writeln!(f, "{}: {:?}", id, info)?;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Vertex {
     pub halfedge: Option<HalfEdgeID>
