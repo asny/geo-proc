@@ -35,6 +35,32 @@ impl Mesh {
             self.connectivity_info.set_halfedge_next(&halfedge_id.unwrap(), *new_next_id);
         }
     }
+
+    pub fn fix_orientation(&mut self)
+    {
+        let mut visited_faces = std::collections::HashSet::new();
+        for face_id in self.face_iter() {
+            self.correct_orientation_of(&face_id, &mut visited_faces);
+        }
+    }
+
+    fn correct_orientation_of(&mut self, face_id: &FaceID, visited_faces: &mut std::collections::HashSet<FaceID>)
+    {
+        if !visited_faces.contains(face_id)
+        {
+            visited_faces.insert(*face_id);
+            for mut walker in self.face_halfedge_iter(face_id) {
+                let vertex_id = walker.vertex_id();
+                if let Some(face_id_to_test) = walker.as_twin().face_id()
+                {
+                    if vertex_id == walker.vertex_id() {
+                        self.flip_orientation_of_face(&face_id_to_test)
+                    }
+                    self.correct_orientation_of(&face_id_to_test, visited_faces);
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
