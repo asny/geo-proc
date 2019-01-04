@@ -1,4 +1,6 @@
-use crate::mesh::*;
+
+use crate::mesh::Mesh;
+use crate::mesh::ids::*;
 
 impl Mesh
 {
