@@ -573,4 +573,21 @@ mod tests {
         test_is_valid(&mesh).unwrap();
 
     }
+
+    #[test]
+    fn test_flip_orientation()
+    {
+        let mut mesh = crate::MeshBuilder::new().cube().build().unwrap();
+
+        let mut map = HashMap::new();
+        for face_id in mesh.face_iter() {
+            map.insert(face_id, mesh.face_normal(&face_id));
+        }
+        mesh.flip_orientation();
+
+        test_is_valid(&mesh).unwrap();
+        for face_id in mesh.face_iter() {
+            assert_eq!(mesh.face_normal(&face_id), -*map.get(&face_id).unwrap());
+        }
+    }
 }
