@@ -124,17 +124,8 @@ impl Mesh
             }
         }
 
-        // Create boundary halfedges
-        let mut walker = mesh.walker();
-        for halfedge_id in mesh.halfedge_iter()
-        {
-            walker.as_halfedge_walker(&halfedge_id);
-            if walker.twin_id().is_none()
-            {
-                let boundary_halfedge_id = mesh.connectivity_info.new_halfedge(walker.as_previous().vertex_id(), None, None);
-                mesh.connectivity_info.set_halfedge_twin(halfedge_id, boundary_halfedge_id);
-            }
-        }
+        mesh.create_boundary_edges();
+
         mesh
     }
 
@@ -256,16 +247,40 @@ impl Mesh
             vid
         };
 
-        for face_id in other.face_iter() {
-            let vertex_ids = other.face_vertices(&face_id);
+        let mut face_mapping: HashMap<FaceID, FaceID> = HashMap::new();
+        for other_face_id in other.face_iter() {
+            let vertex_ids = other.face_vertices(&other_face_id);
 
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
             let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);
             let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
-            self.connectivity_info.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
+            let new_face_id = self.connectivity_info.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
+
+            for mut walker in other.face_halfedge_iter(&other_face_id) {
+                if let Some(fid) = walker.as_twin().face_id()
+                {
+                    if let Some(self_face_id) = face_mapping.get(&fid)
+                    {
+                        for mut walker1 in self.face_halfedge_iter(&self_face_id)
+                        {
+                            let source_vertex_id = walker1.vertex_id().unwrap();
+                            let sink_vertex_id = walker1.as_next().vertex_id().unwrap();
+
+                            for mut walker2 in self.face_halfedge_iter(&new_face_id)
+                            {
+                                if sink_vertex_id == walker2.vertex_id().unwrap() && source_vertex_id == walker2.as_next().vertex_id().unwrap() {
+                                    self.connectivity_info.set_halfedge_twin(walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            face_mapping.insert(other_face_id, new_face_id);
         }
 
-        self.create_twin_connectivity();
+        self.create_boundary_edges();
     }
 
     ////////////////////////////////////////////
@@ -363,36 +378,16 @@ impl Mesh
         id
     }
 
-    fn create_twin_connectivity(&mut self)
+    fn create_boundary_edges(&mut self)
     {
         let mut walker = self.walker();
-        let edges: Vec<HalfEdgeID> = self.halfedge_iter().collect();
-
-        for i1 in 0..edges.len()
+        for halfedge_id in self.halfedge_iter()
         {
-            let halfedge_id1 = edges[i1];
-            if walker.as_halfedge_walker(&halfedge_id1).twin_id().is_none()
+            walker.as_halfedge_walker(&halfedge_id);
+            if walker.twin_id().is_none()
             {
-                let vertex_id1 = walker.vertex_id().unwrap();
-                let vertex_id2 = walker.as_previous().vertex_id().unwrap();
-
-                let mut halfedge2 = None;
-                for i2 in i1+1..edges.len()
-                {
-                    let halfedge_id2 = &edges[i2];
-                    if walker.as_halfedge_walker(halfedge_id2).twin_id().is_none()
-                    {
-                        if walker.vertex_id().unwrap() == vertex_id2 && walker.as_previous().vertex_id().unwrap() == vertex_id1
-                        {
-                            halfedge2 = Some(halfedge_id2.clone());
-                            break;
-                        }
-                    }
-                }
-                let halfedge_id2 = halfedge2.unwrap_or_else(|| {
-                        self.connectivity_info.new_halfedge(Some(vertex_id2), None, None)
-                    });
-                self.connectivity_info.set_halfedge_twin(halfedge_id1, halfedge_id2);
+                let boundary_halfedge_id = self.connectivity_info.new_halfedge(walker.as_previous().vertex_id(), None, None);
+                self.connectivity_info.set_halfedge_twin(halfedge_id, boundary_halfedge_id);
             }
         }
     }
