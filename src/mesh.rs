@@ -37,7 +37,7 @@ use crate::mesh::math::*;
 pub struct Mesh {
     positions: HashMap<VertexID, Vec3>,
     normals: HashMap<VertexID, Vec3>,
-    pub(super) connectivity_info: Rc<ConnectivityInfo>
+    connectivity_info: Rc<ConnectivityInfo>
 }
 
 impl Mesh
