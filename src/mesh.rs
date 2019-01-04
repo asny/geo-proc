@@ -24,6 +24,7 @@ pub mod basic_operations;
 pub mod quality;
 pub mod edge_measures;
 pub mod face_measures;
+pub mod orientation;
 
 mod connectivity_info;
 
@@ -267,40 +268,6 @@ impl Mesh
         self.create_twin_connectivity();
     }
 
-    pub(crate) fn flip_orientation_of_face(&mut self, face_id: &FaceID)
-    {
-        let mut update_list = [(None, None, None); 3];
-
-        let mut i = 0;
-        for mut walker in self.face_halfedge_iter(face_id) {
-            let halfedge_id = walker.halfedge_id();
-            let vertex_id = walker.vertex_id();
-            walker.as_previous();
-            update_list[i] = (halfedge_id.clone(), walker.vertex_id(), walker.halfedge_id());
-            i += 1;
-
-            self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.halfedge_id());
-
-            walker.as_next().as_twin();
-            if walker.face_id().is_none() {
-                self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.halfedge_id());
-                self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), vertex_id.unwrap());
-            }
-        }
-
-        for (halfedge_id, new_vertex_id, new_next_id) in update_list.iter() {
-            self.connectivity_info.set_halfedge_vertex(&halfedge_id.unwrap(), new_vertex_id.unwrap());
-            self.connectivity_info.set_halfedge_next(&halfedge_id.unwrap(), *new_next_id);
-        }
-    }
-
-    pub fn flip_orientation(&mut self)
-    {
-        for face_id in self.face_iter() {
-            self.flip_orientation_of_face(&face_id);
-        }
-    }
-
     ////////////////////////////////////////////
     // *** Functions related to the position ***
     ////////////////////////////////////////////
@@ -456,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_one_face_connectivity() {
-        let mut mesh = Mesh::new_with_connectivity(vec![0, 1, 2], vec![0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0], None);
+        let mesh = Mesh::new_with_connectivity(vec![0, 1, 2], vec![0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0], None);
 
         let f1 = mesh.face_iter().next().unwrap();
         let v1 = mesh.walker_from_face(&f1).vertex_id().unwrap();
@@ -544,7 +511,7 @@ mod tests {
     }
 
     #[test]
-    fn test_create_sub_mesh()
+    fn test_clone_subset()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
@@ -560,34 +527,5 @@ mod tests {
 
         test_is_valid(&mesh).unwrap();
         test_is_valid(&sub_mesh).unwrap();
-    }
-
-    #[test]
-    fn test_flip_orientation_of_face()
-    {
-        let indices: Vec<u32> = vec![0, 1, 2,  1, 2, 3];
-        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5];
-        let mut mesh = crate::MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
-
-        mesh.flip_orientation_of_face(&mesh.face_iter().next().unwrap());
-        test_is_valid(&mesh).unwrap();
-
-    }
-
-    #[test]
-    fn test_flip_orientation()
-    {
-        let mut mesh = crate::MeshBuilder::new().cube().build().unwrap();
-
-        let mut map = HashMap::new();
-        for face_id in mesh.face_iter() {
-            map.insert(face_id, mesh.face_normal(&face_id));
-        }
-        mesh.flip_orientation();
-
-        test_is_valid(&mesh).unwrap();
-        for face_id in mesh.face_iter() {
-            assert_eq!(mesh.face_normal(&face_id), -*map.get(&face_id).unwrap());
-        }
     }
 }
