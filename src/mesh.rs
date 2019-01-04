@@ -231,25 +231,37 @@ impl Mesh
         self.create_twin_connectivity();
     }
 
-    pub fn flip_orientation(&mut self)
+    pub(crate) fn flip_orientation_of_face(&mut self, face_id: &FaceID)
     {
-        for vertex_id in self.vertex_iter() {
-            let twin_id = self.walker_from_vertex(&vertex_id).twin_id().unwrap();
-            self.connectivity_info.set_vertex_halfedge(&vertex_id, Some(twin_id));
+        let mut update_list = [(None, None, None); 3];
+
+        let mut i = 0;
+        for mut walker in self.face_halfedge_iter(face_id) {
+            let halfedge_id = walker.halfedge_id();
+            let vertex_id = walker.vertex_id();
+            walker.as_previous();
+            update_list[i] = (halfedge_id.clone(), walker.vertex_id(), walker.halfedge_id());
+            i += 1;
+
+            self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.halfedge_id());
+
+            walker.as_next().as_twin();
+            if walker.face_id().is_none() {
+                self.connectivity_info.set_vertex_halfedge(&walker.vertex_id().unwrap(), walker.halfedge_id());
+                self.connectivity_info.set_halfedge_vertex(&walker.halfedge_id().unwrap(), vertex_id.unwrap());
+            }
         }
 
-        let mut update_list = Vec::with_capacity(self.no_halfedges());
-        for halfedge_id in self.halfedge_iter() {
-            let mut walker = self.walker_from_halfedge(&halfedge_id);
-            let new_next_id = walker.previous_id();
-            let new_vertex_id = walker.as_twin().vertex_id().unwrap();
-            update_list.push((halfedge_id, new_vertex_id, new_next_id));
+        for (halfedge_id, new_vertex_id, new_next_id) in update_list.iter() {
+            self.connectivity_info.set_halfedge_vertex(&halfedge_id.unwrap(), new_vertex_id.unwrap());
+            self.connectivity_info.set_halfedge_next(&halfedge_id.unwrap(), *new_next_id);
         }
-        for (halfedge_id, new_vertex_id, new_next_id) in update_list {
-            self.connectivity_info.set_halfedge_vertex(&halfedge_id, new_vertex_id);
-            if let Some(next_id) = new_next_id {
-                self.connectivity_info.set_halfedge_next(&halfedge_id, Some(next_id));
-            }
+    }
+
+    pub fn flip_orientation(&mut self)
+    {
+        for face_id in self.face_iter() {
+            self.flip_orientation_of_face(&face_id);
         }
     }
 
