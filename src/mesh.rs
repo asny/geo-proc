@@ -86,11 +86,13 @@ impl Mesh
         let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)),
             positions: HashMap::new(), normals: HashMap::new()};
 
+        // Create vertices
         for i in 0..no_vertices {
             let nor = match normals { Some(ref data) => Some(vec3(data[i*3], data[i*3+1], data[i*3+2])), None => None };
             mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]), nor);
         }
 
+        // Create faces and twin connectivity
         let mut walker = mesh.walker();
         for face in 0..no_faces {
             let v0 = VertexID::new(indices[face * 3] as usize);
@@ -100,17 +102,19 @@ impl Mesh
             let mut twins = [None; 3];
             for halfedge_id in mesh.halfedge_iter() {
                 walker.as_halfedge_walker(&halfedge_id);
-                let vertex_id0 = walker.vertex_id().unwrap();
-                let vertex_id1 = walker.as_previous().vertex_id().unwrap();
+                if walker.twin_id().is_none() {
+                    let vertex_id0 = walker.vertex_id().unwrap();
+                    let vertex_id1 = walker.as_previous().vertex_id().unwrap();
 
-                if vertex_id0 == v0 && vertex_id1 == v1 || vertex_id0 == v1 && vertex_id1 == v0 {
-                    twins[0] = Some(halfedge_id);
-                }
-                if vertex_id0 == v1 && vertex_id1 == v2 || vertex_id0 == v2 && vertex_id1 == v1 {
-                    twins[1] = Some(halfedge_id);
-                }
-                if vertex_id0 == v2 && vertex_id1 == v0 || vertex_id0 == v0 && vertex_id1 == v2 {
-                    twins[2] = Some(halfedge_id);
+                    if vertex_id0 == v0 && vertex_id1 == v1 || vertex_id0 == v1 && vertex_id1 == v0 {
+                        twins[0] = Some(halfedge_id);
+                    }
+                    if vertex_id0 == v1 && vertex_id1 == v2 || vertex_id0 == v2 && vertex_id1 == v1 {
+                        twins[1] = Some(halfedge_id);
+                    }
+                    if vertex_id0 == v2 && vertex_id1 == v0 || vertex_id0 == v0 && vertex_id1 == v2 {
+                        twins[2] = Some(halfedge_id);
+                    }
                 }
             }
 
@@ -125,37 +129,15 @@ impl Mesh
             }
         }
 
+        // Create boundary halfedges
         let mut walker = mesh.walker();
-        let edges: Vec<HalfEdgeID> = mesh.halfedge_iter().collect();
-
-        for i1 in 0..edges.len()
+        for halfedge_id in mesh.halfedge_iter()
         {
-            let halfedge_id1 = edges[i1];
-            if walker.as_halfedge_walker(&halfedge_id1).twin_id().is_none()
+            walker.as_halfedge_walker(&halfedge_id);
+            if walker.twin_id().is_none()
             {
-                let vertex_id1 = walker.vertex_id().unwrap();
-                let vertex_id2 = walker.as_previous().vertex_id().unwrap();
-
-                let mut halfedge2 = None;
-                for i2 in i1+1..edges.len()
-                {
-                    let halfedge_id2 = &edges[i2];
-                    if walker.as_halfedge_walker(halfedge_id2).twin_id().is_none()
-                    {
-                        if walker.vertex_id().unwrap() == vertex_id2 && walker.as_previous().vertex_id().unwrap() == vertex_id1
-                        {
-                            halfedge2 = Some(halfedge_id2.clone());
-                            break;
-                        }
-                    }
-                }
-
-                if halfedge2.is_none()
-                {
-                    let halfedge_id2 = mesh.connectivity_info.new_halfedge(Some(vertex_id2), None, None);
-                    mesh.connectivity_info.set_halfedge_twin(halfedge_id1, halfedge_id2);
-                }
-
+                let boundary_halfedge_id = mesh.connectivity_info.new_halfedge(walker.as_previous().vertex_id(), None, None);
+                mesh.connectivity_info.set_halfedge_twin(halfedge_id, boundary_halfedge_id);
             }
         }
         mesh
