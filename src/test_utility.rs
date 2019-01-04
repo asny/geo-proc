@@ -35,6 +35,10 @@ pub fn test_is_valid(mesh: &Mesh) -> Result<(), Error>
             {
                 return Err(Error::IsNotValid {message: format!("Halfedge twin pointed to by halfedge {} does not point back to halfedge", halfedge_id)});
             }
+            if mesh.walker_from_halfedge(&twin_id).vertex_id() == walker.vertex_id()
+            {
+                return Err(Error::IsNotValid {message: format!("Invalid orientation: The halfedge {} and its twin halfedge {} points to the same vertex {}", halfedge_id, twin_id, walker.vertex_id().unwrap())});
+            }
         }
         else {
             return Err(Error::IsNotValid {message: format!("Halfedge {} does not point to a twin halfedge", halfedge_id)});
