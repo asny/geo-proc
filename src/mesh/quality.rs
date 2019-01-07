@@ -46,6 +46,10 @@ impl Mesh
         for (halfedge_id, _) in self.halfedge_twins_iter() {
             self.remove_edge_if_lonely(&halfedge_id);
         }
+
+        for vertex_id in self.vertex_iter() {
+            self.remove_vertex_if_lonely(&vertex_id);
+        }
     }
 
     pub fn flip_edges(&mut self, flatness_threshold: f32)
