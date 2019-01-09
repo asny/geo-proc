@@ -23,6 +23,7 @@ pub mod merge_overlapping_primitives;
 pub mod connectivity;
 pub mod basic_operations;
 pub mod quality;
+pub mod vertex_measures;
 pub mod edge_measures;
 pub mod face_measures;
 pub mod orientation;
@@ -338,25 +339,9 @@ impl Mesh
     // *** Functions related to the normal ***
     //////////////////////////////////////////
 
-    pub fn normal(&self, vertex_id: &VertexID) ->  Option<&Vec3>
-    {
-        self.normals.get(vertex_id)
-    }
-
     pub fn set_normal(&mut self, vertex_id: VertexID, value: Vec3)
     {
         self.normals.insert(vertex_id, value);
-    }
-
-    pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
-    {
-        let mut normal = vec3(0.0, 0.0, 0.0);
-        for walker in self.vertex_halfedge_iter(&vertex_id) {
-            if let Some(face_id) = walker.face_id() {
-                normal = normal + self.face_normal(&face_id)
-            }
-        }
-        normal.normalize()
     }
 
     pub fn update_vertex_normals(&mut self)
@@ -468,15 +453,6 @@ mod tests {
         let start_edge = walker.halfedge_id().unwrap();
         let one_round_edge = walker.as_previous().as_twin().as_previous().as_twin().as_previous().twin_id().unwrap();
         assert_eq!(start_edge, one_round_edge);
-    }
-
-    #[test]
-    fn test_vertex_normal() {
-        let mesh = create_three_connected_faces();
-        let computed_normal = mesh.compute_vertex_normal(&VertexID::new(0));
-        assert_eq!(0.0, computed_normal.x);
-        assert_eq!(1.0, computed_normal.y);
-        assert_eq!(0.0, computed_normal.z);
     }
 
     #[test]
