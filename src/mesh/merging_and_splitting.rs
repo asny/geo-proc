@@ -10,6 +10,7 @@ pub enum Error {
     FailedToMergeVertices {message: String},
 }
 
+/// # Merging & splitting
 impl Mesh
 {
     pub fn append(&mut self, other: &Self)

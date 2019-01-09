@@ -3,12 +3,12 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum Error {
     MergeWillCreateNonManifoldMesh {message: String},
-    MergeOverlappingPrimitives(crate::mesh::merge_overlapping_primitives::Error),
+    MergeOverlappingPrimitives(crate::mesh::merging_and_splitting::Error),
     CannotCheckOrientationOfMesh {message: String},
 }
 
-impl From<crate::mesh::merge_overlapping_primitives::Error> for Error {
-    fn from(other: crate::mesh::merge_overlapping_primitives::Error) -> Self {
+impl From<crate::mesh::merging_and_splitting::Error> for Error {
+    fn from(other: crate::mesh::merging_and_splitting::Error) -> Self {
         Error::MergeOverlappingPrimitives(other)
     }
 }
