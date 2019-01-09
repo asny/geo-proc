@@ -19,6 +19,7 @@ pub enum Error {
 /// let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
 /// let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
 /// let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build()?;
+///
 /// assert_eq!(mesh.no_faces(), 3);
 /// assert_eq!(mesh.no_vertices(), 4);
 ///
@@ -27,7 +28,7 @@ pub enum Error {
 /// # }
 /// ```
 ///
-/// Build from positions (note: Use `mesh.merge_overlapping_primitives();` if you want to merge
+/// Build from positions (note: Use [merge_overlapping_primitives](../mesh/struct.Mesh.html#method.merge_overlapping_primitives) if you want to merge
 /// unconnected but overlapping parts of the mesh):
 /// ```
 /// # use geo_proc::mesh_builder::{MeshBuilder, Error};
@@ -38,6 +39,7 @@ pub enum Error {
 ///                                    0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
 ///                                    0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
 /// let mesh = MeshBuilder::new().with_positions(positions).build()?;
+///
 /// assert_eq!(mesh.no_faces(), 3);
 /// assert_eq!(mesh.no_vertices(), 9);
 ///
@@ -53,6 +55,7 @@ pub enum Error {
 /// #
 /// # fn main() -> Result<(), Box<Error>> {
 /// let mesh = MeshBuilder::new().cube().build()?;
+///
 /// assert_eq!(mesh.no_faces(), 12);
 /// assert_eq!(mesh.no_vertices(), 8);
 ///

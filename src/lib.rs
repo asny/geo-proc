@@ -9,16 +9,13 @@
 //! - [Iterators](mesh/struct.Mesh.html#iterators) over primitives (vertices, halfedges, faces)
 //! - Halfedge [walker](mesh/struct.Mesh.html#traversal) to efficiently traverse the mesh
 //! - Convenient [connectivity](mesh/struct.Mesh.html#connectivity-functionality) functionality (e.g. vertices of a face, edge between two vertices)
-//! - [Measures on faces](mesh/struct.Mesh.html#face-measures) (e.g. area of face)
-//! - [Measures on edges](mesh/struct.Mesh.html#edge-measures) (e.g. length of edge)
+//! - Measures on [vertices](mesh/struct.Mesh.html#vertex-measures), [edges](mesh/struct.Mesh.html#edge-measures) and [faces](mesh/struct.Mesh.html#face-measures) (e.g. position of vertex, area of face)
 //! - [Edit](mesh/struct.Mesh.html#edit-functionality) functionality (e.g. split edge, collapse edge, flip edge)
 //! - [Orientation](mesh/struct.Mesh.html#orientation-functionality) functionality (e.g. flip orientation of all faces)
 //! - [Quality](mesh/struct.Mesh.html#quality-functionality) functionality (e.g. flip edges recursively to improve triangle quality, collapse small faces)
-//! - And more...
+//! - And more! Most functionality is implemented as methods on the [Mesh](mesh/struct.Mesh.html) struct, so take a look at that rather long list of functions for a complete overview.
 //!
-//! Most functionality is implemented as methods on the [Mesh](mesh/struct.Mesh.html) struct,
-//! so take a look at that rather long list of functions for a complete overview.
-//! The only exception is the [Mesh builder](mesh_builder/struct.MeshBuilder.html) which is used to construct a new mesh.
+//! To construct a new mesh, use the [Mesh builder](mesh_builder/struct.MeshBuilder.html).
 
 
 
