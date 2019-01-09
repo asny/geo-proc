@@ -4,6 +4,7 @@ use crate::mesh::math::*;
 use crate::mesh::ids::*;
 use std::collections::{HashSet, HashMap};
 
+/// # Quality functionality
 impl Mesh
 {
     pub fn smooth_vertices(&mut self, factor: f32)

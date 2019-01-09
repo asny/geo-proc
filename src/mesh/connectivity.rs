@@ -2,6 +2,7 @@
 use crate::mesh::Mesh;
 use crate::mesh::ids::*;
 
+/// # Connectivity functionality
 impl Mesh
 {
     pub fn connecting_edge(&self, vertex_id1: &VertexID, vertex_id2: &VertexID) -> Option<HalfEdgeID>

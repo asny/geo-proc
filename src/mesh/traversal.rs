@@ -3,6 +3,7 @@ use crate::mesh::Mesh;
 use crate::mesh::ids::*;
 use crate::mesh::connectivity_info::{HalfEdge, ConnectivityInfo};
 
+/// # Traversal
 impl Mesh
 {
     pub fn walker(&self) -> Walker

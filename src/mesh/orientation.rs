@@ -1,6 +1,7 @@
 use crate::mesh::Mesh;
 use crate::mesh::ids::*;
 
+/// # Orientation functionality
 impl Mesh {
     pub fn flip_orientation(&mut self)
     {

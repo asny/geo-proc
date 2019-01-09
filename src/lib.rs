@@ -6,13 +6,14 @@
 //!
 //! ## Features
 //! - An implementation of the [halfedge mesh data structure](mesh/struct.Mesh.html)
-//! - [Iterators](mesh/struct.Mesh.html#impl) over primitives (vertices, halfedges, faces)
-//! - Halfedge [walker](mesh/struct.Mesh.html#impl) to efficiently traverse the mesh
-//! - Convenient [connectivity](mesh/struct.Mesh.html#impl-2) functionality (e.g. vertices of a face, edge between two vertices)
-//! - Simple measures on primitives (e.g. area of face, length of edge)
-//! - Basic manipulation functionality (e.g. split edge, collapse edge, flip edge)
-//! - Orientation manipulation functionality (e.g. flip orientation of all faces)
-//! - Mesh quality manipulation functionality (e.g. flip edges recursively to improve triangle quality, collapse small faces)
+//! - [Iterators](mesh/struct.Mesh.html#iterators) over primitives (vertices, halfedges, faces)
+//! - Halfedge [walker](mesh/struct.Mesh.html#traversal) to efficiently traverse the mesh
+//! - Convenient [connectivity](mesh/struct.Mesh.html#connectivity-functionality) functionality (e.g. vertices of a face, edge between two vertices)
+//! - [Measures on faces](mesh/struct.Mesh.html#face-measures) (e.g. area of face)
+//! - [Measures on edges](mesh/struct.Mesh.html#edge-measures) (e.g. length of edge)
+//! - [Edit](mesh/struct.Mesh.html#edit-functionality) functionality (e.g. split edge, collapse edge, flip edge)
+//! - [Orientation](mesh/struct.Mesh.html#orientation-functionality) functionality (e.g. flip orientation of all faces)
+//! - [Quality](mesh/struct.Mesh.html#quality-functionality) functionality (e.g. flip edges recursively to improve triangle quality, collapse small faces)
 //! - And more...
 //!
 //! Most functionality is implemented as methods on the [Mesh](mesh/struct.Mesh.html) struct,

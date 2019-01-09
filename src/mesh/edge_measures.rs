@@ -3,6 +3,7 @@ use crate::mesh::Mesh;
 use crate::mesh::math::*;
 use crate::mesh::ids::*;
 
+/// # Edge measures
 impl Mesh
 {
     pub fn edge_length(&self, halfedge_id: &HalfEdgeID) -> f32

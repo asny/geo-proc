@@ -8,6 +8,7 @@ pub enum Error {
     FailedToFlipEdge {message: String}
 }
 
+/// # Edit functionality
 impl Mesh
 {
     pub fn flip_edge(&mut self, halfedge_id: &HalfEdgeID) -> Result<(), Error>

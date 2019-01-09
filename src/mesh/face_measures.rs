@@ -3,6 +3,7 @@ use crate::mesh::Mesh;
 use crate::mesh::math::*;
 use crate::mesh::ids::*;
 
+/// # Face measures
 impl Mesh
 {
     pub fn face_normal(&self, face_id: &FaceID) -> Vec3

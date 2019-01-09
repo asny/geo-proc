@@ -12,6 +12,7 @@ pub type FaceIter = Box<Iterator<Item = FaceID>>;
 pub type HalfEdgeTwinsIter = Box<Iterator<Item = (HalfEdgeID, HalfEdgeID)>>;
 pub type EdgeIter = Box<Iterator<Item = (VertexID, VertexID)>>;
 
+/// # Iterators
 impl Mesh
 {
     pub fn vertex_halfedge_iter(&self, vertex_id: &VertexID) -> VertexHalfedgeIter
