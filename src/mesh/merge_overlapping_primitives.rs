@@ -2,7 +2,7 @@
 use crate::mesh::Mesh;
 use crate::mesh::math::*;
 use crate::mesh::ids::*;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 
 #[derive(Debug)]
 pub enum Error {
@@ -12,6 +12,97 @@ pub enum Error {
 
 impl Mesh
 {
+    pub fn append(&mut self, other: &Self)
+    {
+        let mut mapping: HashMap<VertexID, VertexID> = HashMap::new();
+        let mut get_or_create_vertex = |mesh: &mut Mesh, vertex_id| -> VertexID {
+            if let Some(vid) = mapping.get(&vertex_id) {return vid.clone();}
+            let p = other.vertex_position(&vertex_id);
+            let vid = mesh.create_vertex(p.clone());
+            mapping.insert(vertex_id, vid);
+            vid
+        };
+
+        let mut face_mapping: HashMap<FaceID, FaceID> = HashMap::new();
+        for other_face_id in other.face_iter() {
+            let vertex_ids = other.face_vertices(&other_face_id);
+
+            let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
+            let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);
+            let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
+            let new_face_id = self.connectivity_info.create_face(&vertex_id0, &vertex_id1, &vertex_id2);
+
+            for mut walker in other.face_halfedge_iter(&other_face_id) {
+                if let Some(fid) = walker.as_twin().face_id()
+                {
+                    if let Some(self_face_id) = face_mapping.get(&fid)
+                    {
+                        for mut walker1 in self.face_halfedge_iter(&self_face_id)
+                        {
+                            let source_vertex_id = walker1.vertex_id().unwrap();
+                            let sink_vertex_id = walker1.as_next().vertex_id().unwrap();
+
+                            for mut walker2 in self.face_halfedge_iter(&new_face_id)
+                            {
+                                if sink_vertex_id == walker2.vertex_id().unwrap() && source_vertex_id == walker2.as_next().vertex_id().unwrap() {
+                                    self.connectivity_info.set_halfedge_twin(walker1.halfedge_id().unwrap(), walker2.halfedge_id().unwrap());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            face_mapping.insert(other_face_id, new_face_id);
+        }
+
+        self.create_boundary_edges();
+    }
+
+    pub fn clone_subset(&self, faces: &std::collections::HashSet<FaceID>) -> Mesh
+    {
+        let info = crate::mesh::ConnectivityInfo::new(faces.len(), faces.len());
+        for face_id in faces {
+            let face = self.connectivity_info.face(face_id).unwrap();
+            for mut walker in self.face_halfedge_iter(face_id) {
+                let halfedge_id = walker.halfedge_id().unwrap();
+                let halfedge = self.connectivity_info.halfedge(&halfedge_id).unwrap();
+                info.add_halfedge(halfedge_id, halfedge);
+
+                let vertex_id = walker.vertex_id().unwrap();
+                let vertex = self.connectivity_info.vertex(&vertex_id).unwrap();
+                info.add_vertex(vertex_id, vertex);
+                info.set_vertex_halfedge(&vertex_id, walker.next_id());
+
+                walker.as_twin();
+                if walker.face_id().is_none()
+                {
+                    let twin_id = walker.halfedge_id().unwrap();
+                    let twin = self.connectivity_info.halfedge(&twin_id).unwrap();
+                    info.add_halfedge(twin_id, twin);
+
+                }
+                else if !faces.contains(&walker.face_id().unwrap())
+                {
+                    let twin_id = walker.halfedge_id().unwrap();
+                    let mut twin = self.connectivity_info.halfedge(&twin_id).unwrap();
+                    twin.face = None;
+                    twin.next = None;
+                    info.add_halfedge(twin_id, twin);
+                }
+            }
+
+            info.add_face(face_id.clone(), face);
+        }
+
+        let mut positions = HashMap::with_capacity(info.no_vertices());
+        for vertex_id in info.vertex_iterator() {
+            positions.insert(vertex_id.clone(), self.vertex_position(&vertex_id).clone());
+        }
+
+        Mesh::new_internal(positions, std::rc::Rc::new(info))
+    }
+
     pub fn merge_overlapping_primitives(&mut self) -> Result<(), Error>
     {
         let set_of_vertices_to_merge = self.find_overlapping_vertices();
@@ -268,6 +359,25 @@ impl Mesh
 mod tests {
     use super::*;
     use crate::test_utility::*;
+
+    #[test]
+    fn test_clone_subset()
+    {
+        let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
+        let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
+        let mesh = crate::MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
+
+        let mut faces = std::collections::HashSet::new();
+        for face_id in mesh.face_iter() {
+            faces.insert(face_id);
+            break;
+        }
+
+        let sub_mesh = mesh.clone_subset(&faces);
+
+        test_is_valid(&mesh).unwrap();
+        test_is_valid(&sub_mesh).unwrap();
+    }
 
     #[test]
     fn test_merge_overlapping_primitives()
