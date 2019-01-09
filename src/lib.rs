@@ -9,3 +9,4 @@ pub mod collision;
 pub mod split;
 
 pub use tri_mesh::prelude as prelude;
+pub use tri_mesh;
