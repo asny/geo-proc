@@ -130,7 +130,7 @@ impl Mesh
     pub fn positions_buffer(&self) -> Vec<f32>
     {
         let mut positions = Vec::with_capacity(self.no_vertices() * 3);
-        for v3 in self.vertex_iter().map(|ref vertex_id| self.position(vertex_id)) {
+        for v3 in self.vertex_iter().map(|ref vertex_id| self.vertex_position(vertex_id)) {
             positions.push(v3.x); positions.push(v3.y); positions.push(v3.z);
         }
         positions
@@ -186,7 +186,7 @@ impl Mesh
 
         let mut positions = HashMap::with_capacity(info.no_vertices());
         for vertex_id in info.vertex_iterator() {
-            positions.insert(vertex_id.clone(), self.position(&vertex_id).clone());
+            positions.insert(vertex_id.clone(), self.vertex_position(&vertex_id).clone());
         }
 
         Mesh::new_internal(positions, Rc::new(info))
@@ -197,7 +197,7 @@ impl Mesh
         let mut mapping: HashMap<VertexID, VertexID> = HashMap::new();
         let mut get_or_create_vertex = |mesh: &mut Mesh, vertex_id| -> VertexID {
             if let Some(vid) = mapping.get(&vertex_id) {return vid.clone();}
-            let p = other.position(&vertex_id);
+            let p = other.vertex_position(&vertex_id);
             let vid = mesh.create_vertex(p.clone());
             mapping.insert(vertex_id, vid);
             vid

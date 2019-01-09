@@ -180,7 +180,7 @@ impl Mesh
         let surviving_vertex_id = walker.vertex_id().unwrap();
         walker.as_twin();
         let dying_vertex_id = walker.vertex_id().unwrap();
-        let new_position = 0.5 * (self.position(&surviving_vertex_id) + self.position(&dying_vertex_id));
+        let new_position = 0.5 * (self.vertex_position(&surviving_vertex_id) + self.vertex_position(&dying_vertex_id));
         self.move_vertex_to(surviving_vertex_id, new_position);
 
         // Update halfedges pointing to dying vertex

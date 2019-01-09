@@ -6,7 +6,7 @@ use crate::mesh::ids::*;
 /// # Vertex measures
 impl Mesh
 {
-    pub fn position(&self, vertex_id: &VertexID) -> &Vec3
+    pub fn vertex_position(&self, vertex_id: &VertexID) -> &Vec3
     {
         self.positions.get(vertex_id).unwrap()
     }

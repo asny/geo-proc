@@ -157,7 +157,7 @@ impl Mesh
             let mut to_merge = Vec::new();
             for id2 in to_check.iter()
             {
-                if (self.position(&id1) - self.position(id2)).magnitude() < 0.00001
+                if (self.vertex_position(&id1) - self.vertex_position(id2)).magnitude() < 0.00001
                 {
                     to_merge.push(*id2);
                 }
@@ -355,7 +355,7 @@ mod tests {
 
         let mut vertex_id1 = None;
         for vertex_id in mesh.vertex_iter() {
-            if *mesh.position(&vertex_id) == vec3(0.0, 0.0, 0.0)
+            if *mesh.vertex_position(&vertex_id) == vec3(0.0, 0.0, 0.0)
             {
                 if vertex_id1.is_none() { vertex_id1 = Some(vertex_id); }
                 else {
@@ -379,7 +379,7 @@ mod tests {
 
         let mut heid1 = None;
         for (v0, v1) in mesh.edge_iter() {
-            if mesh.position(&v0)[2] == 0.0 && mesh.position(&v1)[2] == 0.0
+            if mesh.vertex_position(&v0)[2] == 0.0 && mesh.vertex_position(&v1)[2] == 0.0
             {
                 let halfedge_id = mesh.connecting_edge(&v0, &v1).unwrap();
                 if heid1.is_none() { heid1 = Some((halfedge_id, v0, v1)); }

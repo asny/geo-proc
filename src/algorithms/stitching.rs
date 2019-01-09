@@ -613,7 +613,7 @@ mod tests {
             }
             mesh1.smooth_vertices(1.0);
             for vertex_id in mesh1.vertex_iter() {
-                let p = mesh1.position(&vertex_id).normalize();
+                let p = mesh1.vertex_position(&vertex_id).normalize();
                 mesh1.move_vertex_to(vertex_id, p)
             }
             mesh1.flip_edges(0.5);

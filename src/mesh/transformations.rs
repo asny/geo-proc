@@ -23,7 +23,7 @@ impl Mesh
     pub fn scale(&mut self, scale: f32)
     {
         for vertex_id in self.vertex_iter() {
-            let p = *self.position(&vertex_id);
+            let p = *self.vertex_position(&vertex_id);
             self.move_vertex_to(vertex_id, p * scale);
         }
     }
