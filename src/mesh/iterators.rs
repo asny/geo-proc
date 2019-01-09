@@ -208,7 +208,7 @@ mod tests {
     fn test_vertex_halfedge_iterator_with_holes() {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
         let positions: Vec<f32> = vec![0.0; 5 * 3];
-        let mesh = Mesh::new_with_connectivity(indices, positions);
+        let mesh = Mesh::new(indices, positions);
 
         let mut i = 0;
         for edge in mesh.vertex_halfedge_iter(&VertexID::new(0)) {
