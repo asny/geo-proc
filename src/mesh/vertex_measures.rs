@@ -11,12 +11,7 @@ impl Mesh
         self.positions.get(vertex_id).unwrap()
     }
 
-    pub fn normal(&self, vertex_id: &VertexID) ->  Option<&Vec3>
-    {
-        self.normals.get(vertex_id)
-    }
-
-    pub fn compute_vertex_normal(&self, vertex_id: &VertexID) -> Vec3
+    pub fn vertex_normal(&self, vertex_id: &VertexID) -> Vec3
     {
         let mut normal = vec3(0.0, 0.0, 0.0);
         for walker in self.vertex_halfedge_iter(&vertex_id) {
@@ -38,7 +33,7 @@ mod tests {
     #[test]
     fn test_vertex_normal() {
         let mesh = create_three_connected_faces();
-        let computed_normal = mesh.compute_vertex_normal(&VertexID::new(0));
+        let computed_normal = mesh.vertex_normal(&VertexID::new(0));
         assert_eq!(0.0, computed_normal.x);
         assert_eq!(1.0, computed_normal.y);
         assert_eq!(0.0, computed_normal.z);

@@ -40,17 +40,15 @@ use crate::mesh::math::*;
 #[derive(Debug)]
 pub struct Mesh {
     positions: HashMap<VertexID, Vec3>,
-    normals: HashMap<VertexID, Vec3>,
     connectivity_info: Rc<ConnectivityInfo>
 }
 
 impl Mesh
 {
-    fn new(positions: Vec<f32>, normals: Option<Vec<f32>>) -> Mesh
+    fn new(positions: Vec<f32>) -> Mesh
     {
         let mut indices = vec![None; positions.len()/3];
         let mut positions_out = Vec::new();
-        let mut normals_out = if normals.is_some() { Some(Vec::new()) } else { None };
 
         for i in 0..positions.len()/3 {
             if indices[i].is_none()
@@ -59,15 +57,6 @@ impl Mesh
                 positions_out.push(p1.x);
                 positions_out.push(p1.y);
                 positions_out.push(p1.z);
-
-                if let Some(ref n_in) = normals {
-                    if let Some(ref mut n_out) = normals_out {
-                        let n = vec3(n_in[3 * i], n_in[3 * i + 1], n_in[3 * i + 2]);
-                        n_out.push(n.x);
-                        n_out.push(n.y);
-                        n_out.push(n.z);
-                    }
-                }
 
                 let current_index = Some((positions_out.len() / 3 - 1) as u32);
                 indices[i] = current_index;
@@ -80,20 +69,18 @@ impl Mesh
             }
         }
 
-        Mesh::new_with_connectivity(indices.iter().map(|x| x.unwrap()).collect(), positions_out, normals_out)
+        Mesh::new_with_connectivity(indices.iter().map(|x| x.unwrap()).collect(), positions_out)
     }
 
-    pub(crate) fn new_with_connectivity(indices: Vec<u32>, positions: Vec<f32>, normals: Option<Vec<f32>>) -> Mesh
+    pub(crate) fn new_with_connectivity(indices: Vec<u32>, positions: Vec<f32>) -> Mesh
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
-        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)),
-            positions: HashMap::new(), normals: HashMap::new()};
+        let mut mesh = Mesh { connectivity_info: Rc::new(ConnectivityInfo::new(no_vertices, no_faces)), positions: HashMap::new()};
 
         // Create vertices
         for i in 0..no_vertices {
-            let nor = match normals { Some(ref data) => Some(vec3(data[i*3], data[i*3+1], data[i*3+2])), None => None };
-            mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]), nor);
+            mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]));
         }
 
         // Create faces and twin connectivity
@@ -132,9 +119,9 @@ impl Mesh
         mesh
     }
 
-    fn new_internal(positions: HashMap<VertexID, Vec3>, normals: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> Mesh
+    fn new_internal(positions: HashMap<VertexID, Vec3>, connectivity_info: Rc<ConnectivityInfo>) -> Mesh
     {
-        Mesh {positions, normals, connectivity_info}
+        Mesh {positions, connectivity_info}
     }
 
     pub fn no_vertices(&self) -> usize
@@ -178,15 +165,14 @@ impl Mesh
 
     pub fn normals_buffer(&self) -> Option<Vec<f32>>
     {
-        let mut nor = Vec::with_capacity(self.no_vertices() * 3);
+        let mut normals = Vec::with_capacity(self.no_vertices() * 3);
         for vertex_id in self.vertex_iter() {
-            if let Some(normal) = self.normal(&vertex_id)
-            {
-                nor.push(normal.x); nor.push(normal.y); nor.push(normal.z);
-            }
-            else { return None; }
+            let normal = self.vertex_normal(&vertex_id);
+            normals.push(normal.x);
+            normals.push(normal.y);
+            normals.push(normal.z);
         }
-        Some(nor)
+        Some(normals)
     }
 
     pub fn clone_subset(&self, faces: &std::collections::HashSet<FaceID>) -> Mesh
@@ -226,16 +212,11 @@ impl Mesh
         }
 
         let mut positions = HashMap::with_capacity(info.no_vertices());
-        let mut normals = HashMap::with_capacity(info.no_vertices());
         for vertex_id in info.vertex_iterator() {
-            let p = self.position(&vertex_id).clone();
-            positions.insert(vertex_id.clone(), p);
-            if let Some(normal) = self.normal(&vertex_id) {
-                normals.insert(vertex_id, normal.clone());
-            }
+            positions.insert(vertex_id.clone(), self.position(&vertex_id).clone());
         }
 
-        Mesh::new_internal(positions, normals, Rc::new(info))
+        Mesh::new_internal(positions, Rc::new(info))
     }
 
     pub fn append(&mut self, other: &Self)
@@ -244,8 +225,7 @@ impl Mesh
         let mut get_or_create_vertex = |mesh: &mut Mesh, vertex_id| -> VertexID {
             if let Some(vid) = mapping.get(&vertex_id) {return vid.clone();}
             let p = other.position(&vertex_id);
-            let n = other.normal(&vertex_id).map(|n| n.clone());
-            let vid = mesh.create_vertex(p.clone(), n);
+            let vid = mesh.create_vertex(p.clone());
             mapping.insert(vertex_id, vid);
             vid
         };
@@ -286,32 +266,14 @@ impl Mesh
         self.create_boundary_edges();
     }
 
-    //////////////////////////////////////////
-    // *** Functions related to the normal ***
-    //////////////////////////////////////////
-
-    pub fn set_normal(&mut self, vertex_id: VertexID, value: Vec3)
-    {
-        self.normals.insert(vertex_id, value);
-    }
-
-    pub fn update_vertex_normals(&mut self)
-    {
-        for vertex_id in self.vertex_iter() {
-            let normal = self.compute_vertex_normal(&vertex_id);
-            self.set_normal(vertex_id, normal);
-        }
-    }
-
     ///////////////////////////////////////////////////
     // *** Internal connectivity changing functions ***
     ///////////////////////////////////////////////////
 
-    fn create_vertex(&mut self, position: Vec3, normal: Option<Vec3>) -> VertexID
+    fn create_vertex(&mut self, position: Vec3) -> VertexID
     {
         let id = self.connectivity_info.new_vertex();
         self.positions.insert(id.clone(), position);
-        if let Some(nor) = normal {self.normals.insert(id.clone(), nor);}
         id
     }
 
@@ -332,7 +294,7 @@ impl Mesh
 
 impl Clone for Mesh {
     fn clone(&self) -> Mesh {
-        Mesh::new_internal(self.positions.clone(), self.normals.clone(), Rc::new((*self.connectivity_info).clone()))
+        Mesh::new_internal(self.positions.clone(), Rc::new((*self.connectivity_info).clone()))
     }
 }
 
@@ -342,8 +304,6 @@ impl std::fmt::Display for Mesh {
         writeln!(f, "{}", self.connectivity_info)?;
         writeln!(f, "**** Positions: ****")?;
         writeln!(f, "{:?}", self.positions)?;
-        writeln!(f, "**** Normals: ****")?;
-        writeln!(f, "{:?}", self.normals)?;
         Ok(())
     }
 }
@@ -355,7 +315,7 @@ mod tests {
 
     #[test]
     fn test_one_face_connectivity() {
-        let mesh = Mesh::new_with_connectivity(vec![0, 1, 2], vec![0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0], None);
+        let mesh = Mesh::new_with_connectivity(vec![0, 1, 2], vec![0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
 
         let f1 = mesh.face_iter().next().unwrap();
         let v1 = mesh.walker_from_face(&f1).vertex_id().unwrap();
@@ -407,26 +367,13 @@ mod tests {
     }
 
     #[test]
-    fn test_update_normals() {
-        let mut mesh = create_three_connected_faces();
-        mesh.update_vertex_normals();
-
-        for vertex_id in mesh.vertex_iter() {
-            let normal = mesh.normal(&vertex_id).unwrap();
-            assert_eq!(0.0, normal.x);
-            assert_eq!(1.0, normal.y);
-            assert_eq!(0.0, normal.z);
-        }
-    }
-
-    #[test]
     fn test_new_from_positions()
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
 
-        let mesh = Mesh::new(positions, None);
+        let mesh = Mesh::new(positions);
 
         assert_eq!(4, mesh.no_vertices());
         assert_eq!(3, mesh.no_faces());

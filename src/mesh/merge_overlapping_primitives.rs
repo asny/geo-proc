@@ -276,7 +276,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
 
-        let mut mesh = Mesh::new_with_connectivity((0..9).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..9).collect(), positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(4, mesh.no_vertices());
@@ -304,7 +304,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
 
-        let mut mesh = Mesh::new_with_connectivity((0..9).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..9).collect(), positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(4, mesh.no_vertices());
@@ -320,7 +320,7 @@ mod tests {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,
                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5];
 
-        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(5, mesh.no_vertices());
@@ -337,7 +337,7 @@ mod tests {
                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5,
                                         -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0];
 
-        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(5, mesh.no_vertices());
@@ -351,7 +351,7 @@ mod tests {
     {
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions);
 
         let mut vertex_id1 = None;
         for vertex_id in mesh.vertex_iter() {
@@ -375,7 +375,7 @@ mod tests {
     {
         let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0];
-        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions);
 
         let mut heid1 = None;
         for (v0, v1) in mesh.edge_iter() {

@@ -146,7 +146,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 0.1,  0.1, 0.0, -0.1,  -1.0, 0.0, -0.5];
-        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions);
 
         mesh.collapse_small_faces(0.2);
         test_utility::test_is_valid(&mesh).unwrap();

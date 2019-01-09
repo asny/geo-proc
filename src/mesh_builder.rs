@@ -63,15 +63,14 @@ pub enum Error {
 #[derive(Debug, Default)]
 pub struct MeshBuilder {
     indices: Option<Vec<u32>>,
-    positions: Option<Vec<f32>>,
-    normals: Option<Vec<f32>>
+    positions: Option<Vec<f32>>
 }
 
 impl MeshBuilder {
 
     pub fn new() -> Self
     {
-        MeshBuilder {indices: None, positions: None, normals: None}
+        MeshBuilder {indices: None, positions: None}
     }
 
     pub fn with_indices(mut self, indices: Vec<u32>) -> Self
@@ -86,18 +85,12 @@ impl MeshBuilder {
         self
     }
 
-    pub fn with_normals(mut self, normals: Vec<f32>) -> Self
-    {
-        self.normals = Some(normals);
-        self
-    }
-
     pub fn build(self) -> Result<Mesh, Error>
     {
         let positions = self.positions.ok_or(
             Error::NoPositionsSpecified {message: format!("Did you forget to specify the vertex positions?")})?;
         let indices = self.indices.unwrap_or((0..positions.len() as u32/3).collect());
-        Ok(Mesh::new_with_connectivity(indices, positions, self.normals))
+        Ok(Mesh::new_with_connectivity(indices, positions))
     }
 
     pub fn cube(mut self) -> Self

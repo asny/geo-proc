@@ -68,7 +68,7 @@ impl Mesh
         let twin_vertex_id = walker.vertex_id();
         let is_boundary = walker.face_id().is_none();
 
-        let new_vertex_id = self.create_vertex(position, None);
+        let new_vertex_id = self.create_vertex(position);
         self.split_one_face(&split_halfedge_id, twin_halfedge_id.clone(), new_vertex_id.clone());
 
         if !is_boundary {
@@ -85,7 +85,7 @@ impl Mesh
 
     pub fn split_face(&mut self, face_id: &FaceID, position: Vec3) -> VertexID
     {
-        let new_vertex_id = self.create_vertex(position, None);
+        let new_vertex_id = self.create_vertex(position);
 
         let mut walker = self.walker_from_face(face_id);
         let vertex_id1 = walker.vertex_id().unwrap();
@@ -504,7 +504,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions);
 
         for halfedge_id in mesh.halfedge_iter()
         {
@@ -529,7 +529,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0];
-        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions);
         for halfedge_id in mesh.halfedge_iter()
         {
             if mesh.on_boundary(&halfedge_id)
@@ -570,7 +570,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = Mesh::new_with_connectivity(indices, positions, None);
+        let mut mesh = Mesh::new_with_connectivity(indices, positions);
 
         while mesh.no_faces() > 1 {
             for halfedge_id in mesh.halfedge_iter() {
@@ -592,7 +592,7 @@ mod tests {
     {
         let positions: Vec<f32> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0];
-        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions, None);
+        let mut mesh = Mesh::new_with_connectivity((0..6).collect(), positions);
 
         let faces: Vec<FaceID> = mesh.face_iter().into_iter().collect();
 

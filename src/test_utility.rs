@@ -143,8 +143,7 @@ pub fn create_three_connected_faces() -> Mesh
 {
     let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
     let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5];
-    let normals: Vec<f32> = vec![0.0; 4 * 3];
-    MeshBuilder::new().with_indices(indices).with_positions(positions).with_normals(normals).build().unwrap()
+    MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap()
 }
 
 pub fn create_unconnected_cube() -> Mesh
@@ -192,49 +191,6 @@ pub fn create_unconnected_cube() -> Mesh
         -1.0, 1.0, 1.0,
         -1.0, -1.0, -1.0
     ];
-    let normals: Vec<f32> = vec![
-        0.0, 1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 1.0, 0.0,
 
-        0.0, -1.0, 0.0,
-        0.0, -1.0, 0.0,
-        0.0, -1.0, 0.0,
-        0.0, -1.0, 0.0,
-        0.0, -1.0, 0.0,
-        0.0, -1.0, 0.0,
-
-        0.0, 0.0, -1.0,
-        0.0, 0.0, -1.0,
-        0.0, 0.0, -1.0,
-        0.0, 0.0, -1.0,
-        0.0, 0.0, -1.0,
-        0.0, 0.0, -1.0,
-
-        0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0,
-
-        1.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,
-
-        -1.0, 0.0, 0.0,
-        -1.0, 0.0, 0.0,
-        -1.0, 0.0, 0.0,
-        -1.0, 0.0, 0.0,
-        -1.0, 0.0, 0.0,
-        -1.0, 0.0, 0.0
-    ];
-
-    MeshBuilder::new().with_positions(positions).with_normals(normals).build().unwrap()
+    MeshBuilder::new().with_positions(positions).build().unwrap()
 }
