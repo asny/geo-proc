@@ -27,6 +27,7 @@ pub mod vertex_measures;
 pub mod edge_measures;
 pub mod face_measures;
 pub mod orientation;
+pub mod transformations;
 
 mod connectivity_info;
 
@@ -283,39 +284,6 @@ impl Mesh
         }
 
         self.create_boundary_edges();
-    }
-
-    ////////////////////////////////////////////
-    // *** Functions related to the position ***
-    ////////////////////////////////////////////
-
-    pub fn set_position(&mut self, vertex_id: VertexID, value: Vec3)
-    {
-        self.positions.insert(vertex_id, value);
-    }
-
-    pub fn move_vertex(&mut self, vertex_id: VertexID, value: Vec3)
-    {
-        let mut p = value;
-        {
-            p = p + *self.positions.get(&vertex_id).unwrap();
-        }
-        self.positions.insert(vertex_id, p);
-    }
-
-    pub fn scale(&mut self, scale: f32)
-    {
-        for vertex_id in self.vertex_iter() {
-            let p = *self.position(&vertex_id);
-            self.set_position(vertex_id, p * scale);
-        }
-    }
-
-    pub fn translate(&mut self, translation: &Vec3)
-    {
-        for vertex_id in self.vertex_iter() {
-            self.move_vertex(vertex_id, *translation);
-        }
     }
 
     //////////////////////////////////////////
