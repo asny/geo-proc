@@ -7,3 +7,5 @@ pub mod connected_components;
 pub mod stitching;
 pub mod collision;
 pub mod split;
+
+pub use tri_mesh::prelude as prelude;
