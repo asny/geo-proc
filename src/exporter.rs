@@ -59,12 +59,10 @@ fn parse_as_obj(mesh: &Mesh) -> String
         output = format!("{}v {} {} {}\n", output, positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
     }
 
-    if let Some(ref normals) = mesh.normals_buffer()
+    let normals = mesh.normals_buffer();
+    for i in 0..mesh.no_vertices()
     {
-        for i in 0..mesh.no_vertices()
-        {
-            output = format!("{}vn {} {} {}\n", output, normals[i*3], normals[i*3 + 1], normals[i*3 + 2]);
-        }
+        output = format!("{}vn {} {} {}\n", output, normals[i*3], normals[i*3 + 1], normals[i*3 + 2]);
     }
 
     let indices = mesh.indices_buffer();

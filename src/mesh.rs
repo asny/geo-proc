@@ -136,7 +136,7 @@ impl Mesh
         positions
     }
 
-    pub fn normals_buffer(&self) -> Option<Vec<f32>>
+    pub fn normals_buffer(&self) -> Vec<f32>
     {
         let mut normals = Vec::with_capacity(self.no_vertices() * 3);
         for vertex_id in self.vertex_iter() {
@@ -145,7 +145,7 @@ impl Mesh
             normals.push(normal.y);
             normals.push(normal.z);
         }
-        Some(normals)
+        normals
     }
 
     pub fn clone_subset(&self, faces: &std::collections::HashSet<FaceID>) -> Mesh
