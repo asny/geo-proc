@@ -13,6 +13,13 @@ pub enum Error {
 /// # Merging & splitting
 impl Mesh
 {
+    pub fn merge_with(&mut self, other: &Self) -> Result<(), Error>
+    {
+        self.append(other);
+        self.merge_overlapping_primitives()?;
+        Ok(())
+    }
+
     pub fn append(&mut self, other: &Self)
     {
         let mut mapping: HashMap<VertexID, VertexID> = HashMap::new();
@@ -360,13 +367,14 @@ impl Mesh
 mod tests {
     use super::*;
     use crate::test_utility::*;
+    use crate::MeshBuilder;
 
     #[test]
     fn test_clone_subset()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = crate::MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
+        let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
 
         let mut faces = std::collections::HashSet::new();
         for face_id in mesh.face_iter() {
@@ -507,5 +515,45 @@ mod tests {
         assert_eq!(4, mesh.no_vertices());
         assert_eq!(10, mesh.no_halfedges());
         assert_eq!(2, mesh.no_faces());
+    }
+
+    #[test]
+    fn test_face_face_merging_at_edge()
+    {
+        let indices1: Vec<u32> = vec![0, 1, 2];
+        let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
+        let mut mesh1 = MeshBuilder::new().with_indices(indices1).with_positions(positions1).build().unwrap();
+
+        let indices2: Vec<u32> = vec![0, 1, 2];
+        let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.0, -2.0, -2.0, 0.5, 0.0];
+        let mesh2 = MeshBuilder::new().with_indices(indices2).with_positions(positions2).build().unwrap();
+
+        mesh1.merge_with(&mesh2).unwrap();
+
+        assert_eq!(mesh1.no_faces(), 2);
+        assert_eq!(mesh1.no_vertices(), 4);
+
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
+    }
+
+    #[test]
+    fn test_face_face_merging_at_edge_when_orientation_is_opposite()
+    {
+        let indices1: Vec<u32> = vec![0, 1, 2];
+        let positions1: Vec<f32> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
+        let mut mesh1 = MeshBuilder::new().with_indices(indices1).with_positions(positions1).build().unwrap();
+
+        let indices2: Vec<u32> = vec![0, 1, 2];
+        let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0, -2.0, 0.5, 0.0, -2.0, 0.0, -2.0];
+        let mesh2 = MeshBuilder::new().with_indices(indices2).with_positions(positions2).build().unwrap();
+
+        mesh1.merge_with(&mesh2).unwrap();
+
+        assert_eq!(mesh1.no_faces(), 2);
+        assert_eq!(mesh1.no_vertices(), 4);
+
+        test_is_valid(&mesh1).unwrap();
+        test_is_valid(&mesh2).unwrap();
     }
 }
