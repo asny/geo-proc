@@ -6,6 +6,12 @@ use crate::mesh::ids::*;
 /// # Face measures
 impl Mesh
 {
+    pub fn face_positions(&self, face_id: &FaceID) -> (&Vec3, &Vec3, &Vec3)
+    {
+        let vertices = self.ordered_face_vertices(face_id);
+        (self.position(&vertices.0), self.position(&vertices.1), self.position(&vertices.2))
+    }
+
     pub fn face_normal(&self, face_id: &FaceID) -> Vec3
     {
         let mut walker = self.walker_from_face(face_id);

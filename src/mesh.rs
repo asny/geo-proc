@@ -289,11 +289,6 @@ impl Mesh
     // *** Functions related to the position ***
     ////////////////////////////////////////////
 
-    pub fn position(&self, vertex_id: &VertexID) -> &Vec3
-    {
-        self.positions.get(vertex_id).unwrap()
-    }
-
     pub fn set_position(&mut self, vertex_id: VertexID, value: Vec3)
     {
         self.positions.insert(vertex_id, value);
@@ -321,18 +316,6 @@ impl Mesh
         for vertex_id in self.vertex_iter() {
             self.move_vertex(vertex_id, *translation);
         }
-    }
-
-    pub fn edge_positions(&self, halfedge_id: &HalfEdgeID) -> (&Vec3, &Vec3)
-    {
-        let vertices = self.ordered_edge_vertices(halfedge_id);
-        (self.position(&vertices.0), self.position(&vertices.1))
-    }
-
-    pub fn face_positions(&self, face_id: &FaceID) -> (&Vec3, &Vec3, &Vec3)
-    {
-        let vertices = self.ordered_face_vertices(face_id);
-        (self.position(&vertices.0), self.position(&vertices.1), self.position(&vertices.2))
     }
 
     //////////////////////////////////////////
