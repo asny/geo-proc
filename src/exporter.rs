@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::prelude::*;
-use crate::prelude::*;
+use tri_mesh::prelude::*;
 
 #[derive(Debug)]
 pub enum Error {

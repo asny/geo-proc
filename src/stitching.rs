@@ -1,9 +1,9 @@
 
 use std::collections::{HashMap, HashSet};
 
+use tri_mesh::prelude::*;
+use crate::connected_components::*;
 use crate::collision::*;
-use crate::prelude::*;
-use crate::algorithms::connected_components::*;
 
 #[derive(Debug)]
 pub enum Error {
@@ -274,8 +274,7 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utility::*;
-    use crate::mesh_builder::MeshBuilder;
+    use tri_mesh::test_utility::*;
 
     #[test]
     fn test_finding_edge_edge_intersections()

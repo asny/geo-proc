@@ -1,4 +1,5 @@
-use crate::prelude::*;
+
+use tri_mesh::prelude::*;
 use crate::connected_components::*;
 use std::collections::HashSet;
 
@@ -22,8 +23,7 @@ pub fn split(mesh: &Mesh, is_at_split: &Fn(&Mesh, &HalfEdgeID) -> bool) -> Vec<M
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utility::*;
-    use crate::MeshBuilder;
+    use tri_mesh::test_utility::*;
 
     #[test]
     fn test_splitting()

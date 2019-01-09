@@ -1,4 +1,5 @@
-use crate::prelude::*;
+
+use tri_mesh::prelude::*;
 use std::collections::HashSet;
 
 pub fn connected_component(mesh: &Mesh, face_id: &FaceID) -> HashSet<FaceID>
@@ -46,7 +47,7 @@ pub fn connected_components(mesh: &Mesh) -> Vec<HashSet<FaceID>>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mesh_builder::MeshBuilder;
+    use tri_mesh::mesh_builder::MeshBuilder;
 
     #[test]
     fn test_one_connected_component()
