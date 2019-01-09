@@ -23,7 +23,7 @@ impl Mesh
         }
 
         for vertex_id in self.vertex_iter() {
-            self.set_position(vertex_id, *map.get(&vertex_id).unwrap());
+            self.move_vertex_to(vertex_id, *map.get(&vertex_id).unwrap());
         }
     }
 

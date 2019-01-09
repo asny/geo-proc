@@ -181,7 +181,7 @@ impl Mesh
         walker.as_twin();
         let dying_vertex_id = walker.vertex_id().unwrap();
         let new_position = 0.5 * (self.position(&surviving_vertex_id) + self.position(&dying_vertex_id));
-        self.set_position(surviving_vertex_id, new_position);
+        self.move_vertex_to(surviving_vertex_id, new_position);
 
         // Update halfedges pointing to dying vertex
         for walker1 in self.vertex_halfedge_iter(&dying_vertex_id) {

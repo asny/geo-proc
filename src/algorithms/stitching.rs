@@ -516,7 +516,7 @@ mod tests {
         let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         for vertex_id in mesh2.vertex_iter() {
-            mesh2.move_vertex(vertex_id, vec3(0.5, 0.5, 0.5));
+            mesh2.move_vertex_by(vertex_id, vec3(0.5, 0.5, 0.5));
         }
         split_meshes(&mut mesh1, &mut mesh2).unwrap();
 
@@ -614,7 +614,7 @@ mod tests {
             mesh1.smooth_vertices(1.0);
             for vertex_id in mesh1.vertex_iter() {
                 let p = mesh1.position(&vertex_id).normalize();
-                mesh1.set_position(vertex_id, p)
+                mesh1.move_vertex_to(vertex_id, p)
             }
             mesh1.flip_edges(0.5);
         }
