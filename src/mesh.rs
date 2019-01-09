@@ -21,7 +21,7 @@ pub mod traversal;
 pub mod iterators;
 pub mod merging_and_splitting;
 pub mod connectivity;
-pub mod basic_operations;
+pub mod edit;
 pub mod quality;
 pub mod vertex_measures;
 pub mod edge_measures;
