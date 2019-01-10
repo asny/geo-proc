@@ -585,7 +585,7 @@ mod tests {
     {
         let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
-        mesh2.translate(&vec3(0.5, 0.5, 0.5));
+        mesh2.translate(vec3(0.5, 0.5, 0.5));
 
         let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 2);
@@ -618,9 +618,9 @@ mod tests {
             }
             mesh1.flip_edges(0.5);
         }
-        mesh1.translate(&vec3(0.0, 1.5, 0.0));
+        mesh1.translate(vec3(0.0, 1.5, 0.0));
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
-        mesh2.translate(&vec3(0.5, 2.0, 0.5));
+        mesh2.translate(vec3(0.5, 2.0, 0.5));
 
         let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 2);

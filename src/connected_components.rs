@@ -53,23 +53,8 @@ mod tests {
     fn test_one_connected_component()
     {
         let mesh = create_connected_test_object();
-        let cc = connected_component(&mesh, &FaceID::new(0));
+        let cc = connected_component(&mesh, &mesh.face_iter().next().unwrap());
         assert_eq!(cc.len(), mesh.no_faces());
-    }
-
-    #[test]
-    fn test_three_connected_component()
-    {
-        let mesh = create_unconnected_test_object();
-
-        let mut cc = connected_component(&mesh, &FaceID::new(0));
-        assert_eq!(cc.len(), 12);
-
-        cc = connected_component(&mesh, &FaceID::new(13));
-        assert_eq!(cc.len(), 2);
-
-        cc = connected_component(&mesh, &FaceID::new(14));
-        assert_eq!(cc.len(), 1);
     }
 
     #[test]
