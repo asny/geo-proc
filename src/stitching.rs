@@ -74,44 +74,44 @@ fn split_meshes(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<HashSet<(VertexID,
     Ok(stitches)
 }
 
-fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(PrimitiveID, PrimitiveID), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Result<Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>, Error>
+fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(Primitive, Primitive), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Result<Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>, Error>
 {
     let mut new_edges1 = Vec::new();
     let mut new_edges2 = Vec::new();
 
     // Split faces
-    let mut new_intersections: HashMap<(PrimitiveID, PrimitiveID), Vec3> = HashMap::new();
+    let mut new_intersections: HashMap<(Primitive, Primitive), Vec3> = HashMap::new();
     let mut face_splits1 = HashMap::new();
     let mut face_splits2= HashMap::new();
     for ((id1, id2), point) in intersections.iter()
     {
-        if let PrimitiveID::Face(face_id) = id1
+        if let Primitive::Face(face_id) = id1
         {
             match find_face_primitive_to_split(&face_splits1, mesh1, face_id.clone(), point) {
-                PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((PrimitiveID::Vertex(vertex_id), id2.clone()), *point); },
-                PrimitiveID::Edge(edge) => { new_intersections.insert((PrimitiveID::Edge(edge), id2.clone()), *point); },
-                PrimitiveID::Face(ref split_face_id) => {
+                Primitive::Vertex(vertex_id) => { new_intersections.insert((Primitive::Vertex(vertex_id), id2.clone()), *point); },
+                Primitive::Edge(edge) => { new_intersections.insert((Primitive::Edge(edge), id2.clone()), *point); },
+                Primitive::Face(ref split_face_id) => {
                     let vertex_id = mesh1.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits1, mesh1, face_id.clone(), &vertex_id);
                     for walker in mesh1.vertex_halfedge_iter(&vertex_id) {
                         new_edges1.push(mesh1.ordered_edge_vertices(&walker.halfedge_id().unwrap()));
                     }
-                    new_intersections.insert((PrimitiveID::Vertex(vertex_id), id2.clone()), *point);
+                    new_intersections.insert((Primitive::Vertex(vertex_id), id2.clone()), *point);
                 }
             }
         }
-        else if let PrimitiveID::Face(face_id) = id2
+        else if let Primitive::Face(face_id) = id2
         {
             match find_face_primitive_to_split(&face_splits2, mesh2, face_id.clone(), point) {
-                PrimitiveID::Vertex(vertex_id) => { new_intersections.insert((id1.clone(), PrimitiveID::Vertex(vertex_id)), *point); },
-                PrimitiveID::Edge(edge) => { new_intersections.insert((id1.clone(), PrimitiveID::Edge(edge)), *point); },
-                PrimitiveID::Face(ref split_face_id) => {
+                Primitive::Vertex(vertex_id) => { new_intersections.insert((id1.clone(), Primitive::Vertex(vertex_id)), *point); },
+                Primitive::Edge(edge) => { new_intersections.insert((id1.clone(), Primitive::Edge(edge)), *point); },
+                Primitive::Face(ref split_face_id) => {
                     let vertex_id = mesh2.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits2, mesh2, face_id.clone(), &vertex_id);
                     for walker in mesh2.vertex_halfedge_iter(&vertex_id) {
                         new_edges2.push(mesh2.ordered_edge_vertices(&walker.halfedge_id().unwrap()));
                     }
-                    new_intersections.insert((id1.clone(), PrimitiveID::Vertex(vertex_id)), *point);
+                    new_intersections.insert((id1.clone(), Primitive::Vertex(vertex_id)), *point);
                 }
             }
         }
@@ -126,11 +126,11 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
     for ((id1, id2), point) in new_intersections.drain()
     {
         let vertex_id1 = match id1 {
-            PrimitiveID::Vertex(vertex_id) => { vertex_id },
-            PrimitiveID::Edge(edge) => {
+            Primitive::Vertex(vertex_id) => { vertex_id },
+            Primitive::Edge(edge) => {
                 match find_edge_primitive_to_split(&edge_splits1, mesh1, edge, &point) {
-                    PrimitiveID::Vertex(vertex_id) => { vertex_id },
-                    PrimitiveID::Edge(ref split_edge) => {
+                    Primitive::Vertex(vertex_id) => { vertex_id },
+                    Primitive::Edge(ref split_edge) => {
                         let halfedge_id = mesh1.connecting_edge(&split_edge.0, &split_edge.1).ok_or(
                             Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}
                         )?;
@@ -151,11 +151,11 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
             _ => {unreachable!()}
         };
         let vertex_id2 = match id2 {
-            PrimitiveID::Vertex(vertex_id) => { vertex_id },
-            PrimitiveID::Edge(edge) => {
+            Primitive::Vertex(vertex_id) => { vertex_id },
+            Primitive::Edge(edge) => {
                 match find_edge_primitive_to_split(&edge_splits2, mesh2, edge, &point) {
-                    PrimitiveID::Vertex(vertex_id) => { vertex_id },
-                    PrimitiveID::Edge(ref split_edge) => {
+                    Primitive::Vertex(vertex_id) => { vertex_id },
+                    Primitive::Edge(ref split_edge) => {
                         let halfedge_id = mesh2.connecting_edge(&split_edge.0, &split_edge.1).ok_or(
                             Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}
                         )?;
@@ -182,7 +182,7 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
     else {Ok(None)}
 }
 
-fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, face_id: FaceID, point: &Vec3) -> PrimitiveID
+fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, face_id: FaceID, point: &Vec3) -> Primitive
 {
     if let Some(new_faces) = face_splits.get(&face_id)
     {
@@ -192,10 +192,10 @@ fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, 
         }
         unreachable!()
     }
-    PrimitiveID::Face(face_id)
+    Primitive::Face(face_id)
 }
 
-fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &Mesh, edge: (VertexID, VertexID), point: &Vec3) -> PrimitiveID
+fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &Mesh, edge: (VertexID, VertexID), point: &Vec3) -> Primitive
 {
     if let Some(new_edges) = edge_splits.get(&edge)
     {
@@ -205,7 +205,7 @@ fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), Hash
         }
         unreachable!()
     }
-    PrimitiveID::Edge(edge)
+    Primitive::Edge(edge)
 }
 
 fn insert_edges(edge_list: &mut HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, edge: (VertexID, VertexID), split_edge: &(VertexID, VertexID), vertex_id: &VertexID)
@@ -228,16 +228,16 @@ fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, f
     list.insert(iter.next().unwrap().face_id().unwrap());
 }
 
-fn find_intersections(mesh1: &Mesh, mesh2: &Mesh) -> HashMap<(PrimitiveID, PrimitiveID), Vec3>
+fn find_intersections(mesh1: &Mesh, mesh2: &Mesh) -> HashMap<(Primitive, Primitive), Vec3>
 {
     let edges1 = mesh1.edge_iter().collect();
     let edges2 = mesh2.edge_iter().collect();
     find_intersections_between_edge_face(mesh1, &edges1, mesh2, &edges2)
 }
 
-fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, VertexID)>, mesh2: &Mesh, edges2: &Vec<(VertexID, VertexID)>) -> HashMap<(PrimitiveID, PrimitiveID), Vec3>
+fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, VertexID)>, mesh2: &Mesh, edges2: &Vec<(VertexID, VertexID)>) -> HashMap<(Primitive, Primitive), Vec3>
 {
-    let mut intersections: HashMap<(PrimitiveID, PrimitiveID), Vec3> = HashMap::new();
+    let mut intersections: HashMap<(Primitive, Primitive), Vec3> = HashMap::new();
     for edge1 in edges1
     {
         for face_id2 in mesh2.face_iter()
@@ -274,7 +274,6 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tri_mesh::test_utility::*;
 
     #[test]
     fn test_finding_edge_edge_intersections()
@@ -367,8 +366,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 8);
         assert_eq!(new_edges2.len(), 8);
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
     }
 
     #[test]
@@ -396,8 +395,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 19);
         assert_eq!(new_edges2.len(), 19);
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
 
     }
 
@@ -438,8 +437,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 6);
         assert_eq!(new_edges2.len(), 2);
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
     }
 
     #[test]
@@ -472,8 +471,8 @@ mod tests {
         assert_eq!(new_edges1.len(), 2);
         assert_eq!(new_edges2.len(), 2);
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
     }
 
     #[test]
@@ -491,8 +490,8 @@ mod tests {
 
         assert_eq!(stitches.len(), 2);
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
     }
 
     #[test]
@@ -505,8 +504,8 @@ mod tests {
 
         assert_eq!(stitches.len(), 8);
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
     }
 
     #[test]
@@ -519,8 +518,8 @@ mod tests {
         }
         split_meshes(&mut mesh1, &mut mesh2).unwrap();
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
     }
 
     #[test]
@@ -542,13 +541,14 @@ mod tests {
         let m2 = meshes2[0].clone();
         m1.merge_with(&m2).unwrap();
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
 
         assert_eq!(m1.no_faces(), 2);
         assert_eq!(m1.no_vertices(), 4);
-        test_is_valid(&m1).unwrap();
-        test_is_valid(&m2).unwrap();
+
+        m1.is_valid().unwrap();
+        m2.is_valid().unwrap();
     }
 
     #[test]
@@ -570,13 +570,14 @@ mod tests {
         let m2 = meshes2[0].clone();
         m1.merge_with(&m2).unwrap();
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
 
         assert_eq!(m1.no_faces(), 4);
         assert_eq!(m1.no_vertices(), 6);
-        test_is_valid(&m1).unwrap();
-        test_is_valid(&m2).unwrap();
+
+        m1.is_valid().unwrap();
+        m2.is_valid().unwrap();
     }
 
     #[test]
@@ -594,11 +595,11 @@ mod tests {
         let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
         m1.merge_with(&m2).unwrap();
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
 
-        test_is_valid(&m1).unwrap();
-        test_is_valid(&m2).unwrap();
+        m1.is_valid().unwrap();
+        m2.is_valid().unwrap();
     }
 
     #[test]
@@ -629,11 +630,11 @@ mod tests {
         let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
         m1.merge_with(&m2).unwrap();
 
-        test_is_valid(&mesh1).unwrap();
-        test_is_valid(&mesh2).unwrap();
+        mesh1.is_valid().unwrap();
+        mesh2.is_valid().unwrap();
 
-        test_is_valid(&m1).unwrap();
-        test_is_valid(&m2).unwrap();
+        m1.is_valid().unwrap();
+        m2.is_valid().unwrap();
     }
 
     fn create_simple_mesh_x_z() -> Mesh

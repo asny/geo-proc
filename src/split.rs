@@ -23,7 +23,6 @@ pub fn split(mesh: &Mesh, is_at_split: &Fn(&Mesh, &HalfEdgeID) -> bool) -> Vec<M
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tri_mesh::test_utility::*;
 
     #[test]
     fn test_splitting()
@@ -42,9 +41,9 @@ mod tests {
         let m1 = &meshes[0];
         let m2 = &meshes[1];
 
-        test_is_valid(&mesh).unwrap();
-        test_is_valid(m1).unwrap();
-        test_is_valid(m2).unwrap();
+        mesh.is_valid().unwrap();
+        m1.is_valid().unwrap();
+        m2.is_valid().unwrap();
 
         assert_eq!(m1.no_faces(), 2);
         assert_eq!(m2.no_faces(), 2);
