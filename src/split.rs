@@ -3,12 +3,12 @@ use tri_mesh::prelude::*;
 use crate::connected_components::*;
 use std::collections::HashSet;
 
-pub fn split(mesh: &Mesh, is_at_split: &Fn(&Mesh, &HalfEdgeID) -> bool) -> Vec<Mesh>
+pub fn split(mesh: &Mesh, is_at_split: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 {
     let mut components: Vec<HashSet<FaceID>> = Vec::new();
     for face_id in mesh.face_iter() {
         if components.iter().find(|com| com.contains(&face_id)).is_none() {
-            components.push(connected_component_with_limit(mesh, &face_id, &|halfedge_id| is_at_split(mesh, &halfedge_id)));
+            components.push(connected_component_with_limit(mesh, face_id, &|halfedge_id| is_at_split(mesh, halfedge_id)));
         }
     }
 

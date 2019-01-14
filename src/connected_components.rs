@@ -2,16 +2,16 @@
 use tri_mesh::prelude::*;
 use std::collections::HashSet;
 
-pub fn connected_component(mesh: &Mesh, face_id: &FaceID) -> HashSet<FaceID>
+pub fn connected_component(mesh: &Mesh, face_id: FaceID) -> HashSet<FaceID>
 {
     connected_component_with_limit(mesh, face_id, &|_| false )
 }
 
-pub fn connected_component_with_limit(mesh: &Mesh, face_id: &FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
+pub fn connected_component_with_limit(mesh: &Mesh, face_id: FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
 {
     let mut component = HashSet::new();
-    component.insert(face_id.clone());
-    let mut to_be_tested = vec![face_id.clone()];
+    component.insert(face_id);
+    let mut to_be_tested = vec![face_id];
 
     loop {
         let test_face = match to_be_tested.pop() {
@@ -19,12 +19,12 @@ pub fn connected_component_with_limit(mesh: &Mesh, face_id: &FaceID, limit: &Fn(
             None => break
         };
 
-        for mut walker in mesh.face_halfedge_iter(&test_face) {
+        for mut walker in mesh.face_halfedge_iter(test_face) {
             if !limit(walker.halfedge_id().unwrap()) {
                 if let Some(face_id) = walker.as_twin().face_id() {
                     if !component.contains(&face_id)
                     {
-                        component.insert(face_id.clone());
+                        component.insert(face_id);
                         to_be_tested.push(face_id);
                     }
                 }
@@ -37,7 +37,7 @@ pub fn connected_component_with_limit(mesh: &Mesh, face_id: &FaceID, limit: &Fn(
 pub fn connected_components(mesh: &Mesh) -> Vec<HashSet<FaceID>>
 {
     let mut result = Vec::new();
-    while let Some(ref face_id) = mesh.face_iter().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
+    while let Some(face_id) = mesh.face_iter().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
     {
         result.push(connected_component(mesh, face_id));
     }
@@ -53,7 +53,7 @@ mod tests {
     fn test_one_connected_component()
     {
         let mesh = create_connected_test_object();
-        let cc = connected_component(&mesh, &mesh.face_iter().next().unwrap());
+        let cc = connected_component(&mesh, mesh.face_iter().next().unwrap());
         assert_eq!(cc.len(), mesh.no_faces());
     }
 
