@@ -19,9 +19,9 @@ pub fn connected_component_with_limit(mesh: &Mesh, face_id: FaceID, limit: &Fn(H
             None => break
         };
 
-        for mut walker in mesh.face_halfedge_iter(test_face) {
-            if !limit(walker.halfedge_id().unwrap()) {
-                if let Some(face_id) = walker.as_twin().face_id() {
+        for halfedge_id in mesh.face_halfedge_iter(test_face) {
+            if !limit(halfedge_id) {
+                if let Some(face_id) = mesh.walker_from_halfedge(halfedge_id).as_twin().face_id() {
                     if !component.contains(&face_id)
                     {
                         component.insert(face_id);

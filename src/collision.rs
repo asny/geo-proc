@@ -4,6 +4,19 @@ use tri_mesh::prelude::*;
 const MARGIN: f32 = 0.00001;
 const SQR_MARGIN: f32 = MARGIN * MARGIN;
 
+///
+/// An enum describing the types of primitives.
+///
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum Primitive {
+    /// Vertex
+    Vertex(VertexID),
+    /// Edge
+    Edge((VertexID, VertexID)),
+    /// Face
+    Face(FaceID)
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Intersection {
     pub id1: Primitive,
@@ -296,7 +309,7 @@ mod tests {
         let mesh1 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]).build().unwrap();
         let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![1.0 + MARGIN, 0.0, 0.0, 3.0, 0.0, 1.0, 4.0, 0.0, 0.0]).build().unwrap();
         let face_id = mesh1.face_iter().next().unwrap();
-        let edge_id = mesh2.edge_iter().next().unwrap();
+        let edge_id = mesh2.ordered_edge_vertices(mesh2.edge_iter().next().unwrap());
 
         let result = find_face_edge_intersections(&mesh1, face_id, &mesh2, edge_id);
         assert_eq!(result, None);
@@ -309,7 +322,7 @@ mod tests {
         let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.0, 1.0, 0.0, 0.1, 0.0, 0.1, 1.0, 1.0, 0.0]).build().unwrap();
         let intersection_point = vec3(0.1, 0.0, 0.1);
         let face_id = mesh1.face_iter().next().unwrap();
-        let edge_id = mesh2.edge_iter().find(|(v1, _)| *mesh2.vertex_position(*v1) == intersection_point).unwrap();
+        let edge_id = mesh2.edge_iter().map(|halfedge_id| mesh2.ordered_edge_vertices(halfedge_id)).find(|(v1, _)| *mesh2.vertex_position(*v1) == intersection_point).unwrap();
 
         let result = find_face_edge_intersections(&mesh1, face_id, &mesh2, edge_id);
         let vertex_id = mesh2.vertex_iter().find(|v| *mesh2.vertex_position(*v) == intersection_point).unwrap();
@@ -323,7 +336,7 @@ mod tests {
         let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.1, 1.0, 0.1, 0.1, -0.1, 0.1, 1.0, 1.0, 0.0]).build().unwrap();
 
         let face_id = mesh1.face_iter().next().unwrap();
-        let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.vertex_position(*v1)[0] == 0.1 && mesh2.vertex_position(*v2)[0] == 0.1 ).unwrap();
+        let edge_id = mesh2.edge_iter().map(|halfedge_id| mesh2.ordered_edge_vertices(halfedge_id)).find(|(v1, v2)| mesh2.vertex_position(*v1)[0] == 0.1 && mesh2.vertex_position(*v2)[0] == 0.1 ).unwrap();
 
         let result = find_face_edge_intersections(&mesh1, face_id, &mesh2, edge_id);
         assert_eq!(result, Some((Intersection {id1: Primitive::Face(face_id), id2: Primitive::Edge(edge_id), point: vec3(0.1, 0.0, 0.1)}, None) ));
@@ -336,7 +349,7 @@ mod tests {
         let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.1, 0.0, 0.1, 0.2, 0.0, 0.2, 1.0, 1.0, 0.0]).build().unwrap();
 
         let face_id = mesh1.face_iter().next().unwrap();
-        let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.vertex_position(*v1)[1] == 0.0 && mesh2.vertex_position(*v2)[1] == 0.0 ).unwrap();
+        let edge_id = mesh2.edge_iter().map(|halfedge_id| mesh2.ordered_edge_vertices(halfedge_id)).find(|(v1, v2)| mesh2.vertex_position(*v1)[1] == 0.0 && mesh2.vertex_position(*v2)[1] == 0.0 ).unwrap();
 
         let result = find_face_edge_intersections(&mesh1, face_id, &mesh2, edge_id);
         assert_eq!(result, Some((Intersection {id1: Primitive::Face(face_id), id2: Primitive::Vertex(edge_id.0), point: vec3(0.1, 0.0, 0.1)},
@@ -350,7 +363,7 @@ mod tests {
         let mesh2 = MeshBuilder::new().with_indices((0..3).collect()).with_positions(vec![0.1, 0.0, 0.1, 1.2, 0.0, 0.2, 1.0, 1.0, 0.0]).build().unwrap();
 
         let face_id = mesh1.face_iter().next().unwrap();
-        let edge_id = mesh2.edge_iter().find(|(v1, v2)| mesh2.vertex_position(*v1)[1] == 0.0 && mesh2.vertex_position(*v2)[1] == 0.0 ).unwrap();
+        let edge_id = mesh2.edge_iter().map(|halfedge_id| mesh2.ordered_edge_vertices(halfedge_id)).find(|(v1, v2)| mesh2.vertex_position(*v1)[1] == 0.0 && mesh2.vertex_position(*v2)[1] == 0.0 ).unwrap();
 
         let result = find_face_edge_intersections(&mesh1, face_id, &mesh2, edge_id);
         assert_eq!(result, Some((Intersection {id1: Primitive::Face(face_id), id2: Primitive::Vertex(edge_id.0), point: vec3(0.1, 0.0, 0.1)}, None) ));

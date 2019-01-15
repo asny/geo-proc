@@ -93,8 +93,8 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                 Primitive::Face(split_face_id) => {
                     let vertex_id = mesh1.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits1, mesh1, *face_id, vertex_id);
-                    for walker in mesh1.vertex_halfedge_iter(vertex_id) {
-                        new_edges1.push(mesh1.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                    for halfedge_id in mesh1.vertex_halfedge_iter(vertex_id) {
+                        new_edges1.push(mesh1.ordered_edge_vertices(halfedge_id));
                     }
                     new_intersections.insert((Primitive::Vertex(vertex_id), *id2), *point);
                 }
@@ -108,8 +108,8 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                 Primitive::Face(split_face_id) => {
                     let vertex_id = mesh2.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits2, mesh2, *face_id, vertex_id);
-                    for walker in mesh2.vertex_halfedge_iter(vertex_id) {
-                        new_edges2.push(mesh2.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                    for halfedge_id in mesh2.vertex_halfedge_iter(vertex_id) {
+                        new_edges2.push(mesh2.ordered_edge_vertices(halfedge_id));
                     }
                     new_intersections.insert((*id1, Primitive::Vertex(vertex_id)), *point);
                 }
@@ -136,11 +136,11 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                         )?;
                         let vertex_id = mesh1.split_edge(halfedge_id, point);
                         insert_edges(&mut edge_splits1, edge, split_edge, vertex_id);
-                        for walker in mesh1.vertex_halfedge_iter(vertex_id) {
-                            let vid = walker.vertex_id().unwrap();
+                        for halfedge_id in mesh1.vertex_halfedge_iter(vertex_id) {
+                            let vid = mesh1.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
                             if vid != split_edge.0 && vid != split_edge.1
                             {
-                                new_edges1.push(mesh1.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                                new_edges1.push(mesh1.ordered_edge_vertices(halfedge_id));
                             }
                         }
                         vertex_id
@@ -161,11 +161,11 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                         )?;
                         let vertex_id = mesh2.split_edge(halfedge_id, point);
                         insert_edges(&mut edge_splits2, edge, split_edge, vertex_id);
-                        for walker in mesh2.vertex_halfedge_iter(vertex_id) {
-                            let vid = walker.vertex_id().unwrap();
+                        for halfedge_id in mesh2.vertex_halfedge_iter(vertex_id) {
+                            let vid = mesh2.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
                             if vid != split_edge.0 && vid != split_edge.1
                             {
-                                new_edges2.push(mesh2.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                                new_edges2.push(mesh2.ordered_edge_vertices(halfedge_id));
                             }
                         }
                         vertex_id
@@ -223,15 +223,15 @@ fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, f
     let list = face_list.get_mut(&face_id).unwrap();
 
     let mut iter = mesh.vertex_halfedge_iter(vertex_id);
-    list.insert(iter.next().unwrap().face_id().unwrap());
-    list.insert(iter.next().unwrap().face_id().unwrap());
-    list.insert(iter.next().unwrap().face_id().unwrap());
+    list.insert(mesh.walker_from_halfedge(iter.next().unwrap()).face_id().unwrap());
+    list.insert(mesh.walker_from_halfedge(iter.next().unwrap()).face_id().unwrap());
+    list.insert(mesh.walker_from_halfedge(iter.next().unwrap()).face_id().unwrap());
 }
 
 fn find_intersections(mesh1: &Mesh, mesh2: &Mesh) -> HashMap<(Primitive, Primitive), Vec3>
 {
-    let edges1 = mesh1.edge_iter().collect();
-    let edges2 = mesh2.edge_iter().collect();
+    let edges1 = mesh1.edge_iter().map(|halfedge_id| mesh1.ordered_edge_vertices(halfedge_id)).collect();
+    let edges2 = mesh2.edge_iter().map(|halfedge_id| mesh2.ordered_edge_vertices(halfedge_id)).collect();
     find_intersections_between_edge_face(mesh1, &edges1, mesh2, &edges2)
 }
 
@@ -593,6 +593,10 @@ mod tests {
 
         let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
         let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+
+        m1.is_valid().unwrap();
+        m2.is_valid().unwrap();
+
         m1.merge_with(&m2).unwrap();
 
         mesh1.is_valid().unwrap();
@@ -628,6 +632,10 @@ mod tests {
 
         let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
         let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+
+        m1.is_valid().unwrap();
+        m2.is_valid().unwrap();
+
         m1.merge_with(&m2).unwrap();
 
         mesh1.is_valid().unwrap();
