@@ -74,7 +74,7 @@ fn split_meshes(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<HashSet<(VertexID,
     Ok(stitches)
 }
 
-fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(Primitive, Primitive), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Result<Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>, Error>
+fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(Primitive, Primitive), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Result<Option<(Vec<HalfEdgeID>, Vec<HalfEdgeID>)>, Error>
 {
     let mut new_edges1 = Vec::new();
     let mut new_edges2 = Vec::new();
@@ -93,8 +93,8 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                 Primitive::Face(split_face_id) => {
                     let vertex_id = mesh1.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits1, mesh1, *face_id, vertex_id);
-                    for walker in mesh1.vertex_halfedge_iter(vertex_id) {
-                        new_edges1.push(mesh1.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                    for halfedge_id in mesh1.vertex_halfedge_iter(vertex_id) {
+                        new_edges1.push(halfedge_id);
                     }
                     new_intersections.insert((Primitive::Vertex(vertex_id), *id2), *point);
                 }
@@ -108,8 +108,8 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                 Primitive::Face(split_face_id) => {
                     let vertex_id = mesh2.split_face(split_face_id, point.clone());
                     insert_faces(&mut face_splits2, mesh2, *face_id, vertex_id);
-                    for walker in mesh2.vertex_halfedge_iter(vertex_id) {
-                        new_edges2.push(mesh2.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                    for halfedge_id in mesh2.vertex_halfedge_iter(vertex_id) {
+                        new_edges2.push(halfedge_id);
                     }
                     new_intersections.insert((*id1, Primitive::Vertex(vertex_id)), *point);
                 }
@@ -131,16 +131,15 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                 match find_edge_primitive_to_split(&edge_splits1, mesh1, edge, &point) {
                     Primitive::Vertex(vertex_id) => { vertex_id },
                     Primitive::Edge(split_edge) => {
-                        let halfedge_id = mesh1.connecting_edge(split_edge.0, split_edge.1).ok_or(
-                            Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}
-                        )?;
-                        let vertex_id = mesh1.split_edge(halfedge_id, point);
-                        insert_edges(&mut edge_splits1, edge, split_edge, vertex_id);
-                        for walker in mesh1.vertex_halfedge_iter(vertex_id) {
-                            let vid = walker.vertex_id().unwrap();
-                            if vid != split_edge.0 && vid != split_edge.1
+                        let vertex_pair = mesh1.ordered_edge_vertices(edge);
+                        let (v0, v1) = mesh1.ordered_edge_vertices(split_edge);
+                        let vertex_id = mesh1.split_edge(split_edge, point);
+                        insert_edges(&mut edge_splits1, vertex_pair, (v0, v1), vertex_id);
+                        for halfedge_id in mesh1.vertex_halfedge_iter(vertex_id) {
+                            let vid = mesh1.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
+                            if vid != v0 && vid != v1
                             {
-                                new_edges1.push(mesh1.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                                new_edges1.push(halfedge_id);
                             }
                         }
                         vertex_id
@@ -156,16 +155,15 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                 match find_edge_primitive_to_split(&edge_splits2, mesh2, edge, &point) {
                     Primitive::Vertex(vertex_id) => { vertex_id },
                     Primitive::Edge(split_edge) => {
-                        let halfedge_id = mesh2.connecting_edge(split_edge.0, split_edge.1).ok_or(
-                            Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}
-                        )?;
-                        let vertex_id = mesh2.split_edge(halfedge_id, point);
-                        insert_edges(&mut edge_splits2, edge, split_edge, vertex_id);
-                        for walker in mesh2.vertex_halfedge_iter(vertex_id) {
-                            let vid = walker.vertex_id().unwrap();
-                            if vid != split_edge.0 && vid != split_edge.1
+                        let vertex_pair = mesh2.ordered_edge_vertices(edge);
+                        let (v0, v1) = mesh2.ordered_edge_vertices(split_edge);
+                        let vertex_id = mesh2.split_edge(split_edge, point);
+                        insert_edges(&mut edge_splits2, vertex_pair, (v0, v1), vertex_id);
+                        for halfedge_id in mesh2.vertex_halfedge_iter(vertex_id) {
+                            let vid = mesh2.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
+                            if vid != v0 && vid != v1
                             {
-                                new_edges2.push(mesh2.ordered_edge_vertices(walker.halfedge_id().unwrap()));
+                                new_edges2.push(halfedge_id);
                             }
                         }
                         vertex_id
@@ -195,13 +193,14 @@ fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, 
     Primitive::Face(face_id)
 }
 
-fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &Mesh, edge: (VertexID, VertexID), point: &Vec3) -> Primitive
+fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), HashSet<(VertexID, VertexID)>>, mesh: &Mesh, edge: HalfEdgeID, point: &Vec3) -> Primitive
 {
-    if let Some(new_edges) = edge_splits.get(&edge)
+    let vertex_pair = mesh.ordered_edge_vertices(edge);
+    if let Some(new_edges) = edge_splits.get(&vertex_pair)
     {
         for new_edge in new_edges
         {
-            if let Some(id) = find_edge_intersection(mesh, *new_edge, point) { return id; }
+            if let Some(id) = find_edge_intersection(mesh, min_connecting_edge(mesh, new_edge.0, new_edge.1), point) { return id; }
         }
         unreachable!()
     }
@@ -223,9 +222,9 @@ fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, f
     let list = face_list.get_mut(&face_id).unwrap();
 
     let mut iter = mesh.vertex_halfedge_iter(vertex_id);
-    list.insert(iter.next().unwrap().face_id().unwrap());
-    list.insert(iter.next().unwrap().face_id().unwrap());
-    list.insert(iter.next().unwrap().face_id().unwrap());
+    list.insert(mesh.walker_from_halfedge(iter.next().unwrap()).face_id().unwrap());
+    list.insert(mesh.walker_from_halfedge(iter.next().unwrap()).face_id().unwrap());
+    list.insert(mesh.walker_from_halfedge(iter.next().unwrap()).face_id().unwrap());
 }
 
 fn find_intersections(mesh1: &Mesh, mesh2: &Mesh) -> HashMap<(Primitive, Primitive), Vec3>
@@ -235,7 +234,7 @@ fn find_intersections(mesh1: &Mesh, mesh2: &Mesh) -> HashMap<(Primitive, Primiti
     find_intersections_between_edge_face(mesh1, &edges1, mesh2, &edges2)
 }
 
-fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, VertexID)>, mesh2: &Mesh, edges2: &Vec<(VertexID, VertexID)>) -> HashMap<(Primitive, Primitive), Vec3>
+fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<HalfEdgeID>, mesh2: &Mesh, edges2: &Vec<HalfEdgeID>) -> HashMap<(Primitive, Primitive), Vec3>
 {
     let mut intersections: HashMap<(Primitive, Primitive), Vec3> = HashMap::new();
     for edge1 in edges1
