@@ -26,7 +26,7 @@ pub struct Intersection {
 
 pub fn find_face_edge_intersections(mesh1: &Mesh, face_id: FaceID, mesh2: &Mesh, edge_id: HalfEdgeID) -> Option<(Intersection, Option<Intersection>)>
 {
-    let (vertex_id0, vertex_id1) = mesh2.edge_vertices(edge_id);
+    let (vertex_id0, vertex_id1) = mesh2.ordered_edge_vertices(edge_id);
     let p0 = mesh2.vertex_position(vertex_id0);
     let p1 = mesh2.vertex_position(vertex_id1);
 
@@ -134,9 +134,9 @@ fn find_face_point_intersection_when_point_in_plane(mesh: &Mesh, face_id: FaceID
     if (*b - *point).magnitude2() < SQR_MARGIN { return Some(Primitive::Vertex(v1)); }
     if (*c - *point).magnitude2() < SQR_MARGIN { return Some(Primitive::Vertex(v2)); }
 
-    if point_line_segment_distance(point, a, b) < MARGIN { return Some(Primitive::Edge(mesh.connecting_edge(v0, v1).unwrap())); }
-    if point_line_segment_distance(point, b, c) < MARGIN { return Some(Primitive::Edge(mesh.connecting_edge(v1, v2).unwrap())); }
-    if point_line_segment_distance(point, a, c) < MARGIN { return Some(Primitive::Edge(mesh.connecting_edge(v0, v2).unwrap())); }
+    if point_line_segment_distance(point, a, b) < MARGIN { return Some(Primitive::Edge(min_connecting_edge(mesh, v0, v1))); }
+    if point_line_segment_distance(point, b, c) < MARGIN { return Some(Primitive::Edge(min_connecting_edge(mesh, v1, v2))); }
+    if point_line_segment_distance(point, a, c) < MARGIN { return Some(Primitive::Edge(min_connecting_edge(mesh, v0, v2))); }
 
     // Test whether the intersection point lies inside the face
     let coords = barycentric(point, a, b, c);
@@ -145,6 +145,13 @@ fn find_face_point_intersection_when_point_in_plane(mesh: &Mesh, face_id: FaceID
         return Some(Primitive::Face(face_id));
     }
     None
+}
+
+pub fn min_connecting_edge(mesh: &Mesh, v0: VertexID, v1: VertexID) -> HalfEdgeID
+{
+    let halfedge_id = mesh.connecting_edge(v0, v1).unwrap();
+    let twin_id = mesh.walker_from_halfedge(halfedge_id).twin_id().unwrap();
+    if halfedge_id < twin_id { halfedge_id } else { twin_id }
 }
 
 #[derive(Debug, PartialEq)]
@@ -349,7 +356,7 @@ mod tests {
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|halfedge_id| {let (p1, p2) = mesh2.edge_positions(*halfedge_id); p1[1] == 0.0 && p2[1] == 0.0 } ).unwrap();
-        let (v0, v1) = mesh2.edge_vertices(edge_id);
+        let (v0, v1) = mesh2.ordered_edge_vertices(edge_id);
 
         let result = find_face_edge_intersections(&mesh1, face_id, &mesh2, edge_id);
         assert_eq!(result, Some((Intersection {id1: Primitive::Face(face_id), id2: Primitive::Vertex(v0), point: vec3(0.1, 0.0, 0.1)},
@@ -364,7 +371,7 @@ mod tests {
 
         let face_id = mesh1.face_iter().next().unwrap();
         let edge_id = mesh2.edge_iter().find(|halfedge_id| {let (p1, p2) = mesh2.edge_positions(*halfedge_id); p1[1] == 0.0 && p2[1] == 0.0 } ).unwrap();
-        let (v0, _) = mesh2.edge_vertices(edge_id);
+        let (v0, _) = mesh2.ordered_edge_vertices(edge_id);
 
         let result = find_face_edge_intersections(&mesh1, face_id, &mesh2, edge_id);
         assert_eq!(result, Some((Intersection {id1: Primitive::Face(face_id), id2: Primitive::Vertex(v0), point: vec3(0.1, 0.0, 0.1)}, None) ));
