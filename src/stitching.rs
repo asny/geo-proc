@@ -26,34 +26,27 @@ pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Resu
 
 pub fn split_meshes_at_intersections_and_return_components(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<HashSet<FaceID>>, Vec<HashSet<FaceID>>), Error>
 {
-    let stitches = split_meshes(mesh1, mesh2)?;
-    if stitches.iter().len() == 0 { return Ok((vec![mesh1.face_iter().collect()], vec![mesh2.face_iter().collect()])) }
-
-    let mut seam1 = HashMap::new();
-    stitches.iter().for_each(|pair| {seam1.insert(pair.0, pair.1);});
-    let mut seam2 = HashMap::new();
-    stitches.iter().for_each(|pair| {seam2.insert(pair.1, pair.0);});
-
-    let meshes1 = split_mesh_into_components(mesh1, mesh2, &seam1);
-    let meshes2 = split_mesh_into_components(mesh2, mesh1, &seam2);
+    split_meshes(mesh1, mesh2)?;
+    let meshes1 = split_mesh_into_components(mesh1, mesh2);
+    let meshes2 = split_mesh_into_components(mesh2, mesh1);
 
     Ok((meshes1, meshes2))
 }
 
-fn split_mesh_into_components(mesh: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID, VertexID>) -> Vec<HashSet<FaceID>>
+fn split_mesh_into_components(mesh: &Mesh, mesh2: &Mesh) -> Vec<HashSet<FaceID>>
 {
     let mut components: Vec<HashSet<FaceID>> = Vec::new();
     for face_id in mesh.face_iter() {
         if components.iter().find(|com| com.contains(&face_id)).is_none() {
             let component = connected_component_with_limit(mesh, face_id,
-                                                           &|halfedge_id| { is_at_seam(mesh, mesh2, seam, halfedge_id) });
+                                                           &|halfedge_id| { is_at_seam(mesh, mesh2, halfedge_id) });
             components.push(component);
         }
     }
     components
 }
 
-fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: HalfEdgeID) -> bool
+fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bool
 {
     let (p10, p11) = mesh1.edge_positions(halfedge_id);
     for halfedge_id2 in mesh2.edge_iter() {
@@ -671,7 +664,7 @@ mod tests {
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(vec3(0.0, 2.0, 0.0));
 
-        let result = split_mesh_into_components(&mesh1, &mesh2,&HashMap::new());
+        let result = split_mesh_into_components(&mesh1, &mesh2);
 
         assert_eq!(result.len(), 2);
         assert!(result.iter().find(|cc| cc.len() == 2).is_some());
@@ -687,7 +680,7 @@ mod tests {
         let indices = vec![0, 1, 2,  0, 2, 3,  0, 3, 4];
         let mut mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
-        let result = split_mesh_into_components(&mesh2, &mesh1,&HashMap::new());
+        let result = split_mesh_into_components(&mesh2, &mesh1);
 
         assert_eq!(result.len(), 2);
         assert!(result.iter().find(|cc| cc.len() == 1).is_some());
