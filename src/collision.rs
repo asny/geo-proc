@@ -106,6 +106,21 @@ pub fn find_edge_intersection(mesh: &Mesh, edge: (VertexID, VertexID), point: &V
     None
 }
 
+pub fn point_and_point_intersects(point1: &Vec3, point2: &Vec3) -> bool
+{
+    (point1 - point2).magnitude2() < SQR_MARGIN
+}
+
+pub fn face_and_face_overlaps(mesh1: &Mesh, face_id1: FaceID, mesh2: &Mesh, face_id2: FaceID) -> bool
+{
+    let (p10, p11, p12) = mesh1.face_positions(face_id1);
+    let (p20, p21, p22) = mesh2.face_positions(face_id2);
+
+    (point_and_point_intersects(p10, p20) || point_and_point_intersects(p11, p20) || point_and_point_intersects(p12, p20))
+        && (point_and_point_intersects(p10, p21) || point_and_point_intersects(p11, p21) || point_and_point_intersects(p12, p21))
+        && (point_and_point_intersects(p10, p22) || point_and_point_intersects(p11, p22) || point_and_point_intersects(p12, p22))
+}
+
 pub fn find_face_point_intersection(mesh: &Mesh, face_id: FaceID, point: &Vec3) -> Option<Primitive>
 {
     let p = *mesh.vertex_position(mesh.walker_from_face(face_id).vertex_id().unwrap());
