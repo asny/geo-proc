@@ -45,7 +45,8 @@ fn split_mesh_into_components(mesh: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID
     let mut components: Vec<HashSet<FaceID>> = Vec::new();
     for face_id in mesh.face_iter() {
         if components.iter().find(|com| com.contains(&face_id)).is_none() {
-            let component = connected_component_with_limit(mesh, face_id, &|halfedge_id| { is_at_seam(mesh, mesh2, seam, halfedge_id) });
+            let component = connected_component_with_limit(mesh, face_id,
+                                                           &|halfedge_id| { is_at_seam(mesh, mesh2, seam, halfedge_id) });
             components.push(component);
         }
     }
@@ -54,10 +55,28 @@ fn split_mesh_into_components(mesh: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID
 
 fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, seam: &HashMap<VertexID, VertexID>, halfedge_id: HalfEdgeID) -> bool
 {
-    let vertices = mesh1.ordered_edge_vertices(halfedge_id);
-    if let Some(vertex_id1) = seam.get(&vertices.0) {
-        if let Some(vertex_id2) = seam.get(&vertices.1) {
-            return mesh2.connecting_edge(*vertex_id1, *vertex_id2).is_some()
+    let (p10, p11) = mesh1.edge_positions(halfedge_id);
+    for halfedge_id2 in mesh2.edge_iter() {
+        let (p20, p21) = mesh2.edge_positions(halfedge_id2);
+        if point_and_point_intersects(p10, p20) && point_and_point_intersects(p11, p21) ||
+            point_and_point_intersects(p11, p20) && point_and_point_intersects(p10, p21)
+        {
+            if mesh1.is_edge_on_boundary(halfedge_id) || mesh2.is_edge_on_boundary(halfedge_id2) {
+                return true;
+            }
+            let mut walker1 = mesh1.walker_from_halfedge(halfedge_id);
+            let mut walker2 = mesh2.walker_from_halfedge(halfedge_id2);
+            let face_id10 = walker1.face_id().unwrap();
+            let face_id11 = walker1.as_twin().face_id().unwrap();
+            let face_id20 = walker2.face_id().unwrap();
+            let face_id21 = walker2.as_twin().face_id().unwrap();
+            if (!face_and_face_overlaps(mesh1, face_id10, mesh2, face_id20) &&
+                !face_and_face_overlaps(mesh1, face_id10, mesh2, face_id21)) ||
+                (!face_and_face_overlaps(mesh1, face_id11, mesh2, face_id20) &&
+                !face_and_face_overlaps(mesh1, face_id11, mesh2, face_id21))
+            {
+                return true;
+            }
         }
     }
     false
@@ -643,6 +662,37 @@ mod tests {
 
         m1.is_valid().unwrap();
         m2.is_valid().unwrap();
+    }
+
+    #[test]
+    fn test_split_mesh_into_components()
+    {
+        let mesh1 = MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
+        mesh2.translate(vec3(0.0, 2.0, 0.0));
+
+        let result = split_mesh_into_components(&mesh1, &mesh2,&HashMap::new());
+
+        assert_eq!(result.len(), 2);
+        assert!(result.iter().find(|cc| cc.len() == 2).is_some());
+        assert!(result.iter().find(|cc| cc.len() == 10).is_some());
+    }
+
+    #[test]
+    fn test_split_mesh_into_components2()
+    {
+        let mesh1 = MeshBuilder::new().cube().build().unwrap();
+
+        let positions = vec![-1.0, 1.0, 1.0,  -1.0, -1.0, 1.0,  1.0, -1.0, -1.0,  1.0, 1.0, -1.0, 0.0, 2.0, 0.0 ];
+        let indices = vec![0, 1, 2,  0, 2, 3,  0, 3, 4];
+        let mut mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
+
+        let result = split_mesh_into_components(&mesh2, &mesh1,&HashMap::new());
+
+        assert_eq!(result.len(), 2);
+        assert!(result.iter().find(|cc| cc.len() == 1).is_some());
+        assert!(result.iter().find(|cc| cc.len() == 2).is_some());
+
     }
 
     fn create_simple_mesh_x_z() -> Mesh
