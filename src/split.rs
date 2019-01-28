@@ -5,14 +5,9 @@ use crate::stitching::*;
 use crate::collision::*;
 use std::collections::HashSet;
 
-pub fn cut_into_subsets(mesh: &Mesh, is_at_split: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
+pub fn cut_into_subsets(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 {
-    let mut components: Vec<HashSet<FaceID>> = Vec::new();
-    for face_id in mesh.face_iter() {
-        if components.iter().find(|com| com.contains(&face_id)).is_none() {
-            components.push(connected_component_with_limit(mesh, face_id, &|halfedge_id| is_at_split(mesh, halfedge_id)));
-        }
-    }
+    let components = connected_components_with_limit(mesh, &|halfedge_id| is_at_cut(mesh, halfedge_id));
 
     let mut meshes = Vec::new();
     for component in components {
@@ -39,23 +34,10 @@ pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Resu
 pub fn split_meshes_at_intersections_and_return_components(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<HashSet<FaceID>>, Vec<HashSet<FaceID>>), Error>
 {
     split_primitives_at_intersections(mesh1, mesh2)?;
-    let meshes1 = split_mesh_into_components(mesh1, mesh2);
-    let meshes2 = split_mesh_into_components(mesh2, mesh1);
+    let components1 = connected_components_with_limit(mesh1, &|halfedge_id| is_at_seam(mesh1, mesh2, halfedge_id));
+    let components2 = connected_components_with_limit(mesh2, &|halfedge_id| is_at_seam(mesh2, mesh1, halfedge_id));
 
-    Ok((meshes1, meshes2))
-}
-
-fn split_mesh_into_components(mesh: &Mesh, mesh2: &Mesh) -> Vec<HashSet<FaceID>>
-{
-    let mut components: Vec<HashSet<FaceID>> = Vec::new();
-    for face_id in mesh.face_iter() {
-        if components.iter().find(|com| com.contains(&face_id)).is_none() {
-            let component = connected_component_with_limit(mesh, face_id,
-                                                           &|halfedge_id| { is_at_seam(mesh, mesh2, halfedge_id) });
-            components.push(component);
-        }
-    }
-    components
+    Ok((components1, components2))
 }
 
 fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bool
@@ -246,7 +228,7 @@ mod tests {
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(vec3(0.0, 2.0, 0.0));
 
-        let result = split_mesh_into_components(&mesh1, &mesh2);
+        let result = connected_components_with_limit(&mesh1, &|halfedge_id| is_at_seam(&mesh1, &mesh2, halfedge_id));
 
         assert_eq!(result.len(), 2);
         assert!(result.iter().find(|cc| cc.len() == 2).is_some());
@@ -262,7 +244,7 @@ mod tests {
         let indices = vec![0, 1, 2,  0, 2, 3,  0, 3, 4];
         let mut mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
-        let result = split_mesh_into_components(&mesh2, &mesh1);
+        let result = connected_components_with_limit(&mesh2, &|halfedge_id| is_at_seam(&mesh2, &mesh1, halfedge_id));
 
         assert_eq!(result.len(), 2);
         assert!(result.iter().find(|cc| cc.len() == 1).is_some());
