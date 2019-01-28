@@ -5,21 +5,21 @@ use crate::stitching::*;
 use crate::collision::*;
 use std::collections::HashSet;
 
-pub fn cut_into_subsets(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
+pub fn cut(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 {
     let components = connected_components_with_limit(mesh, &|halfedge_id| is_at_cut(mesh, halfedge_id));
     components.iter().map(|cc| mesh.clone_subset(cc)).collect()
 }
 
-pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
+pub fn cut_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
 {
     split_primitives_at_intersections(mesh1, mesh2)?;
-    let mut meshes1 = cut_into_subsets(&mesh1,&|mesh, halfedge_id| is_at_seam(mesh, mesh2, halfedge_id));
-    let mut meshes2 = cut_into_subsets(&mesh2,&|mesh, halfedge_id| is_at_seam(mesh, mesh1, halfedge_id));
+    let mut meshes1 = cut(&mesh1, &|mesh, halfedge_id| is_at_intersection(mesh, mesh2, halfedge_id));
+    let mut meshes2 = cut(&mesh2, &|mesh, halfedge_id| is_at_intersection(mesh, mesh1, halfedge_id));
     Ok((meshes1, meshes2))
 }
 
-fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bool
+fn is_at_intersection(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bool
 {
     let (p10, p11) = mesh1.edge_positions(halfedge_id);
     for halfedge_id2 in mesh2.edge_iter() {
@@ -53,14 +53,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_cut_into_subsets()
+    fn test_cut()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f32> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
         let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
 
-        let meshes = cut_into_subsets(&mesh, &|mesh,
-                                               he_id| {
+        let meshes = cut(&mesh, &|mesh,
+                                  he_id| {
                 let (p0, p1) = mesh.edge_positions(he_id);
                 p0.z > 0.75 && p0.z < 1.75 && p1.z > 0.75 && p1.z < 1.75
             });
@@ -88,7 +88,7 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 1);
         assert_eq!(meshes2.len(), 1);
 
@@ -117,7 +117,7 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 1.0,  -2.0, 0.0, -1.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 1);
         assert_eq!(meshes2.len(), 1);
 
@@ -142,7 +142,7 @@ mod tests {
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 0.5, 0.5));
 
-        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 2);
         assert_eq!(meshes2.len(), 2);
 
@@ -181,7 +181,7 @@ mod tests {
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 2.0, 0.5));
 
-        let (meshes1, meshes2) = split_meshes_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 2);
         assert_eq!(meshes2.len(), 2);
 
@@ -201,13 +201,13 @@ mod tests {
     }
 
     #[test]
-    fn test_split_mesh_into_components()
+    fn test_is_at_intersection_cube_cube()
     {
         let mesh1 = MeshBuilder::new().cube().build().unwrap();
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(vec3(0.0, 2.0, 0.0));
 
-        let result = connected_components_with_limit(&mesh1, &|halfedge_id| is_at_seam(&mesh1, &mesh2, halfedge_id));
+        let result = connected_components_with_limit(&mesh1, &|halfedge_id| is_at_intersection(&mesh1, &mesh2, halfedge_id));
 
         assert_eq!(result.len(), 2);
         assert!(result.iter().find(|cc| cc.len() == 2).is_some());
@@ -215,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn test_split_mesh_into_components2()
+    fn test_is_at_intersection()
     {
         let mesh1 = MeshBuilder::new().cube().build().unwrap();
 
@@ -223,7 +223,7 @@ mod tests {
         let indices = vec![0, 1, 2,  0, 2, 3,  0, 3, 4];
         let mut mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
-        let result = connected_components_with_limit(&mesh2, &|halfedge_id| is_at_seam(&mesh2, &mesh1, halfedge_id));
+        let result = connected_components_with_limit(&mesh2, &|halfedge_id| is_at_intersection(&mesh2, &mesh1, halfedge_id));
 
         assert_eq!(result.len(), 2);
         assert!(result.iter().find(|cc| cc.len() == 1).is_some());
