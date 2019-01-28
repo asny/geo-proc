@@ -10,7 +10,7 @@ pub fn cut(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
     components.iter().map(|cc| mesh.clone_subset(cc)).collect()
 }
 
-pub fn cut_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
+pub fn cut_at_intersection(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
 {
     split_primitives_at_intersection(mesh1, mesh2)?;
     let meshes1 = cut(&mesh1, &|mesh, halfedge_id| is_at_intersection(mesh, mesh2, halfedge_id));
@@ -87,7 +87,7 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersection(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 1);
         assert_eq!(meshes2.len(), 1);
 
@@ -116,7 +116,7 @@ mod tests {
         let positions2: Vec<f32> = vec![-2.0, 0.0, 1.0,  -2.0, 0.0, -1.0,  -2.0, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersection(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 1);
         assert_eq!(meshes2.len(), 1);
 
@@ -141,7 +141,7 @@ mod tests {
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 0.5, 0.5));
 
-        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersection(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 2);
         assert_eq!(meshes2.len(), 2);
 
@@ -180,7 +180,7 @@ mod tests {
         let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 2.0, 0.5));
 
-        let (meshes1, meshes2) = cut_at_intersections(&mut mesh1, &mut mesh2).unwrap();
+        let (meshes1, meshes2) = cut_at_intersection(&mut mesh1, &mut mesh2).unwrap();
         assert_eq!(meshes1.len(), 2);
         assert_eq!(meshes2.len(), 2);
 
