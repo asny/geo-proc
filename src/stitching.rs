@@ -75,18 +75,17 @@ fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bool
     false
 }
 
-fn split_meshes(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<HashSet<(VertexID, VertexID)>, Error>
+fn split_meshes(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(), Error>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
-    let mut stitches = HashSet::new();
-    while let Some((ref new_edges1, ref new_edges2)) = split_at_intersections(mesh1, mesh2, &intersections, &mut stitches)?
+    while let Some((ref new_edges1, ref new_edges2)) = split_at_intersections(mesh1, mesh2, &intersections)?
     {
         intersections = find_intersections_between_edge_face(mesh1, new_edges1, mesh2, new_edges2);
     }
-    Ok(stitches)
+    Ok(())
 }
 
-fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(Primitive, Primitive), Vec3>, stitches: &mut HashSet<(VertexID, VertexID)>) -> Result<Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>, Error>
+fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(Primitive, Primitive), Vec3>) -> Result<Option<(Vec<(VertexID, VertexID)>, Vec<(VertexID, VertexID)>)>, Error>
 {
     let mut new_edges1 = Vec::new();
     let mut new_edges2 = Vec::new();
@@ -187,8 +186,6 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
             },
             _ => {unreachable!()}
         };
-
-        stitches.insert((vertex_id1, vertex_id2));
     }
     if new_edges1.len() > 0 && new_edges2.len() > 0 { Ok(Some((new_edges1, new_edges2))) }
     else {Ok(None)}
@@ -363,8 +360,7 @@ mod tests {
         let mut mesh2 = create_simple_mesh_y_z();
 
         let intersections = find_intersections(&mesh1, &mesh2);
-        let mut stitches = HashSet::new();
-        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap().unwrap();
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections).unwrap().unwrap();
 
         assert_eq!(mesh1.no_vertices(), 11);
         assert_eq!(mesh1.no_halfedges(), 12 * 3 + 8);
@@ -374,7 +370,6 @@ mod tests {
         assert_eq!(mesh2.no_halfedges(), 12 * 3 + 8);
         assert_eq!(mesh2.no_faces(), 12);
 
-        assert_eq!(stitches.len(), 5);
         assert_eq!(new_edges1.len(), 8);
         assert_eq!(new_edges2.len(), 8);
 
@@ -392,8 +387,7 @@ mod tests {
 
         assert_eq!(intersections.len(), 8);
 
-        let mut stitches = HashSet::new();
-        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap().unwrap();
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections).unwrap().unwrap();
 
         assert_eq!(mesh1.no_vertices(), 14);
         assert_eq!(mesh1.no_faces(), 19);
@@ -403,7 +397,6 @@ mod tests {
         assert_eq!(mesh2.no_faces(), 19);
         assert_eq!(mesh2.no_halfedges(), 19 * 3 + 7);
 
-        assert_eq!(stitches.len(), 8);
         assert_eq!(new_edges1.len(), 19);
         assert_eq!(new_edges2.len(), 19);
 
@@ -428,8 +421,7 @@ mod tests {
 
         assert_eq!(intersections.len(), 2);
 
-        let mut stitches = HashSet::new();
-        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap().unwrap();
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections).unwrap().unwrap();
 
         assert_eq!(mesh1.no_vertices(), 5);
         assert_eq!(mesh1.no_faces(), 5);
@@ -445,7 +437,6 @@ mod tests {
         assert_eq!(mesh2.no_faces(), 3);
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
-        assert_eq!(stitches.len(), 2);
         assert_eq!(new_edges1.len(), 6);
         assert_eq!(new_edges2.len(), 2);
 
@@ -468,8 +459,7 @@ mod tests {
 
         assert_eq!(intersections.len(), 2);
 
-        let mut stitches = HashSet::new();
-        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap().unwrap();
+        let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections).unwrap().unwrap();
 
         assert_eq!(mesh1.no_vertices(), 5);
         assert_eq!(mesh1.no_faces(), 3);
@@ -479,7 +469,6 @@ mod tests {
         assert_eq!(mesh2.no_faces(), 3);
         assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
 
-        assert_eq!(stitches.len(), 2);
         assert_eq!(new_edges1.len(), 2);
         assert_eq!(new_edges2.len(), 2);
 
@@ -498,9 +487,10 @@ mod tests {
         let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        let stitches = split_meshes(&mut mesh1, &mut mesh2).unwrap();
+        split_meshes(&mut mesh1, &mut mesh2).unwrap();
 
-        assert_eq!(stitches.len(), 2);
+        assert_eq!(mesh1.no_vertices(), 5);
+        assert_eq!(mesh2.no_vertices(), 5);
 
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
@@ -512,9 +502,10 @@ mod tests {
         let mut mesh1 = create_simple_mesh_x_z();
         let mut mesh2 = create_shifted_simple_mesh_y_z();
 
-        let stitches = split_meshes(&mut mesh1, &mut mesh2).unwrap();
+        split_meshes(&mut mesh1, &mut mesh2).unwrap();
 
-        assert_eq!(stitches.len(), 8);
+        assert_eq!(mesh1.no_vertices(), 14);
+        assert_eq!(mesh2.no_vertices(), 14);
 
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
