@@ -4,7 +4,7 @@
 pub mod exporter;
 pub mod loader;
 pub mod connected_components;
-pub mod stitching;
+pub mod split_primitives_at_intersection;
 pub mod collision;
 pub mod cut;
 

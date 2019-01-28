@@ -1,7 +1,7 @@
 
 use tri_mesh::prelude::*;
 use crate::connected_components::*;
-use crate::stitching::*;
+use crate::split_primitives_at_intersection::*;
 use crate::collision::*;
 
 pub fn cut(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
@@ -12,7 +12,7 @@ pub fn cut(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 
 pub fn cut_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
 {
-    split_primitives_at_intersections(mesh1, mesh2)?;
+    split_primitives_at_intersection(mesh1, mesh2)?;
     let meshes1 = cut(&mesh1, &|mesh, halfedge_id| is_at_intersection(mesh, mesh2, halfedge_id));
     let meshes2 = cut(&mesh2, &|mesh, halfedge_id| is_at_intersection(mesh, mesh1, halfedge_id));
     Ok((meshes1, meshes2))
