@@ -71,10 +71,10 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
     for ((id1, id2), point) in new_intersections.drain()
     {
         match id1 {
-            Primitive::Vertex(vertex_id) => {},
+            Primitive::Vertex(_) => {},
             Primitive::Edge(edge) => {
                 match find_edge_primitive_to_split(&edge_splits1, mesh1, edge, &point) {
-                    Primitive::Vertex(vertex_id) => {},
+                    Primitive::Vertex(_) => {},
                     Primitive::Edge(split_edge) => {
                         let halfedge_id = mesh1.connecting_edge(split_edge.0, split_edge.1).ok_or(
                             Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}
@@ -95,10 +95,10 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
             _ => {unreachable!()}
         };
         match id2 {
-            Primitive::Vertex(vertex_id) => {},
+            Primitive::Vertex(_) => {},
             Primitive::Edge(edge) => {
                 match find_edge_primitive_to_split(&edge_splits2, mesh2, edge, &point) {
-                    Primitive::Vertex(vertex_id) => {},
+                    Primitive::Vertex(_) => {},
                     Primitive::Edge(split_edge) => {
                         let halfedge_id = mesh2.connecting_edge(split_edge.0, split_edge.1).ok_or(
                             Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}

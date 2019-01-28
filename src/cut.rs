@@ -3,7 +3,6 @@ use tri_mesh::prelude::*;
 use crate::connected_components::*;
 use crate::stitching::*;
 use crate::collision::*;
-use std::collections::HashSet;
 
 pub fn cut(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 {
@@ -14,8 +13,8 @@ pub fn cut(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 pub fn cut_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
 {
     split_primitives_at_intersections(mesh1, mesh2)?;
-    let mut meshes1 = cut(&mesh1, &|mesh, halfedge_id| is_at_intersection(mesh, mesh2, halfedge_id));
-    let mut meshes2 = cut(&mesh2, &|mesh, halfedge_id| is_at_intersection(mesh, mesh1, halfedge_id));
+    let meshes1 = cut(&mesh1, &|mesh, halfedge_id| is_at_intersection(mesh, mesh2, halfedge_id));
+    let meshes2 = cut(&mesh2, &|mesh, halfedge_id| is_at_intersection(mesh, mesh1, halfedge_id));
     Ok((meshes1, meshes2))
 }
 
@@ -221,7 +220,7 @@ mod tests {
 
         let positions = vec![-1.0, 1.0, 1.0,  -1.0, -1.0, 1.0,  1.0, -1.0, -1.0,  1.0, 1.0, -1.0, 0.0, 2.0, 0.0 ];
         let indices = vec![0, 1, 2,  0, 2, 3,  0, 3, 4];
-        let mut mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
+        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let result = connected_components_with_limit(&mesh2, &|halfedge_id| is_at_intersection(&mesh2, &mesh1, halfedge_id));
 
