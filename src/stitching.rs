@@ -70,11 +70,11 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
     let mut edge_splits2 = HashMap::new();
     for ((id1, id2), point) in new_intersections.drain()
     {
-        let vertex_id1 = match id1 {
-            Primitive::Vertex(vertex_id) => { vertex_id },
+        match id1 {
+            Primitive::Vertex(vertex_id) => {},
             Primitive::Edge(edge) => {
                 match find_edge_primitive_to_split(&edge_splits1, mesh1, edge, &point) {
-                    Primitive::Vertex(vertex_id) => { vertex_id },
+                    Primitive::Vertex(vertex_id) => {},
                     Primitive::Edge(split_edge) => {
                         let halfedge_id = mesh1.connecting_edge(split_edge.0, split_edge.1).ok_or(
                             Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}
@@ -88,18 +88,17 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                                 new_edges1.push(mesh1.ordered_edge_vertices(halfedge_id));
                             }
                         }
-                        vertex_id
                     },
                     _ => {unreachable!()}
                 }
             },
             _ => {unreachable!()}
         };
-        let vertex_id2 = match id2 {
-            Primitive::Vertex(vertex_id) => { vertex_id },
+        match id2 {
+            Primitive::Vertex(vertex_id) => {},
             Primitive::Edge(edge) => {
                 match find_edge_primitive_to_split(&edge_splits2, mesh2, edge, &point) {
-                    Primitive::Vertex(vertex_id) => { vertex_id },
+                    Primitive::Vertex(vertex_id) => {},
                     Primitive::Edge(split_edge) => {
                         let halfedge_id = mesh2.connecting_edge(split_edge.0, split_edge.1).ok_or(
                             Error::EdgeToSplitDoesNotExist {message: format!("Cannot find edge ({}, {})", split_edge.0, split_edge.1)}
@@ -113,7 +112,6 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                                 new_edges2.push(mesh2.ordered_edge_vertices(halfedge_id));
                             }
                         }
-                        vertex_id
                     },
                     _ => {unreachable!()}
                 }
