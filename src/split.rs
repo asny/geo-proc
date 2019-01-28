@@ -8,36 +8,15 @@ use std::collections::HashSet;
 pub fn cut_into_subsets(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 {
     let components = connected_components_with_limit(mesh, &|halfedge_id| is_at_cut(mesh, halfedge_id));
-
-    let mut meshes = Vec::new();
-    for component in components {
-        meshes.push(mesh.clone_subset(&component));
-    }
-
-    meshes
+    components.iter().map(|cc| mesh.clone_subset(cc)).collect()
 }
 
 pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<Mesh>, Vec<Mesh>), Error>
 {
-    let (components1, components2) = split_meshes_at_intersections_and_return_components(mesh1, mesh2)?;
-    let mut meshes1 = Vec::new();
-    for component in components1.iter() {
-        meshes1.push(mesh1.clone_subset(component));
-    }
-    let mut meshes2 = Vec::new();
-    for component in components2.iter() {
-        meshes2.push(mesh2.clone_subset(component));
-    }
-    Ok((meshes1, meshes2))
-}
-
-pub fn split_meshes_at_intersections_and_return_components(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<HashSet<FaceID>>, Vec<HashSet<FaceID>>), Error>
-{
     split_primitives_at_intersections(mesh1, mesh2)?;
-    let components1 = connected_components_with_limit(mesh1, &|halfedge_id| is_at_seam(mesh1, mesh2, halfedge_id));
-    let components2 = connected_components_with_limit(mesh2, &|halfedge_id| is_at_seam(mesh2, mesh1, halfedge_id));
-
-    Ok((components1, components2))
+    let mut meshes1 = cut_into_subsets(&mesh1,&|mesh, halfedge_id| is_at_seam(mesh, mesh2, halfedge_id));
+    let mut meshes2 = cut_into_subsets(&mesh2,&|mesh, halfedge_id| is_at_seam(mesh, mesh1, halfedge_id));
+    Ok((meshes1, meshes2))
 }
 
 fn is_at_seam(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bool
