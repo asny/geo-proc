@@ -2,16 +2,21 @@
 use tri_mesh::prelude::*;
 use std::collections::HashSet;
 
-pub fn connected_component(mesh: &Mesh, face_id: FaceID) -> HashSet<FaceID>
+pub fn connected_component(mesh: &Mesh, start_face_id: FaceID) -> HashSet<FaceID>
 {
-    connected_component_with_limit(mesh, face_id, &|_| false )
+    connected_component_with_limit(mesh, start_face_id, &|_| false )
 }
 
-pub fn connected_component_with_limit(mesh: &Mesh, face_id: FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
+pub fn connected_components(mesh: &Mesh) -> Vec<HashSet<FaceID>>
+{
+    connected_components_with_limit(mesh, &|_| false )
+}
+
+pub fn connected_component_with_limit(mesh: &Mesh, start_face_id: FaceID, limit: &Fn(HalfEdgeID) -> bool) -> HashSet<FaceID>
 {
     let mut component = HashSet::new();
-    component.insert(face_id);
-    let mut to_be_tested = vec![face_id];
+    component.insert(start_face_id);
+    let mut to_be_tested = vec![start_face_id];
 
     loop {
         let test_face = match to_be_tested.pop() {
@@ -34,14 +39,15 @@ pub fn connected_component_with_limit(mesh: &Mesh, face_id: FaceID, limit: &Fn(H
     component
 }
 
-pub fn connected_components(mesh: &Mesh) -> Vec<HashSet<FaceID>>
+pub fn connected_components_with_limit(mesh: &Mesh, limit: &Fn(HalfEdgeID) -> bool) -> Vec<HashSet<FaceID>>
 {
-    let mut result = Vec::new();
-    while let Some(face_id) = mesh.face_iter().find(|face_id| result.iter().all(|set: &HashSet<FaceID>| !set.contains(face_id)))
-    {
-        result.push(connected_component(mesh, face_id));
+    let mut components: Vec<HashSet<FaceID>> = Vec::new();
+    for face_id in mesh.face_iter() {
+        if components.iter().find(|com| com.contains(&face_id)).is_none() {
+            components.push(connected_component_with_limit(mesh, face_id, limit));
+        }
     }
-    result
+    components
 }
 
 #[cfg(test)]
