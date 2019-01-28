@@ -2,7 +2,6 @@
 use std::collections::{HashMap, HashSet};
 
 use tri_mesh::prelude::*;
-use crate::connected_components::*;
 use crate::collision::*;
 
 #[derive(Debug)]
@@ -10,7 +9,7 @@ pub enum Error {
     EdgeToSplitDoesNotExist {message: String}
 }
 
-pub fn split_meshes(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(), Error>
+pub fn split_primitives_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(), Error>
 {
     let mut intersections = find_intersections(mesh1, mesh2);
     while let Some((ref new_edges1, ref new_edges2)) = split_at_intersections(mesh1, mesh2, &intersections)?
@@ -422,7 +421,7 @@ mod tests {
         let positions2: Vec<f32> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
         let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
-        split_meshes(&mut mesh1, &mut mesh2).unwrap();
+        split_primitives_at_intersections(&mut mesh1, &mut mesh2).unwrap();
 
         assert_eq!(mesh1.no_vertices(), 5);
         assert_eq!(mesh2.no_vertices(), 5);
@@ -437,7 +436,7 @@ mod tests {
         let mut mesh1 = create_simple_mesh_x_z();
         let mut mesh2 = create_shifted_simple_mesh_y_z();
 
-        split_meshes(&mut mesh1, &mut mesh2).unwrap();
+        split_primitives_at_intersections(&mut mesh1, &mut mesh2).unwrap();
 
         assert_eq!(mesh1.no_vertices(), 14);
         assert_eq!(mesh2.no_vertices(), 14);
@@ -454,7 +453,7 @@ mod tests {
         for vertex_id in mesh2.vertex_iter() {
             mesh2.move_vertex_by(vertex_id, vec3(0.5, 0.5, 0.5));
         }
-        split_meshes(&mut mesh1, &mut mesh2).unwrap();
+        split_primitives_at_intersections(&mut mesh1, &mut mesh2).unwrap();
 
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();

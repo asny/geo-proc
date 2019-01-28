@@ -38,7 +38,7 @@ pub fn split_meshes_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Resu
 
 pub fn split_meshes_at_intersections_and_return_components(mesh1: &mut Mesh, mesh2: &mut Mesh) -> Result<(Vec<HashSet<FaceID>>, Vec<HashSet<FaceID>>), Error>
 {
-    split_meshes(mesh1, mesh2)?;
+    split_primitives_at_intersections(mesh1, mesh2)?;
     let meshes1 = split_mesh_into_components(mesh1, mesh2);
     let meshes2 = split_mesh_into_components(mesh2, mesh1);
 
