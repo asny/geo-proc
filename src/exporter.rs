@@ -70,7 +70,7 @@ fn parse_as_obj(mesh: &Mesh) -> String
         let mut face = String::new();
         for j in 0..3 {
             let index = indices[i*3 + j] + 1;
-            face = format!("{} {}/{}/{}", face, index, index, index);
+            face = format!("{} {}//{}", face, index, index);
         }
         output = format!("{}f{}\n", output, face);
     }
