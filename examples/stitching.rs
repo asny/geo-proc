@@ -6,23 +6,6 @@ use geo_proc::*;
 use tri_mesh::mesh::Mesh;
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2
-    {
-        eprintln!("Missing argument: path");
-        std::process::exit(1);
-    }
-    if args.len() < 3
-    {
-        eprintln!("Missing argument: output folder");
-        std::process::exit(1);
-    }
-
-    let path = &args[1];
-    let out_folder = &args[2];
-
-    let (fire_mesh, result_mesh) = stitch(path, out_folder);
-
     let mut window = Window::new_default("Geometry visualiser");
     let (width, height) = window.size();
     let gl = window.gl();
@@ -36,6 +19,7 @@ fn main() {
                                                     dust::vec3(0.0, 1.0, 0.0),degrees(45.0), width as f32 / height as f32, 0.1, 1000.0);
 
     // Objects
+    let (fire_mesh, result_mesh) = stitch("examples/stitching_data/", "examples/results/");
     let model = include_str!("stitching_data/model.obj").to_string();
     let objects = Objects::new(&gl, model, exporter::parse_as_obj(&fire_mesh), exporter::parse_as_obj(&result_mesh));
 
