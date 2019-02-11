@@ -2,6 +2,9 @@
 .idea
 
 examples/results/
+examples/web/target/
+examples/web/www/pkg/
+examples/web/www/node_modules/
 
 /target
 **/*.rs.bk
