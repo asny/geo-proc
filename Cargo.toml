@@ -7,3 +7,6 @@ edition = "2018"
 [dependencies]
 tri-mesh = "0.1.2"
 tobj = "0.1.6"
+
+[dev-dependencies]
+dust = { git = "https://github.com/asny/Dust", branch="WebGL" }
