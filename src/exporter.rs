@@ -49,7 +49,7 @@ fn save_as_obj(mesh: &Mesh, name: &str) -> Result<(), Error>
     Ok(())
 }
 
-fn parse_as_obj(mesh: &Mesh) -> String
+pub fn parse_as_obj(mesh: &Mesh) -> String
 {
     let mut output = String::from("o object\n");
 

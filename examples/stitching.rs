@@ -2,8 +2,27 @@
 use dust::*;
 use dust::objects::*;
 use dust::window::{event::*, Window};
+use geo_proc::*;
+use tri_mesh::mesh::Mesh;
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() < 2
+    {
+        eprintln!("Missing argument: path");
+        std::process::exit(1);
+    }
+    if args.len() < 3
+    {
+        eprintln!("Missing argument: output folder");
+        std::process::exit(1);
+    }
+
+    let path = &args[1];
+    let out_folder = &args[2];
+
+    let (fire_mesh, result_mesh) = stitch(path, out_folder);
+
     let mut window = Window::new_default("Geometry visualiser");
     let (width, height) = window.size();
     let gl = window.gl();
@@ -17,10 +36,8 @@ fn main() {
                                                     dust::vec3(0.0, 1.0, 0.0),degrees(45.0), width as f32 / height as f32, 0.1, 1000.0);
 
     // Objects
-    let model = include_str!("../../risikosimulator/discretisation/include/preprocessing/testsuite/cases/cube1/model.obj").to_string();
-    let fire_mesh = include_str!("../../risikosimulator/discretisation/include/preprocessing/testsuite/results/cube1/fire.obj").to_string();
-    let result_mesh = include_str!("../../risikosimulator/discretisation/include/preprocessing/testsuite/results/cube1/result.obj").to_string();
-    let objects = Objects::new(&gl, model, fire_mesh, result_mesh);
+    let model = include_str!("stitching_data/model.obj").to_string();
+    let objects = Objects::new(&gl, model, exporter::parse_as_obj(&fire_mesh), exporter::parse_as_obj(&result_mesh));
 
     let plane_positions: Vec<f32> = vec![
         -1.0, 0.0, -1.0,
@@ -236,30 +253,11 @@ fn new_surface_and_wireframe(gl: &gl::Gl, source: String, color: &Vec3) -> (Shad
     (model, wireframe)
 }
 
-/*
-use geo_proc::prelude::*;
-use geo_proc::*;
-
-fn main()
+fn stitch(path: &str, out_folder: &str) -> (Mesh, Mesh)
 {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2
-    {
-        eprintln!("Missing argument: path");
-        std::process::exit(1);
-    }
-    if args.len() < 3
-    {
-        eprintln!("Missing argument: output folder");
-        std::process::exit(1);
-    }
-
-    let path = &args[1];
-    let out_folder = &args[2];
-
     let model_file_name = "model.obj";
     let fire_file_name = "fire.json";
-    let out_model_file_name = if args.len() > 3 { &args[3] } else { "result.obj" };
+    let out_model_file_name = "result.obj";
     let out_fire_model_name = "fire.obj";
 
     println!("Started preprocessing of case in {}", path);
@@ -306,7 +304,7 @@ fn main()
     println!("Fire: {:?}", fire);
 
     // Create fire model
-    let mut fire_mesh = MeshBuilder::new().icosahedron().build().unwrap();
+    let mut fire_mesh = tri_mesh::MeshBuilder::new().icosahedron().build().unwrap();
     fire_mesh.scale(fire.radius);
     fire_mesh.translate(fire.position);
 
@@ -378,9 +376,10 @@ fn main()
             std::process::exit(2);
         }
     );
+    (fire_mesh, out_mesh)
 }
 
-fn print_and_save(meshes: &Vec<Mesh>, name: &str, folder: &str)
+fn print_and_save(meshes: &Vec<tri_mesh::mesh::Mesh>, name: &str, folder: &str)
 {
     let mut i = 0;
     for mesh in meshes {
@@ -390,7 +389,7 @@ fn print_and_save(meshes: &Vec<Mesh>, name: &str, folder: &str)
     }
 }
 
-fn mesh_is_inside_other(mesh: &Mesh, other: &Mesh, point: &Vec3) -> bool
+fn mesh_is_inside_other(mesh: &tri_mesh::mesh::Mesh, other: &tri_mesh::mesh::Mesh, point: &Vec3) -> bool
 {
     for face_id in mesh.face_iter() {
         let face_center = mesh.face_center(face_id);
@@ -402,7 +401,7 @@ fn mesh_is_inside_other(mesh: &Mesh, other: &Mesh, point: &Vec3) -> bool
     false
 }
 
-fn mesh_blocks_view(mesh: &Mesh, point0: &Vec3, point1: &Vec3) -> bool
+fn mesh_blocks_view(mesh: &tri_mesh::mesh::Mesh, point0: &Vec3, point1: &Vec3) -> bool
 {
     for face_id in mesh.face_iter() {
         if collision::find_face_line_piece_intersection(mesh, face_id, point0, point1).is_some()
@@ -441,4 +440,4 @@ fn load_json(filename: &str) -> String
         .expect("something went wrong reading the file");
 
     contents
-}*/
+}
