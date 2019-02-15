@@ -6,7 +6,7 @@ use geo_proc::*;
 use tri_mesh::mesh::Mesh;
 
 fn main() {
-    let mut window = Window::new_default("Geometry visualiser");
+    let mut window = Window::new_default("Geometry visualiser").unwrap();
     let (width, height) = window.size();
     let gl = window.gl();
 
@@ -72,7 +72,7 @@ fn main() {
     // main loop
     let mut j = 0;
     let mut i = 0;
-    window.render_loop(move |events|
+    window.render_loop(move |events, _elapsed_time|
     {
         for event in events {
             handle_camera_events(event, &mut camera_handler, &mut camera);
@@ -154,7 +154,7 @@ fn main() {
         j = j+1;
 
         renderer.copy_to_screen().unwrap();
-    });
+    }).unwrap();
 }
 
 pub fn handle_camera_events(event: &Event, camera_handler: &mut dust::camerahandler::CameraHandler, camera: &mut Camera)
