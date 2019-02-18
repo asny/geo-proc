@@ -11,8 +11,8 @@ fn main() {
     let gl = window.gl();
 
     // Renderer
-    let renderer = pipeline::DeferredPipeline::new(&gl, width, height, true).unwrap();
-    let mirror_renderer = pipeline::DeferredPipeline::new(&gl, width/2, height/2, true).unwrap();
+    let renderer = DeferredPipeline::new(&gl, width, height, true).unwrap();
+    let mirror_renderer = DeferredPipeline::new(&gl, width/2, height/2, true).unwrap();
 
     // Camera
     let mut camera = camera::PerspectiveCamera::new(dust::vec3(5.0, 3.0, 5.0), dust::vec3(0.0, 1.0, 0.0),
