@@ -33,28 +33,3 @@ pub fn load_obj(name: &str) -> Result<Vec<Mesh>, Error>
     }
     Ok(result)
 }
-
-pub fn parse_obj(source: String) -> Result<Vec<Mesh>, Error>
-{
-    let objs = wavefront_obj::obj::parse(source).unwrap();
-    let obj = objs.objects.first().unwrap();
-
-    let mut positions = Vec::new();
-    obj.vertices.iter().for_each(|v| {positions.push(v.x as f32); positions.push(v.y as f32); positions.push(v.z as f32);});
-    let mut indices = Vec::new();
-    for shape in obj.geometry.first().unwrap().shapes.iter() {
-        match shape.primitive {
-            wavefront_obj::obj::Primitive::Triangle(i0, i1, i2) => {
-                indices.push(i0.0 as u32);
-                indices.push(i1.0 as u32);
-                indices.push(i2.0 as u32);
-            },
-            _ => {}
-        }
-    }
-
-    let mut result = Vec::new();
-    let mut mesh = tri_mesh::mesh_builder::MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
-    result.push(mesh);
-    Ok(result)
-}
