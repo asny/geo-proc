@@ -7,12 +7,12 @@ use tri_mesh::mesh::Mesh;
 
 fn main() {
     let mut window = Window::new_default("Geometry visualiser").unwrap();
-    let (width, height) = window.size();
+    let (width, height) = window.framebuffer_size();
     let gl = window.gl();
 
     // Renderer
-    let renderer = DeferredPipeline::new(&gl, width, height, true).unwrap();
-    let mirror_renderer = DeferredPipeline::new(&gl, width/2, height/2, true).unwrap();
+    let renderer = DeferredPipeline::new(&gl, width, height, true, vec4(0.8, 0.8, 0.8, 1.0)).unwrap();
+    let mirror_renderer = DeferredPipeline::new(&gl, width/2, height/2, true, vec4(0.8, 0.8, 0.8, 1.0)).unwrap();
 
     // Camera
     let mut camera = camera::PerspectiveCamera::new(dust::vec3(5.0, 3.0, 5.0), dust::vec3(0.0, 1.0, 0.0),
@@ -166,7 +166,7 @@ pub fn handle_camera_events(event: &Event, camera_handler: &mut dust::camerahand
                 camera_handler.next_state();
             }
         },
-        Event::MouseClick {state, button} => {
+        Event::MouseClick {state, button, ..} => {
             if *button == MouseButton::Left
             {
                 if *state == State::Pressed { camera_handler.start_rotation(); }
