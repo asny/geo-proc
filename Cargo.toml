@@ -5,7 +5,8 @@ authors = ["Asger Nyman Christiansen <asgernyman@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tri-mesh = "0.1.2"
+tri-mesh = { git = "https://github.com/asny/tri-mesh", branch = "development" }
+#tri-mesh = "0.1.2"
 tobj = "0.1.6"
 wavefront_obj = "5.1.0"
 

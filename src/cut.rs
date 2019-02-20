@@ -2,7 +2,6 @@
 use tri_mesh::prelude::*;
 use crate::connected_components::*;
 use crate::split_primitives_at_intersection::*;
-use crate::collision::*;
 
 pub fn cut(mesh: &Mesh, is_at_cut: &Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
 {
@@ -35,16 +34,23 @@ fn is_at_intersection(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bo
             let face_id11 = walker1.as_twin().face_id().unwrap();
             let face_id20 = walker2.face_id().unwrap();
             let face_id21 = walker2.as_twin().face_id().unwrap();
-            if (!face_and_face_overlaps(mesh1, face_id10, mesh2, face_id20) &&
-                !face_and_face_overlaps(mesh1, face_id10, mesh2, face_id21)) ||
-                (!face_and_face_overlaps(mesh1, face_id11, mesh2, face_id20) &&
-                !face_and_face_overlaps(mesh1, face_id11, mesh2, face_id21))
+            if (!mesh1.face_and_face_overlaps(face_id10, mesh2, face_id20) &&
+                !mesh1.face_and_face_overlaps(face_id10, mesh2, face_id21)) ||
+                (!mesh1.face_and_face_overlaps(face_id11, mesh2, face_id20) &&
+                !mesh1.face_and_face_overlaps(face_id11, mesh2, face_id21))
             {
                 return true;
             }
         }
     }
     false
+}
+
+fn point_and_point_intersects(point1: &Vec3, point2: &Vec3) -> bool
+{
+    const MARGIN: f32 = 0.00001;
+    const SQR_MARGIN: f32 = MARGIN * MARGIN;
+    (point1 - point2).magnitude2() < SQR_MARGIN
 }
 
 #[cfg(test)]
