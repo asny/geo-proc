@@ -17,13 +17,8 @@ pub fn connected_component_with_limit(mesh: &Mesh, start_face_id: FaceID, limit:
     let mut component = HashSet::new();
     component.insert(start_face_id);
     let mut to_be_tested = vec![start_face_id];
-
-    loop {
-        let test_face = match to_be_tested.pop() {
-            Some(f) => f,
-            None => break
-        };
-
+    while let Some(test_face) = to_be_tested.pop()
+    {
         for halfedge_id in mesh.face_halfedge_iter(test_face) {
             if !limit(halfedge_id) {
                 if let Some(face_id) = mesh.walker_from_halfedge(halfedge_id).as_twin().face_id() {
