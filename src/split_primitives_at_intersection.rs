@@ -128,7 +128,7 @@ fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, 
     {
         for new_face_id in new_faces
         {
-            if let Some(id) = mesh.find_face_point_intersection(*new_face_id, point) { return id; }
+            if let Some(Intersection::Point {primitive, ..}) = mesh.face_point_intersection(*new_face_id, point) { return primitive; }
         }
         unreachable!()
     }
@@ -141,7 +141,7 @@ fn find_edge_primitive_to_split(edge_splits: &HashMap<(VertexID, VertexID), Hash
     {
         for new_edge in new_edges
         {
-            if let Some(id) = mesh.find_edge_intersection(*new_edge, point) { return id; }
+            if let Some(Intersection::Point {primitive, ..}) = mesh.edge_point_intersection(*new_edge, point) { return primitive; }
         }
         unreachable!()
     }
@@ -182,7 +182,7 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
     {
         for face_id2 in mesh2.face_iter()
         {
-            if let Some(result) = mesh2.find_face_edge_intersections(face_id2, mesh1,*edge1)
+            if let Some(result) = mesh2.face_edge_intersection(face_id2, mesh1,*edge1)
             {
                 let intersection = result.0;
                 intersections.insert((intersection.id2, intersection.id1), intersection.point);
@@ -197,7 +197,7 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
     {
         for face_id1 in mesh1.face_iter()
         {
-            if let Some(result) = mesh1.find_face_edge_intersections( face_id1, mesh2, *edge2)
+            if let Some(result) = mesh1.face_edge_intersection( face_id1, mesh2, *edge2)
             {
                 let intersection = result.0;
                 intersections.insert((intersection.id1, intersection.id2), intersection.point);

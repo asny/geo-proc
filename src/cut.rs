@@ -34,16 +34,26 @@ fn is_at_intersection(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID) -> bo
             let face_id11 = walker1.as_twin().face_id().unwrap();
             let face_id20 = walker2.face_id().unwrap();
             let face_id21 = walker2.as_twin().face_id().unwrap();
-            if (!mesh1.face_and_face_overlaps(face_id10, mesh2, face_id20) &&
-                !mesh1.face_and_face_overlaps(face_id10, mesh2, face_id21)) ||
-                (!mesh1.face_and_face_overlaps(face_id11, mesh2, face_id20) &&
-                !mesh1.face_and_face_overlaps(face_id11, mesh2, face_id21))
+            if (!face_and_face_overlaps(&mesh1, face_id10, mesh2, face_id20) &&
+                !face_and_face_overlaps(&mesh1, face_id10, mesh2, face_id21)) ||
+                (!face_and_face_overlaps(&mesh1, face_id11, mesh2, face_id20) &&
+                !face_and_face_overlaps(&mesh1, face_id11, mesh2, face_id21))
             {
                 return true;
             }
         }
     }
     false
+}
+
+pub fn face_and_face_overlaps(mesh1: &Mesh, face_id1: FaceID, mesh2: &Mesh, face_id2: FaceID) -> bool
+{
+    let (v0, v1, v2) = mesh1.face_vertices(face_id1);
+    let (p0, p1, p2) = mesh2.face_positions(face_id2);
+
+    (mesh1.vertex_point_intersection(v0, p0).is_some() || mesh1.vertex_point_intersection(v1, p0).is_some() || mesh1.vertex_point_intersection(v2, p2).is_some())
+        && (mesh1.vertex_point_intersection(v0, p1).is_some() || mesh1.vertex_point_intersection(v1, p1).is_some() || mesh1.vertex_point_intersection(v2, p1).is_some())
+        && (mesh1.vertex_point_intersection(v0, p2).is_some() || mesh1.vertex_point_intersection(v1, p2).is_some() || mesh1.vertex_point_intersection(v2, p2).is_some())
 }
 
 fn point_and_point_intersects(point1: &Vec3, point2: &Vec3) -> bool
