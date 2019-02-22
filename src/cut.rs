@@ -51,7 +51,7 @@ pub fn face_and_face_overlaps(mesh1: &Mesh, face_id1: FaceID, mesh2: &Mesh, face
     let (v0, v1, v2) = mesh1.face_vertices(face_id1);
     let (p0, p1, p2) = mesh2.face_positions(face_id2);
 
-    (mesh1.vertex_point_intersection(v0, p0).is_some() || mesh1.vertex_point_intersection(v1, p0).is_some() || mesh1.vertex_point_intersection(v2, p2).is_some())
+    (mesh1.vertex_point_intersection(v0, p0).is_some() || mesh1.vertex_point_intersection(v1, p0).is_some() || mesh1.vertex_point_intersection(v2, p0).is_some())
         && (mesh1.vertex_point_intersection(v0, p1).is_some() || mesh1.vertex_point_intersection(v1, p1).is_some() || mesh1.vertex_point_intersection(v2, p1).is_some())
         && (mesh1.vertex_point_intersection(v0, p2).is_some() || mesh1.vertex_point_intersection(v1, p2).is_some() || mesh1.vertex_point_intersection(v2, p2).is_some())
 }
