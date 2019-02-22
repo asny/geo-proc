@@ -388,7 +388,7 @@ fn mesh_is_inside_other(mesh: &tri_mesh::mesh::Mesh, other: &tri_mesh::mesh::Mes
 fn mesh_blocks_view(mesh: &tri_mesh::mesh::Mesh, point0: &Vec3, point1: &Vec3) -> bool
 {
     for face_id in mesh.face_iter() {
-        if mesh.find_face_line_piece_intersection(face_id, point0, point1).is_some()
+        if mesh.face_line_piece_intersection(face_id, point0, point1).is_some()
         {
             return true;
         }

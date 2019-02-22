@@ -182,13 +182,30 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
     {
         for face_id2 in mesh2.face_iter()
         {
-            if let Some(result) = mesh2.face_edge_intersection(face_id2, mesh1,*edge1)
+            let (p0, p1) = (mesh1.vertex_position(edge1.0), mesh1.vertex_position(edge1.1));
+            if let Some(intersection) = mesh2.face_line_piece_intersection(face_id2, p0, p1)
             {
-                let intersection = result.0;
-                intersections.insert((intersection.id2, intersection.id1), intersection.point);
-                if let Some(other_intersection) = result.1
-                {
-                    intersections.insert((other_intersection.id2, other_intersection.id1), other_intersection.point);
+                match intersection {
+                    Intersection::Point {primitive: primitive2, point} => {
+                        if let Some(Intersection::Point {primitive: primitive1, ..}) = mesh1.edge_point_intersection(*edge1, &point)
+                        {
+                            intersections.insert((primitive1, primitive2), point);
+                        }
+                        else { unreachable!() }
+                    },
+                    Intersection::LinePiece {primitive: primitive2, point0, point1} => {
+                        if let Some(Intersection::Point {primitive: primitive1, ..}) = mesh1.edge_point_intersection(*edge1, &point0)
+                        {
+                            intersections.insert((primitive1, primitive2), point0);
+                        }
+                        else { unreachable!() }
+
+                        if let Some(Intersection::Point {primitive: primitive1, ..}) = mesh1.edge_point_intersection(*edge1, &point1)
+                        {
+                            intersections.insert((primitive1, primitive2), point1);
+                        }
+                        else { unreachable!() }
+                    }
                 }
             }
         }
@@ -197,13 +214,30 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
     {
         for face_id1 in mesh1.face_iter()
         {
-            if let Some(result) = mesh1.face_edge_intersection( face_id1, mesh2, *edge2)
+            let (p0, p1) = (mesh2.vertex_position(edge2.0), mesh2.vertex_position(edge2.1));
+            if let Some(intersection) = mesh1.face_line_piece_intersection(face_id1, p0, p1)
             {
-                let intersection = result.0;
-                intersections.insert((intersection.id1, intersection.id2), intersection.point);
-                if let Some(other_intersection) = result.1
-                {
-                    intersections.insert((other_intersection.id1, other_intersection.id2), other_intersection.point);
+                match intersection {
+                    Intersection::Point {primitive: primitive1, point} => {
+                        if let Some(Intersection::Point {primitive: primitive2, ..}) = mesh2.edge_point_intersection(*edge2, &point)
+                        {
+                            intersections.insert((primitive1, primitive2), point);
+                        }
+                        else { unreachable!() }
+                    },
+                    Intersection::LinePiece {primitive: primitive1, point0, point1} => {
+                        if let Some(Intersection::Point {primitive: primitive2, ..}) = mesh2.edge_point_intersection(*edge2, &point0)
+                        {
+                            intersections.insert((primitive1, primitive2), point0);
+                        }
+                        else { unreachable!() }
+
+                        if let Some(Intersection::Point {primitive: primitive2, ..}) = mesh2.edge_point_intersection(*edge2, &point1)
+                        {
+                            intersections.insert((primitive1, primitive2), point1);
+                        }
+                        else { unreachable!() }
+                    }
                 }
             }
         }
