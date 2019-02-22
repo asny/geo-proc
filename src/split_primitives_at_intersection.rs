@@ -193,16 +193,16 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
                         }
                         else { unreachable!() }
                     },
-                    Intersection::LinePiece {primitive: primitive2, point0, point1} => {
+                    Intersection::LinePiece {primitive0: primitive20, primitive1: primitive21, point0, point1} => {
                         if let Some(Intersection::Point {primitive: primitive1, ..}) = mesh1.edge_point_intersection(*edge1, &point0)
                         {
-                            intersections.insert((primitive1, primitive2), point0);
+                            intersections.insert((primitive1, primitive20), point0);
                         }
                         else { unreachable!() }
 
                         if let Some(Intersection::Point {primitive: primitive1, ..}) = mesh1.edge_point_intersection(*edge1, &point1)
                         {
-                            intersections.insert((primitive1, primitive2), point1);
+                            intersections.insert((primitive1, primitive21), point1);
                         }
                         else { unreachable!() }
                     }
@@ -225,16 +225,16 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<(VertexID, Ve
                         }
                         else { unreachable!() }
                     },
-                    Intersection::LinePiece {primitive: primitive1, point0, point1} => {
+                    Intersection::LinePiece {primitive0: primitive10, primitive1: primitive11, point0, point1} => {
                         if let Some(Intersection::Point {primitive: primitive2, ..}) = mesh2.edge_point_intersection(*edge2, &point0)
                         {
-                            intersections.insert((primitive1, primitive2), point0);
+                            intersections.insert((primitive10, primitive2), point0);
                         }
                         else { unreachable!() }
 
                         if let Some(Intersection::Point {primitive: primitive2, ..}) = mesh2.edge_point_intersection(*edge2, &point1)
                         {
-                            intersections.insert((primitive1, primitive2), point1);
+                            intersections.insert((primitive11, primitive2), point1);
                         }
                         else { unreachable!() }
                     }
