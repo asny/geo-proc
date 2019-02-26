@@ -20,10 +20,10 @@ fn main() {
 
     // Objects
     let mut objects = Objects::new(&gl);
-    objects.add(include_str!("../original_mesh1.obj").to_string());
+    /*objects.add(include_str!("../original_mesh1.obj").to_string());
     objects.add(include_str!("../original_mesh2.obj").to_string());
     objects.add(include_str!("../mesh1.obj").to_string());
-    objects.add(include_str!("../mesh2.obj").to_string());
+    objects.add(include_str!("../mesh2.obj").to_string());*/
 
     let plane_positions: Vec<f32> = vec![
         -1.0, 0.0, -1.0,
