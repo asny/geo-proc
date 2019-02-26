@@ -307,13 +307,7 @@ fn stitch(path: &str, out_folder: &str) -> (Mesh, Mesh)
         println!("");
         println!("Stitching mesh: Vertices: {:?} and Faces: {:?}", in_mesh.no_vertices(), in_mesh.no_faces());
         println!("with mesh: Vertices: {:?} and Faces: {:?}", in_mesh.no_vertices(), in_mesh.no_faces());
-        let (mut out_part_meshes, mut in_part_meshes)
-            = cut::cut_at_intersection(&mut out_mesh, in_mesh).unwrap_or_else(
-            |err| {
-                    println!("Error in stitching: {:?}", err);
-                    panic!("Error in stitching: {:?}", err);
-                }
-            );
+        let (mut out_part_meshes, mut in_part_meshes) = out_mesh.split_at_intersection(in_mesh);
 
         print_and_save(&out_part_meshes, &format!("out_part_{}_mesh", t), out_folder);
         print_and_save(&in_part_meshes, &format!("in_part_{}_mesh", t), out_folder);

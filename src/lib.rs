@@ -3,9 +3,6 @@
 
 pub mod exporter;
 pub mod loader;
-pub mod connected_components;
-pub mod split_primitives_at_intersection;
-pub mod cut;
 
 pub use tri_mesh::prelude as prelude;
 pub use tri_mesh;
