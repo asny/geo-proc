@@ -2,8 +2,6 @@
 use dust::*;
 use dust::objects::*;
 use dust::window::{event::*, Window};
-use geo_proc::*;
-use tri_mesh::mesh::Mesh;
 
 fn main() {
     let mut window = Window::new_default("Geometry visualiser").unwrap();
@@ -20,10 +18,7 @@ fn main() {
 
     // Objects
     let mut objects = Objects::new(&gl);
-    /*objects.add(include_str!("../original_mesh1.obj").to_string());
-    objects.add(include_str!("../original_mesh2.obj").to_string());
-    objects.add(include_str!("../mesh1.obj").to_string());
-    objects.add(include_str!("../mesh2.obj").to_string());*/
+    objects.add(include_str!("stitching_data/model.obj").to_string());
 
     let plane_positions: Vec<f32> = vec![
         -1.0, 0.0, -1.0,
@@ -218,7 +213,7 @@ impl Objects
 
     fn toggle(&mut self, i: usize)
     {
-        if i < 0 || i > self.models.len() { return; }
+        if i >= self.models.len() { return; }
         self.models[i].0 = !self.models[i].0;
     }
 

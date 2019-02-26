@@ -77,15 +77,19 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                     Primitive::Edge(split_edge) => {
                         let (v0, v1) = mesh1.edge_vertices(split_edge);
                         let vertex_id = mesh1.split_edge(split_edge, point);
-                        let list = insert_edges(&mut edge_splits1, edge, split_edge, vertex_id);
+
+                        if !edge_splits1.contains_key(&edge) { edge_splits1.insert(edge, HashSet::new()); }
+                        let list = edge_splits1.get_mut(&edge).unwrap();
+
+                        list.remove(&split_edge);
                         for halfedge_id in mesh1.vertex_halfedge_iter(vertex_id) {
                             let vid = mesh1.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
                             if vid != v0 && vid != v1
                             {
-                                new_edges1.push(min_edge(mesh1, halfedge_id));
+                                new_edges1.push(halfedge_id);
                             }
                             else {
-                                list.insert(min_edge(mesh1, halfedge_id));
+                                list.insert(halfedge_id);
                             }
                         }
                     },
@@ -102,16 +106,19 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
                     Primitive::Edge(split_edge) => {
                         let (v0, v1) = mesh2.edge_vertices(split_edge);
                         let vertex_id = mesh2.split_edge(split_edge, point);
-                        let list = insert_edges(&mut edge_splits2, edge, split_edge, vertex_id);
 
+                        if !edge_splits2.contains_key(&edge) { edge_splits2.insert(edge, HashSet::new()); }
+                        let list = edge_splits2.get_mut(&edge).unwrap();
+
+                        list.remove(&split_edge);
                         for halfedge_id in mesh2.vertex_halfedge_iter(vertex_id) {
                             let vid = mesh2.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
                             if vid != v0 && vid != v1
                             {
-                                new_edges2.push(min_edge(mesh2, halfedge_id));
+                                new_edges2.push(halfedge_id);
                             }
                             else {
-                                list.insert(min_edge(mesh2, halfedge_id));
+                                list.insert(halfedge_id);
                             }
                         }
                     },
@@ -149,16 +156,6 @@ fn find_edge_primitive_to_split(edge_splits: &HashMap<HalfEdgeID, HashSet<HalfEd
         unreachable!()
     }
     Primitive::Edge(edge)
-}
-
-fn insert_edges(edge_list: &mut HashMap<HalfEdgeID, HashSet<HalfEdgeID>>, edge: HalfEdgeID, split_edge: HalfEdgeID, vertex_id: VertexID) -> &mut HashSet<HalfEdgeID>
-{
-    if !edge_list.contains_key(&edge) { edge_list.insert(edge, HashSet::new()); }
-    let list = edge_list.get_mut(&edge).unwrap();
-    list.remove(&split_edge);
-    list
-    //list.insert((split_edge.0, vertex_id));
-    //list.insert((split_edge.1, vertex_id));
 }
 
 fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, face_id: FaceID, vertex_id: VertexID)
@@ -247,12 +244,6 @@ fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<HalfEdgeID>, 
         }
     }
     intersections
-}
-
-fn min_edge(mesh: &Mesh, halfedge_id: HalfEdgeID) -> HalfEdgeID
-{
-    let twin_id = mesh.walker_from_halfedge(halfedge_id).twin_id().unwrap();
-    if twin_id < halfedge_id {twin_id} else {halfedge_id}
 }
 
 #[cfg(test)]
