@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::io::prelude::*;
+
 use tri_mesh::prelude::*;
 
 #[derive(Debug)]
@@ -32,7 +31,7 @@ pub fn save(mesh: &Mesh, path: &str) -> Result<(), Error>
     let extension = splitted[1];
 
     let data = if extension == "obj" {
-        Ok(parse_as_obj(mesh))
+        Ok(mesh.parse_as_obj())
     }
     else if extension == "poly" {
         Ok(parse_as_poly(mesh))
@@ -44,37 +43,9 @@ pub fn save(mesh: &Mesh, path: &str) -> Result<(), Error>
 
 fn save_as_obj(mesh: &Mesh, name: &str) -> Result<(), Error>
 {
-    let data = parse_as_obj(mesh);
+    let data = mesh.parse_as_obj();
     save_model(&data, name)?;
     Ok(())
-}
-
-pub fn parse_as_obj(mesh: &Mesh) -> String
-{
-    let mut output = String::from("o object\n");
-
-    let positions = mesh.positions_buffer();
-    for i in 0..mesh.no_vertices()
-    {
-        output = format!("{}v {} {} {}\n", output, positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
-    }
-
-    let normals = mesh.normals_buffer();
-    for i in 0..mesh.no_vertices()
-    {
-        output = format!("{}vn {} {} {}\n", output, normals[i*3], normals[i*3 + 1], normals[i*3 + 2]);
-    }
-
-    let indices = mesh.indices_buffer();
-    for i in 0..mesh.no_faces() {
-        let mut face = String::new();
-        for j in 0..3 {
-            let index = indices[i*3 + j] + 1;
-            face = format!("{} {}//{}", face, index, index);
-        }
-        output = format!("{}f{}\n", output, face);
-    }
-    output
 }
 
 fn save_as_poly(mesh: &Mesh, name: &str) -> Result<(), Error>
@@ -106,7 +77,6 @@ fn parse_as_poly(mesh: &Mesh) -> String
 
 fn save_model(data: &str, name: &str) -> std::io::Result<()>
 {
-    let mut file = File::create(name)?;
-    file.write_all(data.as_bytes())?;
+    std::fs::write(name, data)?;
     Ok(())
 }

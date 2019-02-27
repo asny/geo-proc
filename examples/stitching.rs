@@ -4,6 +4,8 @@ use dust::objects::*;
 use dust::window::{event::*, Window};
 use geo_proc::*;
 use tri_mesh::mesh::Mesh;
+use tri_mesh::prelude::Vec3 as Vec3;
+use tri_mesh::prelude::vec3 as vec3;
 
 fn main() {
     let mut window = Window::new_default("Geometry visualiser").unwrap();
@@ -21,7 +23,7 @@ fn main() {
     // Objects
     let (fire_mesh, result_mesh) = stitch("examples/stitching_data/", "examples/results/");
     let model = include_str!("stitching_data/model.obj").to_string();
-    let objects = Objects::new(&gl, model, exporter::parse_as_obj(&fire_mesh), exporter::parse_as_obj(&result_mesh));
+    let objects = Objects::new(&gl, model, fire_mesh.parse_as_obj(), result_mesh.parse_as_obj());
 
     let plane_positions: Vec<f32> = vec![
         -1.0, 0.0, -1.0,
@@ -226,7 +228,7 @@ impl Objects
     }
 }
 
-fn new_surface_and_wireframe(gl: &gl::Gl, source: String, color: &Vec3) -> (ShadedMesh, Wireframe)
+fn new_surface_and_wireframe(gl: &gl::Gl, source: String, color: &dust::Vec3) -> (ShadedMesh, Wireframe)
 {
     let mut model = ShadedMesh::new_from_obj_source(gl, source.clone()).unwrap();
     model.color = *color;
@@ -393,7 +395,7 @@ fn mesh_blocks_view(mesh: &tri_mesh::mesh::Mesh, point0: &Vec3, point1: &Vec3) -
 #[derive(Debug)]
 struct Fire {
     position: Vec3,
-    radius: f32
+    radius: f64
 }
 
 fn load_fire(filename: &str) -> Result<Fire, serde_json::Error>
@@ -401,10 +403,10 @@ fn load_fire(filename: &str) -> Result<Fire, serde_json::Error>
     let data = load_json(filename);
     let obj: serde_json::Value = serde_json::from_str(&data)?;
     let p = &obj["position"];
-    let position = vec3(p["x"].as_f64().unwrap() as f32, p["y"].as_f64().unwrap() as f32, p["z"].as_f64().unwrap() as f32);
-    let radius = obj["radius"].as_f64().unwrap() as f32;
+    let position = vec3(p["x"].as_f64().unwrap(), p["y"].as_f64().unwrap(), p["z"].as_f64().unwrap());
+    let radius = obj["radius"].as_f64().unwrap();
     let n = &obj["normal"];
-    let normal = vec3(n["x"].as_f64().unwrap() as f32, n["y"].as_f64().unwrap() as f32, n["z"].as_f64().unwrap() as f32);
+    let normal = vec3(n["x"].as_f64().unwrap(), n["y"].as_f64().unwrap(), n["z"].as_f64().unwrap());
     Ok(Fire { position: position + normal * 0.5 * radius, radius })
 }
 

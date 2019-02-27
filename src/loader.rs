@@ -25,7 +25,8 @@ pub fn load_obj(name: &str) -> Result<Vec<Mesh>, Error>
     }
 
     for m in models {
-        let mut mesh_builder = tri_mesh::mesh_builder::MeshBuilder::new().with_positions(m.mesh.positions);
+        let positions: Vec<f64> = m.mesh.positions.iter().map(|v| *v as f64).collect();
+        let mut mesh_builder = tri_mesh::mesh_builder::MeshBuilder::new().with_positions(positions);
         if m.mesh.indices.len() > 0 {
             mesh_builder = mesh_builder.with_indices(m.mesh.indices);
         }
