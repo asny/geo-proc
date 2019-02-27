@@ -6,6 +6,7 @@ use geo_proc::*;
 use tri_mesh::mesh::Mesh;
 use tri_mesh::prelude::Vec3 as Vec3;
 use tri_mesh::prelude::vec3 as vec3;
+use tri_mesh::MeshBuilder;
 
 fn main() {
     let mut window = Window::new_default("Geometry visualiser").unwrap();
@@ -250,35 +251,27 @@ fn stitch(path: &str, out_folder: &str) -> (Mesh, Mesh)
     println!("Output is found at: {}", out_folder);
 
     // Load model
-    let mut meshes = loader::load_obj(&format!("{}{}", path, model_file_name)).unwrap_or_else(
+    let source = std::fs::read_to_string(&format!("{}{}", path, model_file_name)).unwrap_or_else(
     |err| {
             eprintln!("Cannot load {} in {}: {:#?}", model_file_name, path, err);
             std::process::exit(2);
         }
     );
 
-    // Fix meshes
-    let mut i = 0;
-    for mesh in meshes.iter_mut() {
-        if mesh.no_vertices() > 0
-        {
-            mesh.merge_overlapping_primitives().unwrap();
-            //mesh.collapse_small_faces(0.01);
-            //mesh.remove_lonely_primitives();
-            //::mesh::test_utility::test_is_valid(&mesh).unwrap();
+    let mut in_mesh = MeshBuilder::new().with_obj(source).build().unwrap();
+    in_mesh.merge_overlapping_primitives().unwrap();
+    //in_mesh.collapse_small_faces(0.01);
+    //in_mesh.remove_lonely_primitives();
+    //::in_mesh::test_utility::test_is_valid(&in_mesh).unwrap();
 
-            // Fix mesh
-            //mesh.smooth_vertices(0.1);
-            //mesh.flip_edges(0.9);
-            //mesh.collapse_small_faces(0.01);
-            //mesh.remove_lonely_primitives();
-            //::mesh::test_utility::test_is_valid(&mesh).unwrap();
+    // Fix in_mesh
+    //in_mesh.smooth_vertices(0.1);
+    //in_mesh.flip_edges(0.9);
+    //in_mesh.collapse_small_faces(0.01);
+    //in_mesh.remove_lonely_primitives();
+    //::in_mesh::test_utility::test_is_valid(&in_mesh).unwrap();
 
-            exporter::save(&mesh, &format!("{}mesh{}.obj", out_folder, i)).unwrap();
-
-            i += 1;
-        }
-    }
+    exporter::save(&in_mesh, &format!("{}in_mesh.obj", out_folder)).unwrap();
 
     // Load fire
     let fire = load_fire(&format!("{}{}", path, fire_file_name)).unwrap_or_else(
@@ -302,61 +295,56 @@ fn stitch(path: &str, out_folder: &str) -> (Mesh, Mesh)
     );
 
     // Stitching
+    println!("");
+    println!("Stitching in_mesh: Vertices: {:?} and Faces: {:?}", in_mesh.no_vertices(), in_mesh.no_faces());
+    println!("with fire_mesh: Vertices: {:?} and Faces: {:?}", fire_mesh.no_vertices(), fire_mesh.no_faces());
+
     let mut out_mesh = fire_mesh.clone();
-    let mut t = 0;
-    for in_mesh in meshes.iter_mut()
-    {
-        println!("");
-        println!("Stitching mesh: Vertices: {:?} and Faces: {:?}", in_mesh.no_vertices(), in_mesh.no_faces());
-        println!("with mesh: Vertices: {:?} and Faces: {:?}", in_mesh.no_vertices(), in_mesh.no_faces());
-        let (mut out_part_meshes, mut in_part_meshes) = out_mesh.split_at_intersection(in_mesh);
+    let (mut out_part_meshes, mut in_part_meshes) = out_mesh.split_at_intersection(&mut in_mesh);
 
-        print_and_save(&out_part_meshes, &format!("out_part_{}_mesh", t), out_folder);
-        print_and_save(&in_part_meshes, &format!("in_part_{}_mesh", t), out_folder);
+    print_and_save(&out_part_meshes, &format!("out_mesh"), out_folder);
+    print_and_save(&in_part_meshes, &format!("in_mesh"), out_folder);
 
-        let mut meshes_to_merge = Vec::new();
+    let mut meshes_to_merge = Vec::new();
 
-        for submesh in out_part_meshes.drain(..) {
-            if mesh_is_inside_other(&submesh, in_mesh, &fire.position)
-            {
-                meshes_to_merge.push(submesh);
-            }
+    for submesh in out_part_meshes.drain(..) {
+        if mesh_is_inside_other(&submesh, &in_mesh, &fire.position)
+        {
+            meshes_to_merge.push(submesh);
         }
-
-        for submesh in in_part_meshes.drain(..) {
-            if mesh_is_inside_other(&submesh, &out_mesh, &fire.position)
-            {
-                meshes_to_merge.push(submesh);
-            }
-        }
-
-        println!("Meshes to merge: {}", meshes_to_merge.len());
-        print_and_save(&meshes_to_merge, &format!("mesh_to_merge_{}", t), out_folder);
-
-        let mut iter = meshes_to_merge.drain(..);
-        let mut result_mesh = iter.next().unwrap();
-        for mesh in iter {
-            result_mesh.merge_with(&mesh).unwrap_or_else(
-                |err| {
-                        println!("Error in merging: {:?}", err);
-                        panic!("Error in merging: {:?}", err);
-                    }
-                );
-        }
-
-        println!("Result mesh: Vertices: {:?} and Faces: {:?}", result_mesh.no_vertices(), result_mesh.no_faces());
-        out_mesh = result_mesh;
-        t = t+1;
     }
 
-    // Save mesh
-    exporter::save(&out_mesh, &format!("{}{}", out_folder, out_model_file_name)).unwrap_or_else(
+    for submesh in in_part_meshes.drain(..) {
+        if mesh_is_inside_other(&submesh, &out_mesh, &fire.position)
+        {
+            meshes_to_merge.push(submesh);
+        }
+    }
+
+    println!("Meshes to merge: {}", meshes_to_merge.len());
+    print_and_save(&meshes_to_merge, &format!("mesh_to_merge"), out_folder);
+
+    let mut iter = meshes_to_merge.drain(..);
+    let mut result_mesh = iter.next().unwrap();
+    for mesh in iter {
+        result_mesh.merge_with(&mesh).unwrap_or_else(
+            |err| {
+                    println!("Error in merging: {:?}", err);
+                    panic!("Error in merging: {:?}", err);
+                }
+            );
+    }
+
+    println!("Result in_mesh: Vertices: {:?} and Faces: {:?}", result_mesh.no_vertices(), result_mesh.no_faces());
+
+    // Save in_mesh
+    exporter::save(&result_mesh, &format!("{}{}", out_folder, out_model_file_name)).unwrap_or_else(
     |err| {
             eprintln!("Cannot save {} in {}: {:#?}", out_model_file_name, out_folder, err);
             std::process::exit(2);
         }
     );
-    (fire_mesh, out_mesh)
+    (fire_mesh, result_mesh)
 }
 
 fn print_and_save(meshes: &Vec<tri_mesh::mesh::Mesh>, name: &str, folder: &str)
