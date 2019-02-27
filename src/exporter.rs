@@ -37,25 +37,11 @@ pub fn save(mesh: &Mesh, path: &str) -> Result<(), Error>
         Ok(parse_as_poly(mesh))
     }
     else { Err(Error::FileTypeNotSupported {message: format!("Extension {} of file {} is not supported!", extension, splitted[0])}) };
-    save_model(&data?, path)?;
+    std::fs::write(path, data?)?;
     Ok(())
 }
 
-fn save_as_obj(mesh: &Mesh, name: &str) -> Result<(), Error>
-{
-    let data = mesh.parse_as_obj();
-    save_model(&data, name)?;
-    Ok(())
-}
-
-fn save_as_poly(mesh: &Mesh, name: &str) -> Result<(), Error>
-{
-    let data = parse_as_poly(mesh);
-    save_model(&data, name)?;
-    Ok(())
-}
-
-fn parse_as_poly(mesh: &Mesh) -> String
+pub fn parse_as_poly(mesh: &Mesh) -> String
 {
     let mut output = format!("{} 3 0 0\n", mesh.no_vertices());
 
@@ -72,11 +58,4 @@ fn parse_as_poly(mesh: &Mesh) -> String
         output = format!("{}3 {} {} {}\n", output, indices[i*3] + 1, indices[i*3 + 1] + 1, indices[i*3 + 2] + 1);
     }
     output
-}
-
-
-fn save_model(data: &str, name: &str) -> std::io::Result<()>
-{
-    std::fs::write(name, data)?;
-    Ok(())
 }
