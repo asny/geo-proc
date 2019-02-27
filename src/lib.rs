@@ -2,7 +2,6 @@
 //!
 
 pub mod exporter;
-pub mod loader;
 
 pub use tri_mesh::prelude as prelude;
 pub use tri_mesh;
